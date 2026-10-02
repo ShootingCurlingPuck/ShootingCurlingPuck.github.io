@@ -389,23 +389,28 @@ const dateEl = el(
 const legendG = el("g", { class: "live" }, svg);
 const LEG_F = 18,
   LEG_GAP = 24;
-const legItems = [
-  ["free", "Free"],
-  ["soon", "Booked soon"],
-  ["busy", "Busy"],
-].map(([s, t]) => ({ s, t, w: 36 + t.length * LEG_F * CHAR_W }));
-let lx =
-  CX -
-  (legItems.reduce((a, i) => a + i.w, 0) + LEG_GAP * (legItems.length - 1)) / 2;
-legItems.forEach((i) => {
-  roomShape(legendG, lx, 1002, 26, 20, i.s);
-  label(
-    i.t,
-    { x: lx + 36, y: 1012, class: "legend", "font-size": LEG_F },
-    legendG
-  );
-  lx += i.w + LEG_GAP;
-});
+function buildLegend() {
+  while (legendG.firstChild) legendG.removeChild(legendG.firstChild);
+  mctx.font = `700 ${LEG_F}px NeueHaas, Arial, sans-serif`; // the legend's real font
+  const items = [
+    ["free", "Free"],
+    ["soon", "Booked soon"],
+    ["busy", "Busy"],
+  ].map(([s, t]) => ({ s, t, w: 36 + mctx.measureText(t).width }));
+  let lx =
+    CX -
+    (items.reduce((a, i) => a + i.w, 0) + LEG_GAP * (items.length - 1)) / 2;
+  items.forEach((i) => {
+    roomShape(legendG, lx, 1002, 26, 20, i.s);
+    label(
+      i.t,
+      { x: lx + 36, y: 1012, class: "legend", "font-size": LEG_F },
+      legendG
+    );
+    lx += i.w + LEG_GAP;
+  });
+}
+buildLegend();
 const errEl = el(
   "text",
   { x: CX, y: 1084, class: "err", "font-size": 20 },
@@ -643,6 +648,7 @@ applyMode();
   .catch(() => {})
   .then(() => {
     placeClock();
+    buildLegend();
     render();
   });
 setInterval(tick, 1000);
