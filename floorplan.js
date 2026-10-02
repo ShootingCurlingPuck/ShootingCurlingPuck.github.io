@@ -51,7 +51,7 @@ const P = {
   ink: "#000000",
 };
 Object.keys(P).forEach((k) =>
-  document.documentElement.style.setProperty("--" + k, P[k]),
+  document.documentElement.style.setProperty("--" + k, P[k])
 );
 
 // ---- ASSETS (change paths here if you move files; missing files just don't show) ----
@@ -270,7 +270,7 @@ function roomShape(parent, x, y, w, h, state) {
   el(
     "rect",
     { x: x + 2, y: y + 2, width: w - 4, height: h - 4, rx: 6, class: "base" },
-    g,
+    g
   );
   return g;
 }
@@ -278,7 +278,7 @@ function img(file, x, y, w, h, parent, extra) {
   const n = el(
     "image",
     Object.assign({ x, y, width: w, height: h }, extra || {}),
-    parent || svg,
+    parent || svg
   );
   n.setAttributeNS(XLINK, "xlink:href", file);
   return n;
@@ -293,12 +293,12 @@ PIXEL_CORNERS.forEach((c) => {
   const g = el(
     "g",
     { transform: `translate(${c.x} ${c.y}) scale(${c.sx} ${c.sy})` },
-    svg,
+    svg
   );
   const f = el(
     "g",
     { "clip-path": "url(#pxclip)", filter: "url(#white30)" },
-    g,
+    g
   );
   img(c.file, -PIXEL_GRID.x * k, -PIXEL_GRID.y * k, 1500 * k, 1500 * k, f);
 });
@@ -306,7 +306,7 @@ PIXEL_CORNERS.forEach((c) => {
 el(
   "rect",
   { x: 651, y: 339, width: 1238, height: 1161, rx: 8, class: "floor" },
-  svg,
+  svg
 ); // floor
 
 ANCHORS.forEach((a) => {
@@ -320,7 +320,7 @@ ANCHORS.forEach((a) => {
       rx: 8,
       class: "anchor" + (a.dashed ? " dashed" : ""),
     },
-    svg,
+    svg
   );
   if (a.label) {
     const txt = !EMOJI_OK && ICON_TEXT[a.label];
@@ -332,7 +332,7 @@ ANCHORS.forEach((a) => {
         class: "alabel",
         "font-size": txt ? Math.min(a.f, fit(txt, a.w * 0.8, a.f)) : a.f,
       },
-      svg,
+      svg
     );
   }
 });
@@ -350,7 +350,7 @@ ROOMS.forEach((r) => {
 el(
   "rect",
   { x: 1039, y: 740, width: 461, height: 360, rx: 8, class: "core" },
-  svg,
+  svg
 );
 
 // Standby veil: covers the plan, everything drawn after it stays crisp
@@ -370,18 +370,18 @@ img(
   CLOCK_FRAME.w,
   CLOCK_FRAME.h,
   clockG,
-  { preserveAspectRatio: "xMidYMid meet" },
+  { preserveAspectRatio: "xMidYMid meet" }
 );
 const clockEl = el(
   "text",
   { x: FRAME_C.x, y: FRAME_C.y, class: "clock h", "font-size": CLOCK_F },
-  clockG,
+  clockG
 );
 clockEl.style.dominantBaseline = "alphabetic";
 const dateEl = el(
   "text",
   { x: CX, y: 972, class: "date", "font-size": 26 },
-  clockG,
+  clockG
 );
 const legendG = el("g", { class: "live" }, svg);
 const LEG_F = 18,
@@ -399,14 +399,14 @@ legItems.forEach((i) => {
   label(
     i.t,
     { x: lx + 36, y: 1012, class: "legend", "font-size": LEG_F },
-    legendG,
+    legendG
   );
   lx += i.w + LEG_GAP;
 });
 const errEl = el(
   "text",
   { x: CX, y: 1084, class: "err", "font-size": 20 },
-  svg,
+  svg
 );
 
 // ---- Logic ----
@@ -526,7 +526,7 @@ function isStandby(now) {
         hour: "2-digit",
         minute: "2-digit",
       }),
-      10,
+      10
     ) % 24;
   return weekday === "Sat" || weekday === "Sun" || h < OPEN_H || h >= CLOSE_H;
 }
@@ -595,7 +595,7 @@ function fetchJson(url, ms) {
         (e) => {
           clearTimeout(timer);
           reject(e);
-        },
+        }
       );
   });
 }
@@ -613,7 +613,7 @@ function load() {
       if (!Array.isArray(list)) throw new Error("Unexpected response");
       if (standby) return;
       lastData = new Map(
-        list.map((s) => [String(s.scheduleId).toLowerCase(), s]),
+        list.map((s) => [String(s.scheduleId).toLowerCase(), s])
       );
       lastOk = Date.now();
       errMsg = "";
