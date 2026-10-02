@@ -86,9 +86,10 @@ const PSG_LOGO = {
 // Pixel clusters: file + corner. sx/sy mirror the cluster so it hugs its corner.
 const PIXEL_CELL = 54;
 const PIXEL_CORNERS = [
-  { file: "assets/pxl-3.svg", x: 320, y: 400, sx: 1, sy: -1 }, // top left
-  { file: "assets/pxl-2.svg", x: 140, y: 1540, sx: 1, sy: -1 }, // bottom left
-  { file: "assets/pxl-1.svg", x: 2250, y: 1450, sx: 1, sy: 1 }, // bottom right (top right is the logo)
+  { file: "assets/pxl-3.svg", x: 320, y: 400, sx: 1, sy: -1 },
+  { file: "assets/pxl-2.svg", x: 139, y: 1540, sx: 1, sy: -1 },
+  { file: "assets/pxl-1.svg", x: 2264, y: 1458, sx: 1, sy: 1 },
+  { file: "assets/pxl-3.svg", x: 2264, y: 800, sx: 1, sy: 1, rotate: -90 },
 ];
 const PIXEL_GRID = { x: 286.3, y: 439.46, w: 932.9 }; // where the 3 x 2 squares sit inside the 1500 canvas
 // --------------------
@@ -292,7 +293,9 @@ const k = PIXEL_CELL / (PIXEL_GRID.w / 3); // canvas units -> screen units
 PIXEL_CORNERS.forEach((c) => {
   const g = el(
     "g",
-    { transform: `translate(${c.x} ${c.y}) scale(${c.sx} ${c.sy})` },
+    {
+      transform: `translate(${c.x} ${c.y}) scale(${c.sx} ${c.sy}) rotate(${c.rotate || 0})`,
+    },
     svg
   );
   const f = el(
