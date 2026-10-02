@@ -1,0 +1,115 @@
+@font-face {
+  font-family: "Obviously";
+  src: url("fonts/Obviously-Semibold.otf") format("opentype");
+  font-weight: 700;
+}
+@font-face {
+  font-family: "NeueHaas";
+  src: url("fonts/NeueHaasGroteskDisplay-Bold.ttf") format("truetype");
+  font-weight: 700;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  background: var(--t1);
+  overflow: hidden;
+  cursor: none;
+}
+body {
+  font-family: "NeueHaas", "Helvetica Neue", Arial, sans-serif;
+}
+#plan {
+  display: block;
+  width: 100vw;
+  height: 100vh;
+}
+text {
+  text-anchor: middle;
+  dominant-baseline: central;
+  font-weight: 700;
+}
+.h {
+  font-family: "Obviously", "NeueHaas", "Helvetica Neue", Arial, sans-serif;
+}
+
+.floor {
+  fill: var(--t3);
+}
+.anchor {
+  fill: var(--t4);
+}
+.anchor.dashed {
+  stroke: var(--ink);
+  stroke-opacity: 0.5;
+  stroke-width: 3;
+  stroke-dasharray: 12 10;
+}
+.core {
+  fill: var(--t1);
+  stroke: var(--ink);
+  stroke-opacity: 0.6;
+  stroke-width: 4;
+  stroke-linejoin: round;
+}
+
+.room .base {
+  stroke: var(--ink);
+  stroke-opacity: 0.6;
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+.room.free .base {
+  fill: var(--green);
+}
+.room.soon .base {
+  fill: var(--yellow);
+}
+.room.busy .base {
+  fill: var(--red);
+}
+.room.nodata .base {
+  fill: var(--t3);
+}
+.room text {
+  fill: var(--ink);
+}
+.room.busy text {
+  fill: #fff;
+}
+.room.nodata text {
+  fill-opacity: 0.45;
+}
+.room text.u {
+  opacity: 0.9;
+}
+
+.clock {
+  fill: var(--t2);
+}
+.date {
+  fill: var(--ink);
+}
+.legend {
+  fill: var(--ink);
+  text-anchor: start;
+}
+.err {
+  fill: var(--ink);
+}
+.here {
+  fill: var(--ink);
+}
+
+.dim {
+  display: none;
+  fill: var(--t1);
+  opacity: 0.88;
+}
+#plan.standby .dim {
+  display: inline;
+}
+#plan.standby .live {
+  display: none;
+}
