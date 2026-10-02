@@ -1,3 +1,7 @@
+// Written to run on old TV browsers (Samsung 2018, Chromium ~56): no trailing commas in calls,
+// no async/await, and fallbacks for APIs that engine lacks. Keep it that way when editing.
+// Test URLs: ?mode=live | ?mode=standby | ?debug=1 (shows errors on screen) | ?icons=text|emoji
+
 // ----- SETTINGS -----
 const DATA_URL =
   "https://defaulte0e5bdf3aed144d3a1d20677842249.ac.environment.api.powerplatform.com/powerautomate/automations/direct/cu/30/workflows/9b00daac866f48c3901fd5518909b9b4/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=ZzGG55w4he-5jts1YHl-aPl_cRBANaPgxD4noVRohps";
@@ -9,8 +13,22 @@ const FORCE = new URLSearchParams(location.search).get("mode"); // "standby" or 
 const REFRESH_MS = 60 * 1000;
 const STALE_MS = 6 * 60 * 1000; // keep showing last good data this long after failures
 const FETCH_TIMEOUT_MS = 20 * 1000;
+const QS = new URLSearchParams(location.search);
 let clockOffset = 0; // server time minus device time
 const nowMs = () => Date.now() + clockOffset;
+
+// On-screen error log for TVs without devtools. Only active with ?debug=1
+let debugLog = () => {};
+if (QS.get("debug")) {
+  const box = document.createElement("div");
+  box.style.cssText =
+    "position:fixed;left:0;top:0;right:0;z-index:9;padding:8px;background:#fff;color:#c00;font:20px monospace;white-space:pre-wrap";
+  document.body.appendChild(box);
+  debugLog = (m) => {
+    box.textContent += m + "\n";
+  };
+  window.onerror = (m, src, line) => debugLog(m + " (line " + line + ")");
+}
 
 // ---- FONT SIZES ----
 const NAME_F = 28; // one size for every room name
@@ -214,6 +232,19 @@ const ANCHORS = [
   { x: 880, y: 1180, w: 133, h: 102, label: "🚻", f: 48, dashed: true }, // toilets
 ];
 
+const mctx = document.createElement("canvas").getContext("2d");
+
+// Old TV browsers often have no emoji font. Detect that (a missing glyph measures the same as
+// any other missing glyph) and fall back to short text labels. Force with ?icons=text or ?icons=emoji
+const ICONS = QS.get("icons");
+const EMOJI_OK = ICONS
+  ? ICONS === "emoji"
+  : (function () {
+      mctx.font = `700 40px ${FONT_STACK}`;
+      return mctx.measureText("🚻").width !== mctx.measureText("\uFFFF").width;
+    })();
+const ICON_TEXT = { "🚻": "WC", "⬆️⬇️": "Lift", "🔇": "Quiet" };
+
 const SVGNS = "http://www.w3.org/2000/svg";
 const XLINK = "http://www.w3.org/1999/xlink";
 const svg = document.getElementById("plan");
@@ -245,7 +276,7 @@ function img(file, x, y, w, h, parent, extra) {
     Object.assign({ x, y, width: w, height: h }, extra || {}),
     parent || svg,
   );
-  n.setAttributeNS(XLINK, "href", file);
+  n.setAttributeNS(XLINK, "xlink:href", file);
   return n;
 }
 
@@ -287,12 +318,19 @@ ANCHORS.forEach((a) => {
     },
     svg,
   );
-  if (a.label)
+  if (a.label) {
+    const txt = !EMOJI_OK && ICON_TEXT[a.label];
     label(
-      a.label,
-      { x: a.x + a.w / 2, y: a.y + a.h / 2, class: "alabel", "font-size": a.f },
+      txt || a.label,
+      {
+        x: a.x + a.w / 2,
+        y: a.y + a.h / 2,
+        class: "alabel",
+        "font-size": txt ? Math.min(a.f, fit(txt, a.w * 0.8, a.f)) : a.f,
+      },
       svg,
     );
+  }
 });
 
 label("Kitchen", { x: 1750, y: 450, class: "alabel", "font-size": 26 }, svg);
@@ -368,11 +406,11 @@ const errEl = el(
 );
 
 // ---- Logic ----
-const mctx = document.createElement("canvas").getContext("2d");
 function inkMid(text, size) {
   // distance from baseline up to the middle of the glyph ink
   mctx.font = `700 ${size}px ${FONT_STACK}`;
   const m = mctx.measureText(text);
+  if (typeof m.actualBoundingBoxAscent !== "number") return size * 0.36; // old engines: about half the cap height
   return (m.actualBoundingBoxAscent - m.actualBoundingBoxDescent) / 2;
 }
 function placeClock() {
@@ -472,20 +510,21 @@ let standby = null;
 function isStandby(now) {
   if (FORCE === "standby") return true;
   if (FORCE === "live") return false;
-  const p = Object.fromEntries(
-    new Intl.DateTimeFormat("en-GB", {
-      timeZone: TZ,
-      weekday: "short",
-      hour: "2-digit",
-      hourCycle: "h23",
-    })
-      .formatToParts(now)
-      .map((x) => [x.type, x.value]),
-  );
-  const h = +p.hour % 24;
-  return (
-    p.weekday === "Sat" || p.weekday === "Sun" || h < OPEN_H || h >= CLOSE_H
-  );
+  // Two plain calls instead of formatToParts (missing on old engines)
+  const weekday = now.toLocaleDateString("en-GB", {
+    timeZone: TZ,
+    weekday: "short",
+  });
+  const h =
+    parseInt(
+      now.toLocaleTimeString("en-GB", {
+        timeZone: TZ,
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+      10,
+    ) % 24;
+  return weekday === "Sat" || weekday === "Sun" || h < OPEN_H || h >= CLOSE_H;
 }
 
 function applyMode() {
@@ -530,45 +569,70 @@ function tick() {
   });
 }
 
-async function load() {
+// fetch + JSON with a hard timeout. AbortController is optional (missing on old engines).
+function fetchJson(url, ms) {
+  return new Promise((resolve, reject) => {
+    const ctl =
+      typeof AbortController === "function" ? new AbortController() : null;
+    const timer = setTimeout(() => {
+      if (ctl) ctl.abort();
+      reject(new Error("Timeout"));
+    }, ms);
+    fetch(url, { cache: "no-store", signal: ctl ? ctl.signal : undefined })
+      .then((res) => {
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        return res.json();
+      })
+      .then(
+        (d) => {
+          clearTimeout(timer);
+          resolve(d);
+        },
+        (e) => {
+          clearTimeout(timer);
+          reject(e);
+        },
+      );
+  });
+}
+
+function load() {
   if (standby) return;
-  try {
-    let data;
-    const ctl = new AbortController();
-    const timer = setTimeout(() => ctl.abort(), FETCH_TIMEOUT_MS);
-    const res = await fetch(DATA_URL, {
-      cache: "no-store",
-      signal: ctl.signal,
-    }).finally(() => clearTimeout(timer));
-    if (!res.ok) throw new Error("HTTP " + res.status);
-    data = await res.json();
-    if (data.generatedAt) {
-      const off = parseUtc(data.generatedAt).getTime() - Date.now();
-      clockOffset = Math.abs(off) > 5000 ? off : 0; // ignore normal jitter
-    }
-    const list = data.value || (data.schedule && data.schedule.value);
-    if (!Array.isArray(list)) throw new Error("Unexpected response");
-    if (standby) return;
-    lastData = new Map(
-      list.map((s) => [String(s.scheduleId).toLowerCase(), s]),
-    );
-    lastOk = Date.now();
-    errMsg = "";
-  } catch (e) {
-    errMsg = "Room data unavailable";
-    console.error(e);
-  }
-  render();
+  // "&_=" defeats HTTP caching on engines that ignore cache: "no-store"
+  fetchJson(DATA_URL + "&_=" + Date.now(), FETCH_TIMEOUT_MS)
+    .then((data) => {
+      if (data.generatedAt) {
+        const off = parseUtc(data.generatedAt).getTime() - Date.now();
+        clockOffset = Math.abs(off) > 5000 ? off : 0; // ignore normal jitter
+      }
+      const list = data.value || (data.schedule && data.schedule.value);
+      if (!Array.isArray(list)) throw new Error("Unexpected response");
+      if (standby) return;
+      lastData = new Map(
+        list.map((s) => [String(s.scheduleId).toLowerCase(), s]),
+      );
+      lastOk = Date.now();
+      errMsg = "";
+    })
+    .catch((e) => {
+      errMsg = "Room data unavailable";
+      console.error(e);
+      debugLog(String(e));
+    })
+    .then(render);
 }
 
 placeClock();
 tick();
 applyMode();
 // Re-measure once the brand fonts have really loaded
-Promise.all([
-  document.fonts.load("700 20px Obviously"),
-  document.fonts.load("700 20px NeueHaas"),
-])
+(document.fonts
+  ? Promise.all([
+      document.fonts.load("700 20px Obviously"),
+      document.fonts.load("700 20px NeueHaas"),
+    ])
+  : Promise.resolve()
+)
   .catch(() => {})
   .then(() => {
     placeClock();
