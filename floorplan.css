@@ -113,3 +113,11 @@ text {
 #plan.standby .live {
   display: none;
 }
+
+.lname,
+.lhead {
+  text-anchor: start;
+}
+.ltime {
+  text-anchor: end;
+}

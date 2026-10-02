@@ -417,6 +417,78 @@ const errEl = el(
   svg
 );
 
+// ---- "Free now" panel (left margin) ----
+const LIST = {
+  x: 196,
+  w: 430,
+  top: 520,
+  rowH: 62,
+  rows: 10,
+  nameF: 34,
+  timeF: 26,
+};
+const listG = el("g", { class: "live" }, svg); // "live" class hides it in standby
+const listHead = label(
+  "Free now",
+  { x: LIST.x, y: 430, class: "h lhead", "font-size": 52 },
+  listG
+);
+label(
+  "until",
+  {
+    x: LIST.x + LIST.w,
+    y: 478,
+    class: "ltime",
+    "font-size": 20,
+    "fill-opacity": 0.6,
+  },
+  listG
+);
+const listRows = [];
+for (let i = 0; i < LIST.rows; i++) {
+  const y = LIST.top + i * LIST.rowH;
+  const g = el("g", {}, listG);
+  listRows.push({
+    g: g,
+    chip: roomShape(g, LIST.x, y - 11, 22, 22, "free"),
+    name: el("text", { x: LIST.x + 36, y: y, class: "lname" }, g),
+    time: el(
+      "text",
+      { x: LIST.x + LIST.w, y: y, class: "ltime", "font-size": LIST.timeF },
+      g
+    ),
+  });
+}
+
+function renderList(avail, fresh) {
+  const key = (a) => (a.res.until ? a.res.until.getTime() : 1e15);
+  avail.sort((a, b) => key(b) - key(a)); // longest-free first
+  const msg = !fresh ? "No data" : avail.length ? "" : "All busy";
+  const more = avail.length > LIST.rows ? avail.length - (LIST.rows - 1) : 0;
+  listRows.forEach((row, i) => {
+    const a = avail[i];
+    const isMsg = i === 0 && msg;
+    const isMore = more && i === LIST.rows - 1;
+    row.g.style.display = a || isMsg ? "" : "none";
+    row.chip.style.display = isMsg || isMore ? "none" : "";
+    if (isMsg || isMore) {
+      row.name.textContent = isMsg ? msg : "+" + more + " more";
+      row.name.setAttribute("font-size", LIST.nameF);
+      row.time.textContent = "";
+      row.name.setAttribute("x", LIST.x);
+      return;
+    }
+    row.name.setAttribute("x", LIST.x + 36);
+    const nm = (a.r.booth ? "Booth " : "The ") + a.r.name;
+    const tm = a.res.until ? fmt(a.res.until) : "all day";
+    row.chip.setAttribute("class", "room " + a.res.state);
+    row.name.textContent = nm;
+    row.name.setAttribute("font-size", fit(nm, LIST.w - 36 - 110, LIST.nameF));
+    row.time.textContent = tm;
+  });
+  listHead.textContent = "Free now";
+}
+
 // ---- Logic ----
 function inkMid(text, size) {
   // distance from baseline up to the middle of the glyph ink
@@ -560,13 +632,17 @@ let lastData = null,
 function render() {
   const now = new Date(nowMs());
   const fresh = lastData && Date.now() - lastOk < STALE_MS;
+  const avail = [];
   ROOMS.forEach((r) => {
     const res = fresh
       ? roomState(lastData.get(r.email), now)
       : { state: "nodata" };
     r.g.setAttribute("class", "room " + res.state);
     layout(r, res);
+    if (res.state === "free" || res.state === "soon")
+      avail.push({ r: r, res: res });
   });
+  renderList(avail, !!fresh);
   errEl.textContent = fresh || standby ? "" : errMsg;
 }
 
