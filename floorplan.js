@@ -479,7 +479,8 @@ function renderList(avail, fresh) {
       return;
     }
     row.name.setAttribute("x", LIST.x + 36);
-    const nm = (a.r.booth ? "Booth " : "The ") + a.r.name;
+    const nm =
+      (a.r.booth ? "Booth " : a.r.name.includes(" ") ? "" : "The ") + a.r.name;
     const tm = a.res.until ? fmt(a.res.until) : "all day";
     row.chip.setAttribute("class", "room " + a.res.state);
     row.name.textContent = nm;
