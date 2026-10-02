@@ -421,16 +421,16 @@ const errEl = el(
 const LIST = {
   x: 196,
   w: 430,
-  top: 520,
-  rowH: 62,
+  top: 550,
+  rowH: 90,
   rows: 10,
-  nameF: 34,
-  timeF: 26,
+  nameF: 40,
+  timeF: 24,
 };
 const listG = el("g", { class: "live" }, svg); // "live" class hides it in standby
 const listHead = label(
   "Free now",
-  { x: LIST.x, y: 430, class: "h lhead", "font-size": 52 },
+  { x: LIST.x, y: LIST.top - LIST.rowH, class: "h lhead", "font-size": 52 },
   listG
 );
 label(
