@@ -232,7 +232,11 @@ const ANCHORS = [
   { x: 880, y: 1180, w: 133, h: 102, label: "🚻", f: 48, dashed: true }, // toilets
 ];
 
-const mctx = document.createElement("canvas").getContext("2d");
+// Text measuring canvas. If the browser has no canvas, fall back to a crude estimate instead of crashing.
+const mctx = document.createElement("canvas").getContext("2d") || {
+  font: "",
+  measureText: (t) => ({ width: t.length * 20 }),
+};
 
 // Old TV browsers often have no emoji font. Detect that (a missing glyph measures the same as
 // any other missing glyph) and fall back to short text labels. Force with ?icons=text or ?icons=emoji
