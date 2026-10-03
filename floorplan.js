@@ -6,12 +6,12 @@
 const DATA_URL =
   "https://defaulte0e5bdf3aed144d3a1d20677842249.ac.environment.api.powerplatform.com/powerautomate/automations/direct/cu/30/workflows/9b00daac866f48c3901fd5518909b9b4/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=ZzGG55w4he-5jts1YHl-aPl_cRBANaPgxD4noVRohps";
 const TZ = "Europe/Brussels";
-const SOON_MIN = 10; // "free, but booked soon" threshold
+const SOON_MIN = 15; // "free, but busy soon" threshold
 const OPEN_H = 7,
   CLOSE_H = 19; // standby outside these hours, and at weekends
 const FORCE = new URLSearchParams(location.search).get("mode"); // "standby" or "live" for testing
 const REFRESH_MS = 60 * 1000;
-const STALE_MS = 6 * 60 * 1000; // keep showing last good data this long after failures
+const STALE_MS = 5 * 60 * 1000; // keep showing last good data this long after failures
 const FETCH_TIMEOUT_MS = 20 * 1000;
 const QS = new URLSearchParams(location.search);
 let clockOffset = 0; // server time minus device time
@@ -31,15 +31,15 @@ if (QS.get("debug")) {
 }
 
 // ---- FONT SIZES ----
-const NAME_F = 28; // one size for every room name
-const TIME_F = 22; // one size for every time line
-const UNTIL_F = 18; // the small "until" label above the time
+const NAME_F = 26; // one size for every room name
 const CLOCK_F = 70; // max clock size, shrinks automatically if too wide
 const CHAR_W = 0.68; // average glyph width in em, used to fit text into tiles
 const FONT_STACK = "Obviously, NeueHaas, Arial, sans-serif";
-const FRAME_C = { x: 1275, y: 862.5 }; // centre of the clock frame's text area
 
-// ---- BRAND: Pink palette (+ black and white) ----
+const CHIP = 32; // size of the state square in the list
+const NAME_DX = CHIP + 14; // gap between chip and name
+
+// ---- Brand palette ----
 const P = {
   t1: "#C69C6D", // Tint I: background
   t2: "#A25C0F", // Tint II
@@ -47,7 +47,7 @@ const P = {
   t4: "#E0CDA9",
   red: "#C8102E", // Accent I: busy, clock
   green: "#54987C", // Accent II: free
-  yellow: "#E1FF6F", // Marking: booked soon, highlight
+  yellow: "#E1FF6F", // Marking: busy soon, highlight
   ink: "#000000",
 };
 Object.keys(P).forEach((k) =>
@@ -55,13 +55,6 @@ Object.keys(P).forEach((k) =>
 );
 
 // ---- ASSETS (change paths here if you move files; missing files just don't show) ----
-const CLOCK_FRAME = {
-  file: "assets/frame.svg",
-  x: 1039,
-  y: 775,
-  w: 461,
-  h: 185,
-};
 const ORMIT_LOGO = {
   file: "assets/logo-black.svg",
   x: 695,
@@ -85,12 +78,6 @@ const PSG_LOGO = {
 };
 // Pixel clusters: file + corner. sx/sy mirror the cluster so it hugs its corner.
 const PIXEL_CELL = 54;
-const PIXEL_CORNERS = [
-  { file: "assets/pxl-3.svg", x: 320, y: 400, sx: 1, sy: -1 },
-  { file: "assets/pxl-2.svg", x: 139, y: 1540, sx: 1, sy: -1 },
-  { file: "assets/pxl-1.svg", x: 2264, y: 1458, sx: 1, sy: 1 },
-  { file: "assets/pxl-3.svg", x: 2264, y: 800, sx: 1, sy: 1, rotate: -90 },
-];
 const PIXEL_GRID = { x: 286.3, y: 439.46, w: 932.9 }; // where the 3 x 2 squares sit inside the 1500 canvas
 // --------------------
 
@@ -254,6 +241,66 @@ const SVGNS = "http://www.w3.org/2000/svg";
 const XLINK = "http://www.w3.org/1999/xlink";
 const svg = document.getElementById("plan");
 
+// ---- LAYOUT: change these few numbers, everything else follows ----
+const FLOOR = { x: 651, y: 339, w: 1238, h: 1161 };
+const CORE = { x: 1039, y: 740, w: 461, h: 360 }; // the solid block with the clock
+const MAP_SHIFT = 280; // how far the map is pushed right (more list space)
+const VIEW_H = FLOOR.h + 80;
+const VIEW_W = Math.round((VIEW_H * 16) / 9);
+const VIEW = {
+  x: Math.round(FLOOR.x + FLOOR.w / 2 - VIEW_W / 2 - MAP_SHIFT),
+  y: FLOOR.y - 40,
+  w: VIEW_W,
+  h: VIEW_H,
+};
+svg.setAttribute("viewBox", [VIEW.x, VIEW.y, VIEW.w, VIEW.h].join(" "));
+const VR = VIEW.x + VIEW.w,
+  VB = VIEW.y + VIEW.h; // right / bottom edges
+
+// Core-anchored: clock frame, date, error line
+const CX = CORE.x + CORE.w / 2;
+const CLOCK_FRAME = {
+  file: "assets/frame.svg",
+  x: CORE.x,
+  y: CORE.y + 75,
+  w: CORE.w,
+  h: 185,
+};
+const FRAME_C = { x: CX + 5.5, y: CLOCK_FRAME.y + 87.5 };
+const DATE_Y = CORE.y + 292,
+  ERR_Y = CORE.y + 344;
+const GROUP_MID_Y = (CLOCK_FRAME.y + DATE_Y + 13) / 2; // vertical middle of frame + date
+const STANDBY_SCALE = 2;
+const STANDBY_SHIFT = `translate(${VIEW.x + VIEW.w / 2}px, ${VIEW.y + VIEW.h / 2}px) scale(${STANDBY_SCALE}) translate(${-CX}px, ${-GROUP_MID_Y}px)`;
+const LIVE_POS = "translate(0px, 0px) scale(1) translate(0px, 0px)";
+
+// Screen-anchored: pixel clusters hug the viewBox corners
+const PIXEL_CORNERS = [
+  { file: "assets/pxl-3.svg", x: VIEW.x + 154, y: VIEW.y + 101, sx: 1, sy: -1 },
+  { file: "assets/pxl-2.svg", x: VIEW.x - 26, y: VB, sx: 1, sy: -1 },
+  { file: "assets/pxl-1.svg", x: VR - 108, y: VB - 82, sx: 1, sy: 1 },
+  {
+    file: "assets/pxl-3.svg",
+    x: VR - 108,
+    y: VIEW.y + 501,
+    sx: 1,
+    sy: 1,
+    rotate: -90,
+  },
+];
+
+// Left panel: from screen edge to floor, with padding
+const LIST = {
+  x: VIEW.x + 60,
+  w: FLOOR.x - 75 - (VIEW.x + 60),
+  head: FLOOR.y + 90,
+  top: FLOOR.y + 170,
+  rowH: 70,
+  rows: ROOMS.filter((r) => !r.booth).length,
+  nameF: 42,
+  timeF: 28,
+};
+
 function el(tag, attrs, parent) {
   const n = document.createElementNS(SVGNS, tag);
   for (const k in attrs) n.setAttribute(k, attrs[k]);
@@ -286,7 +333,11 @@ function img(file, x, y, w, h, parent, extra) {
 }
 
 // ---- Static drawing ----
-el("rect", { x: 166, y: 299, width: 2206, height: 1241, fill: P.t1 }, svg); // background
+el(
+  "rect",
+  { x: VIEW.x, y: VIEW.y, width: VIEW.w, height: VIEW.h, fill: P.t1 },
+  svg
+);
 
 // Pixel clusters in the corners
 const k = PIXEL_CELL / (PIXEL_GRID.w / 3); // canvas units -> screen units
@@ -298,19 +349,22 @@ PIXEL_CORNERS.forEach((c) => {
     },
     svg
   );
-  const f = el(
-    "g",
-    { "clip-path": "url(#pxclip)", filter: "url(#white30)" },
-    g
-  );
+  const f = el("g", { filter: "url(#white30)" }, g);
   img(c.file, -PIXEL_GRID.x * k, -PIXEL_GRID.y * k, 1500 * k, 1500 * k, f);
 });
 
 el(
   "rect",
-  { x: 651, y: 339, width: 1238, height: 1161, rx: 8, class: "floor" },
+  {
+    x: FLOOR.x,
+    y: FLOOR.y,
+    width: FLOOR.w,
+    height: FLOOR.h,
+    rx: 8,
+    class: "floor",
+  },
   svg
-); // floor
+);
 
 ANCHORS.forEach((a) => {
   el(
@@ -332,7 +386,6 @@ ANCHORS.forEach((a) => {
       {
         x: a.x + a.w / 2,
         y: a.y + a.h / 2,
-        class: "alabel",
         "font-size": txt ? Math.min(a.f, fit(txt, a.w * 0.8, a.f)) : a.f,
       },
       svg
@@ -340,32 +393,26 @@ ANCHORS.forEach((a) => {
   }
 });
 
-label("Kitchen", { x: 1750, y: 450, class: "alabel", "font-size": 26 }, svg);
+label("Kitchen", { x: 1750, y: 450, "font-size": 26 }, svg);
 
 ROOMS.forEach((r) => {
   r.g = roomShape(svg, r.x, r.y, r.w, r.h, "nodata");
   r.nameEl = el("text", { class: "h" }, r.g);
-  r.untilEl = el("text", { class: "u" }, r.g);
-  r.timeEl = el("text", {}, r.g);
 });
 
 // Inner walls (solid block in the middle) and outer wall
 el(
   "rect",
-  { x: 1039, y: 740, width: 461, height: 360, rx: 8, class: "core" },
+  { x: CORE.x, y: CORE.y, width: CORE.w, height: CORE.h, rx: 8, class: "core" },
   svg
 );
-
-// Standby veil: covers the plan, everything drawn after it stays crisp
-el("rect", { x: 166, y: 299, width: 2206, height: 1241, class: "dim" }, svg);
 
 img(ORMIT_LOGO.file, ORMIT_LOGO.x, ORMIT_LOGO.y, ORMIT_LOGO.w, ORMIT_LOGO.h);
 img(VOLVE_LOGO.file, VOLVE_LOGO.x, VOLVE_LOGO.y, VOLVE_LOGO.w, VOLVE_LOGO.h);
 img(PSG_LOGO.file, PSG_LOGO.x, PSG_LOGO.y, PSG_LOGO.w, PSG_LOGO.h);
 
-// Centre of the ring: clock frame, clock, date, legend, error line
-const CX = 1269.5;
-const clockG = el("g", {}, svg);
+// Centre of the ring: clock frame, clock, date, error line
+const clockG = el("g", { class: "clockg" }, svg);
 img(
   CLOCK_FRAME.file,
   CLOCK_FRAME.x,
@@ -383,65 +430,21 @@ const clockEl = el(
 clockEl.style.dominantBaseline = "alphabetic";
 const dateEl = el(
   "text",
-  { x: CX, y: 972, class: "date", "font-size": 26 },
+  { x: CX, y: DATE_Y, class: "date", "font-size": 26 },
   clockG
 );
-const legendG = el("g", { class: "live" }, svg);
-const LEG_F = 18,
-  LEG_GAP = 24;
-function buildLegend() {
-  while (legendG.firstChild) legendG.removeChild(legendG.firstChild);
-  mctx.font = `700 ${LEG_F}px NeueHaas, Arial, sans-serif`; // the legend's real font
-  const items = [
-    ["free", "Free"],
-    ["soon", "Booked soon"],
-    ["busy", "Busy"],
-  ].map(([s, t]) => ({ s, t, w: 36 + mctx.measureText(t).width }));
-  let lx =
-    CX -
-    (items.reduce((a, i) => a + i.w, 0) + LEG_GAP * (items.length - 1)) / 2;
-  items.forEach((i) => {
-    roomShape(legendG, lx, 1002, 26, 20, i.s);
-    label(
-      i.t,
-      { x: lx + 36, y: 1012, class: "legend", "font-size": LEG_F },
-      legendG
-    );
-    lx += i.w + LEG_GAP;
-  });
-}
-buildLegend();
+
 const errEl = el(
   "text",
-  { x: CX, y: 1084, class: "err", "font-size": 20 },
+  { x: CX, y: ERR_Y, class: "err", "font-size": 20 },
   svg
 );
 
-// ---- "Free now" panel (left margin) ----
-const LIST = {
-  x: 196,
-  w: 430,
-  top: 550,
-  rowH: 90,
-  rows: 10,
-  nameF: 40,
-  timeF: 24,
-};
-const listG = el("g", { class: "live" }, svg); // "live" class hides it in standby
-const listHead = label(
-  "Free now",
-  { x: LIST.x, y: LIST.top - LIST.rowH, class: "h lhead", "font-size": 52 },
-  listG
-);
+// ---- "Rooms" panel (left margin) ----
+const listG = el("g", {}, svg); // "live" class hides it in standby
 label(
-  "until",
-  {
-    x: LIST.x + LIST.w,
-    y: 478,
-    class: "ltime",
-    "font-size": 20,
-    "fill-opacity": 0.6,
-  },
+  "Rooms",
+  { x: LIST.x, y: LIST.head, class: "h lhead", "font-size": 52 },
   listG
 );
 const listRows = [];
@@ -450,8 +453,8 @@ for (let i = 0; i < LIST.rows; i++) {
   const g = el("g", {}, listG);
   listRows.push({
     g: g,
-    chip: roomShape(g, LIST.x, y - 11, 22, 22, "free"),
-    name: el("text", { x: LIST.x + 36, y: y, class: "lname" }, g),
+    chip: roomShape(g, LIST.x, y - CHIP / 2, CHIP, CHIP, "free"),
+    name: el("text", { x: LIST.x + NAME_DX, y: y, class: "lname" }, g),
     time: el(
       "text",
       { x: LIST.x + LIST.w, y: y, class: "ltime", "font-size": LIST.timeF },
@@ -460,34 +463,75 @@ for (let i = 0; i < LIST.rows; i++) {
   });
 }
 
-function renderList(avail, fresh) {
-  const key = (a) => (a.res.until ? a.res.until.getTime() : 1e15);
-  avail.sort((a, b) => key(b) - key(a)); // longest-free first
-  const msg = !fresh ? "No data" : avail.length ? "" : "All busy";
-  const more = avail.length > LIST.rows ? avail.length - (LIST.rows - 1) : 0;
+const BOOTH_Y = LIST.top + LIST.rows * LIST.rowH + 24;
+label(
+  "Booths",
+  { x: LIST.x, y: BOOTH_Y, class: "h lhead", "font-size": 52 },
+  listG
+);
+const boothCells = ROOMS.filter((r) => r.booth).map((r, i, all) => {
+  const x = LIST.x + (i * LIST.w) / all.length;
+  const g = el("g", {}, listG);
+  return {
+    r: r,
+    chip: roomShape(g, x, BOOTH_Y + 60, CHIP, CHIP, "nodata"),
+    name: label(
+      r.name,
+      {
+        x: x + CHIP + 10,
+        y: BOOTH_Y + 60 + CHIP / 2 - 3,
+        class: "lname h",
+        "font-size": 34,
+      },
+      g
+    ),
+  };
+});
+
+// Standby veil: covers everything except the clock group, which is drawn above it
+const veil = el(
+  "rect",
+  { x: VIEW.x, y: VIEW.y, width: VIEW.w, height: VIEW.h, class: "dim" },
+  svg
+);
+// Final z-order: ...map, logos, list, veil, clock
+svg.insertBefore(listG, clockG);
+svg.insertBefore(veil, clockG);
+
+const listName = (a) => (a.r.booth ? "Booth " : "") + a.r.name;
+
+function renderList(rows, fresh) {
+  listG.setAttribute("opacity", fresh || standby ? 1 : 0.3); // feed dead: whole panel fades
+  boothCells.forEach((c) => {
+    const a = rows.find((x) => x.r === c.r);
+    c.chip.setAttribute("class", "room " + a.res.state);
+    c.name.setAttribute("opacity", a.res.state === "busy" ? 0.6 : 1);
+  });
+  rows = rows.filter((a) => !a.r.booth);
+  rows.sort((a, b) =>
+    a.r.name.toLowerCase() < b.r.name.toLowerCase() ? -1 : 1
+  );
   listRows.forEach((row, i) => {
-    const a = avail[i];
-    const isMsg = i === 0 && msg;
-    const isMore = more && i === LIST.rows - 1;
-    row.g.style.display = a || isMsg ? "" : "none";
-    row.chip.style.display = isMsg || isMore ? "none" : "";
-    if (isMsg || isMore) {
-      row.name.textContent = isMsg ? msg : "+" + more + " more";
-      row.name.setAttribute("font-size", LIST.nameF);
-      row.time.textContent = "";
-      row.name.setAttribute("x", LIST.x);
-      return;
-    }
-    row.name.setAttribute("x", LIST.x + 36);
-    const nm =
-      (a.r.booth ? "Booth " : a.r.name.includes(" ") ? "" : "The ") + a.r.name;
-    const tm = a.res.until ? fmt(a.res.until) : "all day";
+    const a = rows[i];
+    row.g.style.display = a ? "" : "none";
+    if (!a) return;
+    const nm = listName(a);
+    const dim = a.res.state === "busy" ? 0.6 : 1;
     row.chip.setAttribute("class", "room " + a.res.state);
     row.name.textContent = nm;
-    row.name.setAttribute("font-size", fit(nm, LIST.w - 36 - 110, LIST.nameF));
-    row.time.textContent = tm;
+    row.name.setAttribute(
+      "font-size",
+      fit(nm, LIST.w - NAME_DX - 110, LIST.nameF)
+    );
+    row.name.setAttribute("opacity", dim);
+    row.time.textContent = a.res.until
+      ? `${a.res.state === "busy" ? "busy" : "free"} until ${fmt(a.res.until)}`
+      : "";
+    row.time.setAttribute(
+      "opacity",
+      row.time.textContent.includes("busy") ? 0.6 : 1
+    );
   });
-  listHead.textContent = "Free now";
 }
 
 // ---- Logic ----
@@ -553,7 +597,7 @@ function fit(text, maxW, maxF) {
 function layout(r, res) {
   const cx = r.x + r.w / 2,
     cy = r.y + r.h / 2,
-    maxW = r.w * 0.92;
+    maxW = r.w * 0.8;
   if (r.booth) {
     const fs = Math.min(r.w, r.h) * 0.8;
     r.nameEl.textContent = r.name;
@@ -561,33 +605,13 @@ function layout(r, res) {
     r.nameEl.setAttribute("x", cx);
     r.nameEl.setAttribute("y", cy + inkMid(r.name, fs));
     r.nameEl.setAttribute("font-size", fs);
-    r.timeEl.textContent = "";
-    r.untilEl.textContent = "";
     return;
   }
   const nf = fit(r.name, maxW, NAME_F);
-  const has = !!res.until;
-  const tf = has ? TIME_F : 0,
-    uf = has ? UNTIL_F : 0;
-  const g1 = has ? 4 : 0,
-    g2 = has ? 2 : 0;
-  const top = cy - (nf + g1 + uf + g2 + tf) / 2;
   r.nameEl.textContent = r.name;
   r.nameEl.setAttribute("x", cx);
-  r.nameEl.setAttribute("y", top + nf / 2);
+  r.nameEl.setAttribute("y", cy);
   r.nameEl.setAttribute("font-size", nf);
-  r.untilEl.textContent = has
-    ? res.state === "busy"
-      ? "busy until"
-      : "free until"
-    : "";
-  r.untilEl.setAttribute("x", cx);
-  r.untilEl.setAttribute("y", top + nf + g1 + uf / 2);
-  r.untilEl.setAttribute("font-size", uf || 10);
-  r.timeEl.textContent = has ? fmt(res.until) : "";
-  r.timeEl.setAttribute("x", cx);
-  r.timeEl.setAttribute("y", top + nf + g1 + uf + g2 + tf / 2);
-  r.timeEl.setAttribute("font-size", tf || 10);
 }
 
 let standby = null;
@@ -617,7 +641,7 @@ function applyMode() {
   if (s === standby) return;
   standby = s;
   svg.classList.toggle("standby", s);
-  clockG.setAttribute("transform", s ? "translate(0 42)" : "");
+  clockG.style.transform = s ? STANDBY_SHIFT : LIVE_POS;
   if (s) {
     lastData = null;
     errMsg = "";
@@ -640,22 +664,31 @@ function render() {
       : { state: "nodata" };
     r.g.setAttribute("class", "room " + res.state);
     layout(r, res);
-    if (res.state === "free" || res.state === "soon")
-      avail.push({ r: r, res: res });
+    avail.push({ r: r, res: res });
   });
   renderList(avail, !!fresh);
   errEl.textContent = fresh || standby ? "" : errMsg;
 }
 
+let lastClock = "",
+  lastDate = "";
 function tick() {
   const now = new Date(nowMs());
-  clockEl.textContent = fmt(now);
-  dateEl.textContent = now.toLocaleDateString("en-GB", {
+  const c = fmt(now);
+  if (c !== lastClock) {
+    lastClock = c;
+    clockEl.textContent = c;
+  }
+  const d = now.toLocaleDateString("en-GB", {
     timeZone: TZ,
     weekday: "long",
     day: "numeric",
     month: "long",
   });
+  if (d !== lastDate) {
+    lastDate = d;
+    dateEl.textContent = d;
+  }
 }
 
 // fetch + JSON with a hard timeout. AbortController is optional (missing on old engines).
@@ -725,10 +758,15 @@ applyMode();
   .catch(() => {})
   .then(() => {
     placeClock();
-    buildLegend();
     render();
   });
 setInterval(tick, 1000);
 setInterval(applyMode, 10 * 1000);
 setInterval(render, 10 * 1000); // re-evaluate states between fetches
 setInterval(load, REFRESH_MS);
+setInterval(
+  function () {
+    if (standby && new Date().getHours() === 23) location.reload();
+  },
+  30 * 60 * 1000
+);
