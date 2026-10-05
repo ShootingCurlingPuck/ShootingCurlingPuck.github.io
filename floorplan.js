@@ -76,6 +76,8 @@ const PSG_LOGO = {
   w: 192,
   h: 96,
 };
+// Feedback QR: size = the code itself, pad = light border around it (the QR "quiet zone")
+const QR = { file: "assets/feedback-qr.svg", size: 130, pad: 10 };
 // Pixel clusters: file + corner. sx/sy mirror the cluster so it hugs its corner.
 const PIXEL_CELL = 54;
 const PIXEL_GRID = { x: 286.3, y: 439.46, w: 932.9 }; // where the 3 x 2 squares sit inside the 1500 canvas
@@ -497,6 +499,34 @@ const veil = el(
 // Final z-order: ...map, logos, list, veil, clock
 svg.insertBefore(listG, clockG);
 svg.insertBefore(veil, clockG);
+
+// Feedback QR in the free strip right of the floor. Appended last so the standby veil doesn't dim it.
+const QR_TILE = QR.size + QR.pad * 2;
+const QR_X = Math.round((FLOOR.x + FLOOR.w + VR) / 2 - QR_TILE / 2);
+const QR_Y = FLOOR.y + FLOOR.h - QR_TILE - 40;
+el(
+  "rect",
+  {
+    x: QR_X,
+    y: QR_Y,
+    width: QR_TILE,
+    height: QR_TILE,
+    rx: 8,
+    class: "floor",
+  },
+  svg
+);
+img(QR.file, QR_X + QR.pad, QR_Y + QR.pad, QR.size, QR.size);
+label(
+  "Feedback",
+  {
+    x: QR_X + QR_TILE / 2,
+    y: QR_Y - 30,
+    class: "h",
+    "font-size": 26,
+  },
+  svg
+);
 
 const listName = (a) => (a.r.booth ? "Booth " : "") + a.r.name;
 
