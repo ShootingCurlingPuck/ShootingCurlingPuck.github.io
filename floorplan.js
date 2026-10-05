@@ -58,7 +58,7 @@ Object.keys(P).forEach((k) =>
 const ORMIT_LOGO = {
   file: "assets/logo-black.svg",
   x: 695,
-  y: 980,
+  y: 1000,
   w: 300,
   h: 60,
 };
@@ -78,6 +78,8 @@ const PSG_LOGO = {
 };
 // Feedback QR: size = the code itself, pad = light border around it (the QR "quiet zone")
 const QR = { file: "assets/feedback-qr.svg", size: 130, pad: 10 };
+// "You" marker: the TV hangs on the Oval's south wall, facing the open area
+const YOU = { x: 764, y: 920, dot: 8, ring: 17 };
 // Pixel clusters: file + corner. sx/sy mirror the cluster so it hugs its corner.
 const PIXEL_CELL = 54;
 const PIXEL_GRID = { x: 286.3, y: 439.46, w: 932.9 }; // where the 3 x 2 squares sit inside the 1500 canvas
@@ -420,6 +422,33 @@ el(
 img(ORMIT_LOGO.file, ORMIT_LOGO.x, ORMIT_LOGO.y, ORMIT_LOGO.w, ORMIT_LOGO.h);
 img(VOLVE_LOGO.file, VOLVE_LOGO.x, VOLVE_LOGO.y, VOLVE_LOGO.w, VOLVE_LOGO.h);
 img(PSG_LOGO.file, PSG_LOGO.x, PSG_LOGO.y, PSG_LOGO.w, PSG_LOGO.h);
+
+// "You" marker, between the Oval and the Ormit logo
+const youG = el("g", {}, svg);
+el(
+  "circle",
+  {
+    cx: YOU.x,
+    cy: YOU.y,
+    r: YOU.ring,
+    fill: "none",
+    stroke: P.t2,
+    "stroke-width": 4,
+  },
+  youG
+);
+el("circle", { cx: YOU.x, cy: YOU.y, r: YOU.dot, fill: P.ink }, youG);
+label(
+  "You",
+  {
+    x: YOU.x - YOU.ring - 3,
+    y: YOU.y + YOU.ring + 12,
+    class: "h lname",
+    "font-size": 20,
+    opacity: 0.6,
+  },
+  youG
+);
 
 // Centre of the ring: clock frame, clock, date, error line
 const clockG = el("g", { class: "clockg" }, svg);
