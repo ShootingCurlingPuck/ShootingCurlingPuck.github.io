@@ -269,7 +269,7 @@ const CLOCK_FRAME = {
   h: 185,
 };
 const FRAME_C = { x: CX + 5.5, y: CLOCK_FRAME.y + 87.5 };
-const DATE_Y = CORE.y + 292,
+const DATE_Y = CORE.y + 256,
   ERR_Y = CORE.y + 344;
 const GROUP_MID_Y = (CLOCK_FRAME.y + DATE_Y + 13) / 2; // vertical middle of frame + date
 const STANDBY_SCALE = 2;
@@ -449,6 +449,31 @@ label(
   { x: LIST.x, y: LIST.head, class: "h lhead", "font-size": 52 },
   listG
 );
+
+// Live indicator, same line as the "Rooms" heading. Fixed left edge, text grows right.
+const LIVE_SIZE = 22;
+const LIVE_X = CORE.x + CORE.w / 2 - 48;
+const LIVE_Y = DATE_Y + 24;
+const liveG = el("g", {}, clockG);
+const liveChip = roomShape(
+  liveG,
+  LIVE_X,
+  LIVE_Y + LIVE_SIZE / 2,
+  LIVE_SIZE,
+  LIVE_SIZE,
+  "nodata"
+);
+const liveTxt = label(
+  "",
+  {
+    x: LIVE_X + LIVE_SIZE + 12,
+    y: LIVE_Y + LIVE_SIZE,
+    class: "lname",
+    "font-size": 24,
+  },
+  liveG
+);
+
 const listRows = [];
 for (let i = 0; i < LIST.rows; i++) {
   const y = LIST.top + i * LIST.rowH;
@@ -529,6 +554,18 @@ label(
 );
 
 const listName = (a) => (a.r.booth ? "Booth " : "") + a.r.name;
+
+function renderLive(fresh) {
+  liveG.style.display = standby ? "none" : "";
+  if (standby) return;
+  const late = fresh && Date.now() - lastOk > 2 * REFRESH_MS; // missed refreshes, not yet stale
+  const state = !fresh ? "nodata" : late ? "soon" : "free";
+  liveChip.setAttribute(
+    "class",
+    "room " + state + (state === "free" ? " pulse" : "")
+  );
+  liveTxt.textContent = !fresh ? "Offline" : late ? "Delayed" : "Live";
+}
 
 function renderList(rows, fresh) {
   listG.setAttribute("opacity", fresh || standby ? 1 : 0.3); // feed dead: whole panel fades
@@ -697,6 +734,7 @@ function render() {
     avail.push({ r: r, res: res });
   });
   renderList(avail, !!fresh);
+  renderLive(fresh);
   errEl.textContent = fresh || standby ? "" : errMsg;
 }
 
