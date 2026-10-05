@@ -216,7 +216,15 @@ const ANCHORS = [
   { x: 750, y: 566, w: 70, h: 174, dashed: true }, // storage
   { x: 880, y: 566, w: 211, h: 174, label: "🚻", f: 48, dashed: true }, // toilets
   { x: 1460, y: 566, w: 113, h: 174, label: "⬆️⬇️", f: 32, dashed: true }, // elevators
-  { x: 650, y: 1302, w: 155, h: 198, label: "🔇", f: 48, dashed: true }, // focus room
+  {
+    x: 650,
+    y: 1302,
+    w: 155,
+    h: 198,
+    label: "Focus",
+    f: NAME_F,
+    dashed: true,
+  }, // focus room
   { x: 1167, y: 1100, w: 493, h: 178, dashed: true }, // Volve
   { x: 1721, y: 1027, w: 169, h: 120, dashed: true }, // Pauwels room
   { x: 880, y: 1180, w: 133, h: 102, label: "🚻", f: 48, dashed: true }, // toilets
