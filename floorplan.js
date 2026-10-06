@@ -361,7 +361,7 @@ PIXEL_CORNERS.forEach((c) => {
     },
     svg
   );
-  const f = el("g", { filter: "url(#white30)" }, g);
+  const f = el("g", {}, g);
   img(c.file, -PIXEL_GRID.x * k, -PIXEL_GRID.y * k, 1500 * k, 1500 * k, f);
 });
 
