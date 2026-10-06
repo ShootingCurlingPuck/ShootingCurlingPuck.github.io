@@ -869,9 +869,107 @@ setInterval(tick, 1000);
 setInterval(applyMode, 10 * 1000);
 setInterval(render, 10 * 1000); // re-evaluate states between fetches
 setInterval(load, REFRESH_MS);
+
+// ===== AUTO-REFRESH: self-contained. Delete this block (and the loader in index.html) to remove. =====
+const BOOT = Date.now();
+const WAKE_GAP_MS = 30 * 1000; // a 1 s tick arriving this late means the TV slept
+const MIN_LIFE_MS = 30 * 1000; // ignore wake signals this soon after load (prevents reload loops)
+const UPDATE_MS = 5 * 60 * 1000; // how often to check for new code
+const SYNC_MS = 10 * 60 * 1000; // how often to sync the clock
+const WATCH = ["floorplan.js", "floorplan.css"];
+
+// 1. Cache-busted reload: a new URL each time, keeps ?mode= and friends.
+function hardReload() {
+  const u = new URL(location.href);
+  u.searchParams.set("r", Date.now());
+  location.replace(u.toString());
+}
+// Only reload once the network answers, otherwise the TV could land on an error page.
+let reloading = false;
+function safeReload() {
+  if (reloading) return;
+  reloading = true;
+  (function attempt() {
+    fetch("index.html?v=" + Date.now(), { cache: "no-store" })
+      .then(function (res) {
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        hardReload();
+      })
+      .catch(function () {
+        setTimeout(attempt, 5000);
+      });
+  })();
+}
+
+// 2. Wake handler: resume events plus a late-tick check.
+function onWake() {
+  if (Date.now() - BOOT > MIN_LIFE_MS) safeReload();
+}
+document.addEventListener("visibilitychange", function () {
+  if (!document.hidden) onWake();
+});
+window.addEventListener("pageshow", function (e) {
+  if (e.persisted) onWake(); // pageshow also fires on every normal load
+});
+window.addEventListener("focus", onWake);
+window.addEventListener("online", onWake);
+let lastBeat = Date.now();
+setInterval(function () {
+  const n = Date.now();
+  if (n - lastBeat > WAKE_GAP_MS) onWake();
+  lastBeat = n;
+}, 1000);
+
+// 3. Update check: reload when the served JS/CSS differs from what we saw at start.
+let baseline = null;
+function snapshot() {
+  return Promise.all(
+    WATCH.map(function (f) {
+      return fetch(f + "?v=" + Date.now(), { cache: "no-store" }).then(
+        function (res) {
+          if (!res.ok) throw new Error("HTTP " + res.status);
+          return res.text();
+        }
+      );
+    })
+  ).then(function (parts) {
+    return parts.join("\n/*--*/\n");
+  });
+}
+function checkUpdate() {
+  snapshot()
+    .then(function (s) {
+      if (baseline === null) baseline = s;
+      else if (s !== baseline) safeReload();
+    })
+    .catch(function () {});
+}
+
+// 4. Clock sync from our own server's Date header (works in standby too).
+function syncClock() {
+  fetch("index.html?v=" + Date.now(), { method: "HEAD", cache: "no-store" })
+    .then(function (res) {
+      const h = res.headers.get("Date");
+      if (!h) return;
+      const off = new Date(h).getTime() - Date.now();
+      clockOffset = Math.abs(off) > 5000 ? off : 0; // ignore normal jitter
+      tick();
+      applyMode();
+    })
+    .catch(function () {});
+}
+
+syncClock();
+checkUpdate();
+setInterval(syncClock, SYNC_MS);
+setInterval(checkUpdate, UPDATE_MS);
+
+// Nightly reload in standby, now on Brussels time (the old check used device time)
 setInterval(
   function () {
-    if (standby && new Date().getHours() === 23) location.reload();
+    const h = parseInt(fmt(new Date(nowMs())), 10) % 24;
+    if (standby && h === 23 && Date.now() - BOOT > 45 * 60 * 1000) safeReload();
   },
   30 * 60 * 1000
 );
+// ===== END AUTO-REFRESH =====

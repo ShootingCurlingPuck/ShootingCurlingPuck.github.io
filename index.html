@@ -4,7 +4,13 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Room Status</title>
-    <link href="floorplan.css" rel="stylesheet" />
+    <script>
+      // Loader: unique URL per load, so cached CSS/JS can never be reused
+      var v = Date.now();
+      document.write(
+        '<link href="floorplan.css?v=' + v + '" rel="stylesheet" />'
+      );
+    </script>
   </head>
   <body>
     <svg
@@ -22,6 +28,8 @@
       </defs>
     </svg>
 
-    <script src="floorplan.js"></script>
+    <script>
+      document.write('<script src="floorplan.js?v=' + v + '"><\/script>');
+    </script>
   </body>
 </html>
