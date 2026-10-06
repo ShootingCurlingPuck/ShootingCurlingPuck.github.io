@@ -41,13 +41,13 @@ const NAME_DX = CHIP + 14; // gap between chip and name
 
 // ---- Brand palette ----
 const P = {
-  t1: "#C69C6D", // Tint I: background
-  t2: "#A25C0F", // Tint II
-  t3: "#FAFDE5", // Tint III: floor
-  t4: "#E0CDA9",
+  t1: "#CEDEFF", // Tint I: background
+  t2: "#256EFF", // Tint II
+  t3: "#FFFFFF", // Tint III: floor
+  t4: "#FFFFFF",
   red: "#C8102E", // Accent I: busy, clock
-  green: "#54987C", // Accent II: free
-  yellow: "#E1FF6F", // Marking: busy soon, highlight
+  green: "#FFEAFC", // Accent II: free
+  yellow: "#FFEAFC", // Marking: busy soon, highlight
   ink: "#000000",
 };
 Object.keys(P).forEach((k) =>
@@ -288,7 +288,7 @@ const LIVE_POS = "translate(0px, 0px) scale(1) translate(0px, 0px)";
 
 // Screen-anchored: pixel clusters hug the viewBox corners
 const PIXEL_CORNERS = [
-  { file: "assets/pxl-3.svg", x: VIEW.x + 154, y: VIEW.y + 101, sx: 1, sy: -1 },
+  { file: "assets/pxl-3.svg", x: VIEW.x + 400, y: VIEW.y + 101, sx: 1, sy: -1 },
   { file: "assets/pxl-2.svg", x: VIEW.x - 26, y: VB, sx: 1, sy: -1 },
   { file: "assets/pxl-1.svg", x: VR - 108, y: VB - 82, sx: 1, sy: 1 },
   {
@@ -361,7 +361,7 @@ PIXEL_CORNERS.forEach((c) => {
     },
     svg
   );
-  const f = el("g", { filter: "url(#white30)" }, g);
+  const f = el("g", {}, g);
   img(c.file, -PIXEL_GRID.x * k, -PIXEL_GRID.y * k, 1500 * k, 1500 * k, f);
 });
 

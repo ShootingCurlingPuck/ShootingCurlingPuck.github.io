@@ -8,14 +8,14 @@
         </clipPath>
     </defs>
     <g clip-path="url(#83ada6a9ca)">
-        <path fill="#ddff5b"
+        <path fill="#FFFFFF4D"
             d="M 908.179688 750.4375 L 1219.160156 750.4375 L 1219.160156 1061.417969 L 908.179688 1061.417969 Z M 908.179688 750.4375 "
             fill-opacity="1" fill-rule="nonzero" />
     </g>
-    <path fill="#ddff5b"
+    <path fill="#FFFFFF4D"
         d="M 286.300781 750.4375 L 597.28125 750.4375 L 597.28125 1061.417969 L 286.300781 1061.417969 Z M 286.300781 750.4375 "
         fill-opacity="1" fill-rule="nonzero" />
-    <path fill="#ddff5b"
+    <path fill="#FFFFFF4D"
         d="M 597.28125 439.457031 L 908.257812 439.457031 L 908.257812 750.4375 L 597.28125 750.4375 Z M 597.28125 439.457031 "
         fill-opacity="1" fill-rule="nonzero" />
 </svg>
