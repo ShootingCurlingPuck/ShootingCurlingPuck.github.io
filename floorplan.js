@@ -628,14 +628,23 @@ function renderList(rows, fresh) {
       fit(nm, LIST.w - NAME_DX - 110, LIST.nameF)
     );
     row.name.setAttribute("opacity", dim);
-    row.time.textContent = a.res.until
-      ? `${a.res.state === "busy" ? "busy" : "free"} until ${fmt(a.res.until)}`
-      : "";
+    row.time.textContent = timeLabel(a.res);
     row.time.setAttribute(
       "opacity",
       row.time.textContent.includes("busy") ? 0.6 : 1
     );
   });
+}
+
+const dayKey = (d) => d.toLocaleDateString("en-GB", { timeZone: TZ });
+function timeLabel(res) {
+  if (res.state === "nodata") return "";
+  const word = res.state === "busy" ? "busy" : "free";
+  const closed =
+    !res.until ||
+    dayKey(res.until) !== dayKey(new Date(nowMs())) ||
+    parseInt(fmt(res.until), 10) % 24 >= CLOSE_H;
+  return word + (closed ? " for the day" : ` until ${fmt(res.until)}`);
 }
 
 // ---- Logic ----
