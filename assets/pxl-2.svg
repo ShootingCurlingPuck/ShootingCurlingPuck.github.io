@@ -12,12 +12,12 @@
         </clipPath>
     </defs>
     <g clip-path="url(#a84eb3f110)">
-        <path fill="#FFFFFF4D"
+        <path fill="#000000"
             d="M 754.128906 746.542969 L 1063.675781 746.542969 L 1063.675781 1056.089844 L 754.128906 1056.089844 Z M 754.128906 746.542969 "
             fill-opacity="1" fill-rule="nonzero" />
     </g>
     <g clip-path="url(#17f72c168c)">
-        <path fill="#FFFFFF4D"
+        <path fill="#000000"
             d="M 444.582031 436.996094 L 754.128906 436.996094 L 754.128906 746.542969 L 444.582031 746.542969 Z M 444.582031 436.996094 "
             fill-opacity="1" fill-rule="nonzero" />
     </g>
