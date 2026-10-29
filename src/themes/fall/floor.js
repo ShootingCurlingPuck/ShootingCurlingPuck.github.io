@@ -1,12 +1,12 @@
 // The permanent forest floor along the bottom edge of the screen (which counts as the ground):
-// a leaf cover with a pile under the Booths list, a tree stump, mushrooms and acorns.
+// a leaf cover with a pile under the Booths list, and props: a tree stump, mushrooms, acorns, twigs...
 // The layout is seeded by date: stable all day, different tomorrow.
 import { TZ } from "../../config.js";
 import { QS } from "../../core/params.js";
 import { nowMs } from "../../core/time.js";
 import { use } from "../../core/svg.js";
-import { seeded, pick, mix, INK } from "../toolkit.js";
-import { HAZE } from "./settings.js";
+import { seeded, pick, mix, INK, randInt } from "../toolkit.js";
+import { HAZE, FLOOR_PROPS } from "./settings.js";
 import { LEAF_FORM_WEIGHTS, LEAF_VARIANTS, leafShape, propShape } from "./shapes.js";
 
 export function drawForestFloor(g, scene, pal) {
@@ -88,62 +88,92 @@ export function drawForestFloor(g, scene, pal) {
 
   // Props. The bottom edge of the screen is the ground: everything either stands on it or rests on
   // something that does. Leaves in front of a prop may only hide the part below its bury line.
-  const PROP_BOX = {
-    stump: { l: -54, r: 56, bury: 30 },
-    mushroom: { l: -22, r: 22, bury: 16 },
-    mushrooms: { l: -30, r: 36, bury: 16 }
+  // Standing props: extent left/right of the base, bury line and scale (sprite units)
+  const STANDING = {
+    stump: { l: -54, r: 56, bury: 30, s: 1 },
+    mushroom: { l: -22, r: 22, bury: 16, s: 1.2 },
+    mushrooms: { l: -30, r: 36, bury: 16, s: 1.2 },
+    chanterelles: { l: -24, r: 24, bury: 10, s: 1.4 },
+    mycena: { l: -22, r: 22, bury: 12, s: 1.3 },
+    puffball: { l: -16, r: 16, bury: 8, s: 1.3 },
   };
-  const taken = []; // x positions already used by props
-  const free = (x, w) => taken.every((t) => Math.abs(t - x) > w);
+  // Lying props: half width and half height as they lie, and the offset from sprite origin to middle
+  const LYING = {
+    acorn: { w: 24, h: 14, dy: 20 },
+    conker: { w: 14, h: 13, dy: 0 },
+    husk: { w: 28, h: 14, dy: 0 },
+    twig: { w: 44, h: 7, dy: 0 },
+    "branch-leaf": { w: 54, h: 9, dy: 0 },
+  };
+  const taken = []; // [x, half width] of every placed prop
+  const free = (x, w) => taken.every((t) => Math.abs(t[0] - x) > t[1] + w);
 
-  // Rooted: base just below the screen edge, a few small leaves in front of the foot
-  function rooted(name, x, s) {
-    const b = PROP_BOX[name],
+  // Standing: base just below the screen edge, a few small leaves in front of the foot
+  function standing(name, x) {
+    const b = STANDING[name],
+      s = b.s,
       yb = VB + 3;
-    if (hits(x, yb - 40 * s, (b.r - b.l) * s * 0.5)) return;
+    if (hits(x, yb - 40 * s, (b.r - b.l) * s * 0.5)) return false;
     const P = { name: name, key: yb, l: x + b.l * s, r: x + b.r * s, line: yb - b.bury * s };
     P.tf = `translate(${Math.round(x)} ${yb}) scale(${s})`;
     props.push(P);
-    taken.push(x);
+    taken.push([x, ((b.r - b.l) * s) / 2]);
     for (let i = 0; i < 3; i++)
       leaf(x + b.l * s + rnd() * (b.r - b.l) * s, VB - 3 - rnd() * 6, 0.7, { key: P.key + 1, edge: true });
+    return true;
   }
-  // Lying acorns (some without cap, a few loose caps): on the ground among the bottom leaves, or nestled into the pile.
-  // Two leaves right behind and under each one hold it up.
-  function lyingAcorn(x) {
-    const s = 1.1 + rnd() * 0.25;
-    const kind = pick(rnd, [["acorn", 6], ["nut", 2], ["cap", 1]]);
-    // acorns and nuts lie on their side; a loose cap lies bowl-up or dome-up, never on its edge
-    const deg =
-      kind === "cap"
-        ? (rnd() < 0.5 ? 0 : 180) + (rnd() - 0.5) * 24
-        : (rnd() < 0.5 ? -1 : 1) * (65 + rnd() * 50) + (rnd() < 0.2 ? 180 : 0);
-    const half = kind === "cap" ? 8 * s : 14 * s; // half its height as it lies
-    const pile = inPile(x);
-    const cy = pile ? Math.min(VB - half - 2, surface(x) + 40 + rnd() * 30) : VB - half - rnd() * 4;
-    if (hits(x, cy, 26 * s)) return;
-    const P = { name: kind, key: cy + 1, l: x - 24 * s, r: x + 24 * s, line: cy + 4 * s, cx: x, cy: cy, rad: half };
-    P.tf = `translate(${Math.round(x)} ${Math.round(cy)}) rotate(${Math.round(deg)}) scale(${s.toFixed(2)}) translate(0 ${kind === "cap" ? 14 : 20})`;
+  // Lying: on the ground among the bottom leaves, or nestled into the pile, with leaves right behind
+  // and under it to hold it up
+  function lying(kind, x) {
+    const b = LYING[kind];
+    let name = kind,
+      s = 1.1 + rnd() * 0.25,
+      deg;
+    if (kind === "acorn") name = pick(rnd, [["acorn", 6], ["nut", 2], ["cap", 1]]);
+    if (kind === "twig") name = rnd() < 0.5 ? "twig" : "twig-fork";
+    if (name === "cap") deg = (rnd() < 0.5 ? 0 : 180) + (rnd() - 0.5) * 24; // bowl-up or dome-up
+    else if (kind === "acorn") deg = (rnd() < 0.5 ? -1 : 1) * (65 + rnd() * 50) + (rnd() < 0.2 ? 180 : 0); // on its side
+    else if (kind === "conker") deg = rnd() * 360; // round: any way up
+    else if (kind === "husk") deg = (rnd() - 0.5) * 30; // open side up
+    else {
+      deg = (rnd() < 0.5 ? 0 : 180) + (rnd() - 0.5) * 24; // twigs lie roughly flat, either way round
+      s = 0.9 + rnd() * 0.3;
+    }
+    const half = (name === "cap" ? 8 : b.h) * s,
+      hw = b.w * s;
+    const cy = inPile(x) ? Math.min(VB - half - 2, surface(x) + 40 + rnd() * 30) : VB - half - rnd() * 4;
+    if (hits(x, cy, Math.max(hw, 26 * s))) return false;
+    const P = { name: name, key: cy + 1, l: x - hw, r: x + hw, line: cy + half * 0.3, cx: x, cy: cy, rad: half };
+    P.tf = `translate(${Math.round(x)} ${Math.round(cy)}) rotate(${Math.round(deg)}) scale(${s.toFixed(2)}) translate(0 ${name === "cap" ? 14 : b.dy})`;
     props.push(P);
-    taken.push(x);
-    leaf(x - 10 + rnd() * 20, cy + 14, 0.8, { key: cy - 1, edge: true });
-    leaf(x - 10 + rnd() * 20, cy + 18, 0.8, { key: cy - 1, edge: true });
+    taken.push([x, hw]);
+    const n = hw > 30 ? 3 : 2; // long twigs get more support
+    for (let i = 0; i < n; i++) leaf(x - hw * 0.6 + rnd() * hw * 1.2, cy + 14 + rnd() * 4, 0.8, { key: cy - 1, edge: true });
+    return true;
   }
 
+  // Today's selection: a random count of each kind (see FLOOR_PROPS), placed in random order
   const stumpX = Math.max(VIEW.x + 80, Math.min(listR - 70, peakX + (rnd() < 0.5 ? -1 : 1) * (110 + rnd() * 60)));
-  rooted("stump", stumpX, 1);
-  for (let i = 0, n = 0; i < 40 && n < 4; i++) {
-    const x = VIEW.x + 80 + rnd() * (VR - VIEW.x - 160);
-    if (!free(x, 140)) continue;
-    rooted(pick(rnd, [["mushroom", 2], ["mushrooms", 1]]), x, 1.2);
-    n++;
+  if (randInt(rnd, FLOOR_PROPS.stump[0], FLOOR_PROPS.stump[1])) standing("stump", stumpX);
+  const todo = [];
+  Object.keys(FLOOR_PROPS).forEach((k) => {
+    if (k === "stump") return;
+    for (let n = randInt(rnd, FLOOR_PROPS[k][0], FLOOR_PROPS[k][1]); n > 0; n--) todo.push(k);
+  });
+  for (let i = todo.length - 1; i > 0; i--) {
+    const j = Math.floor(rnd() * (i + 1)),
+      t = todo[i];
+    todo[i] = todo[j];
+    todo[j] = t;
   }
-  for (let i = 0, n = 0; i < 80 && n < 9; i++) {
-    const x = VIEW.x + 30 + rnd() * (VR - VIEW.x - 60);
-    if (!free(x, 60)) continue;
-    lyingAcorn(x);
-    n++;
-  }
+  todo.forEach((kind) => {
+    const w = STANDING[kind] ? ((STANDING[kind].r - STANDING[kind].l) * STANDING[kind].s) / 2 : LYING[kind].w * 1.2;
+    for (let tries = 0; tries < 30; tries++) {
+      const x = VIEW.x + 40 + rnd() * (VR - VIEW.x - 80);
+      if (!free(x, w + 20)) continue;
+      if (STANDING[kind] ? standing(kind, x) : lying(kind, x)) break;
+    }
+  });
 
   // A leaf in front of a prop may not reach above that prop's bury line
   const unburied = leaves.filter((L) =>

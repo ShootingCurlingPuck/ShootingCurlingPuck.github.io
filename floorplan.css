@@ -129,3 +129,11 @@ text {
 .ltime {
   text-anchor: end;
 }
+
+/* Theme items attached to the plan (e.g. fungi on tiles) fade with it in standby */
+.theme .on-plan {
+  transition: opacity 1.2s ease-in-out;
+}
+#plan.standby .theme .on-plan {
+  opacity: 0.12;
+}

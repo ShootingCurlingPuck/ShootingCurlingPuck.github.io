@@ -1,4 +1,4 @@
-// Autumn: a forest floor along the bottom edge, and leaves falling, landing and catching on ledges
+// Autumn: a forest floor along the bottom edge, fungi on the tiles, a visiting spider, and falling leaves
 import { el } from "../../core/svg.js";
 import { QS } from "../../core/params.js";
 import { debugLog } from "../../core/debug.js";
@@ -6,13 +6,25 @@ import { FALL_PALS } from "./settings.js";
 import { loadShapes } from "./shapes.js";
 import { drawForestFloor } from "./floor.js";
 import { startFalling } from "./falling.js";
+import { drawLedgeFungi } from "./ledges.js";
+import { startSpider } from "./spider.js";
 
 export default function startFall(scene) {
   const pal = FALL_PALS[QS.get("fallpal")] || FALL_PALS.a;
+  // Each part runs on its own, so a bug in one doesn't take the others down
+  const part = (name, fn) => {
+    try {
+      return fn();
+    } catch (e) {
+      debugLog("Autumn " + name + ": " + e);
+    }
+  };
   loadShapes()
     .then(() => {
-      const surface = drawForestFloor(el("g", { class: "ground" }, scene.layer), scene, pal);
-      startFalling(scene.layer, scene, pal, surface);
+      const surface = part("floor", () => drawForestFloor(el("g", { class: "ground" }, scene.layer), scene, pal));
+      part("ledge fungi", () => drawLedgeFungi(scene.layer, scene));
+      part("spider", () => startSpider(scene.layer, scene));
+      part("falling", () => startFalling(scene.layer, scene, pal, surface || (() => scene.geo.VB - 20)));
     })
-    .catch((e) => debugLog("Autumn theme: " + e));
+    .catch((e) => debugLog("Autumn shapes: " + e));
 }

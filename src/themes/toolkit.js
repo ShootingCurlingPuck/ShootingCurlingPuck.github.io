@@ -74,3 +74,23 @@ export function roughCopies(id, n, amounts) {
     defs.appendChild(copy);
   }
 }
+
+// One shared animation loop for all moving theme parts, at about 30 fps (plenty, and kind to the TV).
+// fn(now, dt): now in ms (performance clock), dt in seconds since the last frame, capped at 0.1 so
+// nothing jumps after the TV slept.
+const frameFns = [];
+let last = 0;
+function frame(now) {
+  requestAnimationFrame(frame);
+  if (now - last < 30) return;
+  const dt = last ? Math.min(0.1, (now - last) / 1000) : 0;
+  last = now;
+  frameFns.forEach((fn) => fn(now, dt));
+}
+export function everyFrame(fn) {
+  if (!frameFns.length) requestAnimationFrame(frame);
+  frameFns.push(fn);
+}
+
+// Random whole number from min to max (inclusive)
+export const randInt = (rnd, min, max) => min + Math.floor(rnd() * (max - min + 1));
