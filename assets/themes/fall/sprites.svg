@@ -1,0 +1,118 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 300" width="820" height="300">
+  <!--
+  Autumn sprite sheet. Loaded once by src/themes/toolkit.js, which copies every element whose id starts
+  with "leaf-" or "prop-" into the page. Edit freely in Inkscape/Figma, but keep the ids.
+  Leaves (leaf-*): tip up, stem down, about 80 units long, centred on 0,0. Keep the three paths with
+  class stem / body / veins, and leave fill and stroke UNSET on them: every leaf gets its own colour
+  from the code (fill = leaf colour, stroke = a darker shade of it). The code also makes a few slightly
+  irregular copies of each leaf, so they don't all look identical.
+  Props (prop-*): fixed colours. 0,0 is where they touch the ground (acorn, nut and cap rotate around
+  their middle, which the code knows about).
+  The outer groups with transform="translate(...)" and the yellow preview colours are only there so the
+  shapes sit side by side in an editor; the page ignores them.
+-->
+  <g transform="translate(60 60)" fill="#CFA24F" stroke="#5E4207">
+    <g id="leaf-maple">
+      <path class="stem" d="M0,20L1,40" fill="none" stroke-width="3" stroke-linecap="round"/>
+      <path class="body" d="M0,-42L7,-27L15,-31L13,-17L29,-25L26,-12L40,-11L31,-1L36,8L18,6L14,16L5,11L2,21L-2,21L-5,11L-14,16L-18,6L-36,8L-31,-1L-40,-11L-26,-12L-29,-25L-13,-17L-15,-31L-7,-27Z" stroke-width="2" stroke-linejoin="round"/>
+      <path class="veins" d="M0,19L0,-34M0,12L27,-17M0,12L-27,-17M0,16L24,5M0,16L-24,5" fill="none" stroke-width="1.6" stroke-opacity="0.55" stroke-linecap="round"/>
+    </g>
+  </g>
+  <g transform="translate(170 60)" fill="#CFA24F" stroke="#5E4207">
+    <g id="leaf-oak">
+      <path class="stem" d="M0,28L1,42" fill="none" stroke-width="3" stroke-linecap="round"/>
+      <path class="body" d="M0,-40Q12,-40 13,-30Q8,-24 12,-20Q23,-19 20,-9Q12,-5 16,-1Q27,2 22,12Q14,13 15,19Q16,29 4,31L-4,31Q-16,29 -15,19Q-14,13 -22,12Q-27,2 -16,-1Q-12,-5 -20,-9Q-23,-19 -12,-20Q-8,-24 -13,-30Q-12,-40 0,-40Z" stroke-width="2" stroke-linejoin="round"/>
+      <path class="veins" d="M0,29L0,-34M0,-14L10,-20M0,-14L-10,-20M0,4L13,0M0,4L-13,0" fill="none" stroke-width="1.6" stroke-opacity="0.55" stroke-linecap="round"/>
+    </g>
+  </g>
+  <g transform="translate(280 60)" fill="#CFA24F" stroke="#5E4207">
+    <g id="leaf-birch">
+      <path class="stem" d="M0,30L1,42" fill="none" stroke-width="3" stroke-linecap="round"/>
+      <path class="body" d="M0,-38C14,-30 22,-13 20,3C18,17 9,27 0,32C-9,27 -18,17 -20,3C-22,-13 -14,-30 0,-38Z" stroke-width="2" stroke-linejoin="round"/>
+      <path class="veins" d="M0,30L0,-30M0,-6L12,-16M0,-6L-12,-16M0,10L13,1M0,10L-13,1" fill="none" stroke-width="1.6" stroke-opacity="0.55" stroke-linecap="round"/>
+    </g>
+  </g>
+  <g transform="translate(60 260)">
+    <g id="prop-acorn">
+      <path d="M0,-34L2,-41" fill="none" stroke="#4A3A2E" stroke-width="3" stroke-linecap="round"/>
+      <path d="M-11,-22Q-12,-6 0,1Q12,-6 11,-22Z" fill="#C0905A" stroke="#4A3A2E" stroke-width="2" stroke-linejoin="round"/>
+      <path d="M-14,-21Q-15,-34 0,-35Q15,-34 14,-21Z" fill="#8C6A4F" stroke="#4A3A2E" stroke-width="2" stroke-linejoin="round"/>
+      <path d="M-9,-27L9,-27M-6,-31L6,-31" fill="none" stroke="#4A3A2E" stroke-opacity="0.35" stroke-width="1.5"/>
+    </g>
+  </g>
+  <g transform="translate(190 260)">
+    <g id="prop-nut">
+      <path d="M-11,-22Q-12,-6 0,1Q12,-6 11,-22Q0,-27 -11,-22Z" fill="#C0905A" stroke="#4A3A2E" stroke-width="2" stroke-linejoin="round"/>
+      <ellipse cx="0" cy="-22" rx="6" ry="2.5" fill="#8C6A4F"/>
+    </g>
+  </g>
+  <g transform="translate(320 260)">
+    <g id="prop-cap">
+      <path d="M-14,-21Q-15,-8 0,-7Q15,-8 14,-21Q0,-24 -14,-21Z" fill="#8C6A4F" stroke="#4A3A2E" stroke-width="2" stroke-linejoin="round"/>
+      <path d="M-9,-15L9,-15" fill="none" stroke="#4A3A2E" stroke-opacity="0.35" stroke-width="1.5"/>
+    </g>
+  </g>
+  <g transform="translate(450 260)">
+    <g id="prop-mushroom">
+      <g transform="translate(0 0) rotate(0) scale(1)">
+        <path d="M-5,0L-6,-19Q0,-21 6,-19L5,0Z" fill="#EFE4D2" stroke="#4A3A2E" stroke-width="2" stroke-linejoin="round"/>
+        <path d="M-21,-17Q-19,-38 0,-39Q19,-38 21,-17Q0,-13 -21,-17Z" fill="#B9675C" stroke="#4A3A2E" stroke-width="2" stroke-linejoin="round"/>
+        <circle cx="-9" cy="-27" r="3" fill="#EFE4D2"/>
+        <circle cx="5" cy="-31" r="2.5" fill="#EFE4D2"/>
+        <circle cx="12" cy="-22" r="2" fill="#EFE4D2"/>
+      </g>
+    </g>
+  </g>
+  <g transform="translate(580 260)">
+    <g id="prop-mushrooms">
+      <g transform="translate(-14 2) rotate(-10) scale(0.7)">
+        <path d="M-5,0L-6,-19Q0,-21 6,-19L5,0Z" fill="#EFE4D2" stroke="#4A3A2E" stroke-width="2" stroke-linejoin="round"/>
+        <path d="M-21,-17Q-19,-38 0,-39Q19,-38 21,-17Q0,-13 -21,-17Z" fill="#B9675C" stroke="#4A3A2E" stroke-width="2" stroke-linejoin="round"/>
+        <circle cx="-9" cy="-27" r="3" fill="#EFE4D2"/>
+        <circle cx="5" cy="-31" r="2.5" fill="#EFE4D2"/>
+        <circle cx="12" cy="-22" r="2" fill="#EFE4D2"/>
+      </g>
+      <g transform="translate(6 0) rotate(4) scale(1)">
+        <path d="M-5,0L-6,-19Q0,-21 6,-19L5,0Z" fill="#EFE4D2" stroke="#4A3A2E" stroke-width="2" stroke-linejoin="round"/>
+        <path d="M-21,-17Q-19,-38 0,-39Q19,-38 21,-17Q0,-13 -21,-17Z" fill="#B9675C" stroke="#4A3A2E" stroke-width="2" stroke-linejoin="round"/>
+        <circle cx="-9" cy="-27" r="3" fill="#EFE4D2"/>
+        <circle cx="5" cy="-31" r="2.5" fill="#EFE4D2"/>
+        <circle cx="12" cy="-22" r="2" fill="#EFE4D2"/>
+      </g>
+      <g transform="translate(24 3) rotate(12) scale(0.55)">
+        <path d="M-5,0L-6,-19Q0,-21 6,-19L5,0Z" fill="#EFE4D2" stroke="#4A3A2E" stroke-width="2" stroke-linejoin="round"/>
+        <path d="M-21,-17Q-19,-38 0,-39Q19,-38 21,-17Q0,-13 -21,-17Z" fill="#B9675C" stroke="#4A3A2E" stroke-width="2" stroke-linejoin="round"/>
+        <circle cx="-9" cy="-27" r="3" fill="#EFE4D2"/>
+        <circle cx="5" cy="-31" r="2.5" fill="#EFE4D2"/>
+        <circle cx="12" cy="-22" r="2" fill="#EFE4D2"/>
+      </g>
+    </g>
+  </g>
+  <g transform="translate(710 260)">
+    <g id="prop-stump">
+      <path d="M-52,0Q-40,-6 -36,-22L-34,-86Q0,-80 34,-86L36,-22Q40,-6 54,0Q0,7 -52,0Z" fill="#8C6A4F" stroke="#4A3A2E" stroke-width="2" stroke-linejoin="round"/>
+      <path d="M-20,-70L-22,-12M2,-74L1,-30M18,-68L21,-20M-30,-40L-28,-20" fill="none" stroke="#4A3A2E" stroke-opacity="0.35" stroke-width="2" stroke-linecap="round"/>
+      <ellipse cx="0" cy="-86" rx="34" ry="10" fill="#D2B48C" stroke="#4A3A2E" stroke-width="2" stroke-linejoin="round"/>
+      <ellipse cx="1" cy="-86" rx="22" ry="6" fill="none" stroke="#8C6A4F" stroke-opacity="0.6" stroke-width="1.5"/>
+      <ellipse cx="2" cy="-86" rx="10" ry="3" fill="none" stroke="#8C6A4F" stroke-opacity="0.6" stroke-width="1.5"/>
+      <path d="M34,-74Q56,-77 57,-67Q49,-61 35,-64Z" fill="#EBDDC3" stroke="#4A3A2E" stroke-width="2" stroke-linejoin="round"/>
+      <path d="M38,-69Q48,-71 52,-67" fill="none" stroke="#B98E5E" stroke-width="1.5" stroke-linecap="round"/>
+      <path d="M35,-59Q50,-61 50,-54Q45,-50 35,-52Z" fill="#E2CDA6" stroke="#4A3A2E" stroke-width="2" stroke-linejoin="round"/>
+      <path d="M-35,-50Q-47,-52 -47,-45Q-43,-42 -35,-43Z" fill="#E2CDA6" stroke="#4A3A2E" stroke-width="2" stroke-linejoin="round"/>
+      <g transform="translate(-12 -84) rotate(-8) scale(0.55)">
+        <path d="M-5,0L-6,-19Q0,-21 6,-19L5,0Z" fill="#EFE4D2" stroke="#4A3A2E" stroke-width="2" stroke-linejoin="round"/>
+        <path d="M-21,-17Q-19,-38 0,-39Q19,-38 21,-17Q0,-13 -21,-17Z" fill="#B9675C" stroke="#4A3A2E" stroke-width="2" stroke-linejoin="round"/>
+        <circle cx="-9" cy="-27" r="3" fill="#EFE4D2"/>
+        <circle cx="5" cy="-31" r="2.5" fill="#EFE4D2"/>
+        <circle cx="12" cy="-22" r="2" fill="#EFE4D2"/>
+      </g>
+      <g transform="translate(4 -86) rotate(5) scale(0.8)">
+        <path d="M-5,0L-6,-19Q0,-21 6,-19L5,0Z" fill="#EFE4D2" stroke="#4A3A2E" stroke-width="2" stroke-linejoin="round"/>
+        <path d="M-21,-17Q-19,-38 0,-39Q19,-38 21,-17Q0,-13 -21,-17Z" fill="#B9675C" stroke="#4A3A2E" stroke-width="2" stroke-linejoin="round"/>
+        <circle cx="-9" cy="-27" r="3" fill="#EFE4D2"/>
+        <circle cx="5" cy="-31" r="2.5" fill="#EFE4D2"/>
+        <circle cx="12" cy="-22" r="2" fill="#EFE4D2"/>
+      </g>
+    </g>
+  </g>
+</svg>
