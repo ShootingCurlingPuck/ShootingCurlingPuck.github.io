@@ -41,12 +41,14 @@ export const WIND = {
 };
 
 // ----- Animation performance (see core/perf.js) -----
-// Animations run at about `target` fps. Below `low` the detail level drops by `down` per second,
-// above `high` it climbs back by `up` per second (slower, so it doesn't seesaw), never below `min`.
+// Below `low` fps the detail level drops by `down` per second, above `high` it climbs back by `up`
+// per second (slower, so it doesn't seesaw), never below `min`. `target`: the fps assumed at start.
+// Tuned on the TV (Oct 2026): it tops out around 25 fps with almost nothing moving and runs at about
+// 23 at full detail without visible stutter, so only a real slowdown (under 20) cuts detail.
 export const PERF = {
-  target: 30,
-  low: 24,
-  high: 27,
+  target: 25,
+  low: 20,
+  high: 23,
   down: 0.25,
   up: 0.05,
   min: 0.2,
