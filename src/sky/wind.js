@@ -1,16 +1,18 @@
-// Wind for themes, from the live weather: a smooth strength (0 = still air, 1 = stormy) and gusts.
-// The strength eases towards the weather over about a minute, so updates never jump.
-// Direction is always right to left on screen (leaves cross the whole screen from the tree).
-// Gusts happen in calm weather too, just rarely and gently; the windier, the more often and stronger.
+// Wind, from the live weather, for everything (whatever the season): a smooth strength (0 = still
+// air, 1 = stormy) and gusts. The strength eases towards the weather over about a minute, so updates
+// never jump. Gusts happen in calm weather too, just rarely and gently; the windier, the more often
+// and stronger. What reacts to it (leaves, snow, ...) is up to the theme.
+// Direction on screen: WIND.direction by default (-1: right to left), a theme may change it.
 // Test switches: ?wind=<km/h> (pretend wind speed), ?gusts=often (a gust every few seconds)
 import { QS } from "../core/params.js";
 import { WIND } from "../config.js";
-import { everyFrame } from "./toolkit.js";
+import { everyFrame } from "../core/anim.js";
 
 export function startWind(scene) {
   const forcedKmh = parseFloat(QS.get("wind"));
   const often = QS.get("gusts") === "often";
   const listeners = [];
+  let dir = WIND.direction;
 
   // km/h to strength, along the points in WIND.levels
   function strengthFor(kmh) {
@@ -71,5 +73,8 @@ export function startWind(scene) {
     },
     // fn(amp) at the start of every gust
     onGust: (fn) => listeners.push(fn),
+    // which way it blows on screen: -1 right to left, 1 left to right
+    dir: () => dir,
+    setDirection: (d) => (dir = d < 0 ? -1 : 1),
   };
 }

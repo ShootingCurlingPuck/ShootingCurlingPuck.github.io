@@ -36,6 +36,7 @@ import { load, roomState } from "./data/schedule.js";
 import { applyMode } from "./system/mode.js";
 import { startAutoRefresh, safeReload } from "./system/autorefresh.js";
 import { startTheme, themeChanged } from "./themes/index.js";
+import { startSky } from "./sky/index.js";
 import { startWeather, getWeather } from "./weather/weather.js";
 
 // ---- Drawing ----
@@ -52,20 +53,22 @@ const veil = el(
   { x: L.VIEW.x, y: L.VIEW.y, width: L.VIEW.w, height: L.VIEW.h, class: "dim" },
   svg,
 );
-// Final z-order: ...map, logos, list, [theme], veil, clock, error line; then two layers on top:
-// [theme front] (everything that moves), then the QR code
+// Final z-order: ...map, logos, list, [theme], veil, clock, error line; then three layers on top:
+// moving things ([theme front], then the weather's rain), clouds, then the QR code
 svg.insertBefore(listG, clockG);
 svg.insertBefore(veil, clockG);
 // Front layer for themes, in its own drawing on top: everything that moves goes here, so the TV
 // doesn't have to redraw the whole plan for every moving leaf (see overlay() in core/svg.js)
-const frontG = el("g", { class: "theme-front" }, overlay("moving"));
+const movingLayer = overlay("moving");
+const frontG = el("g", { class: "theme-front" }, movingLayer);
+const weatherG = el("g", { class: "weather-front" }, movingLayer); // rain in front of leaves
 const skyLayer = overlay("sky"); // clouds: in front of the rain, so it falls from under them
 drawQR(overlay("top")); // last, so nothing covers it
 
 // Seasonal theme. Live: above the plan and list, under the veil. Standby: above the veil.
 const themeG = el("g", { class: "theme" }, svg);
 svg.insertBefore(themeG, veil);
-startTheme({
+const scene = {
   layer: themeG,
   geo: {
     VIEW: L.VIEW,
@@ -119,7 +122,10 @@ startTheme({
   isStandby: () => !!state.standby,
   on: on, // subscribe to events: "mode" (standby), "room" (a room changed state), "weather"
   weather: getWeather, // the latest weather, or null (see weather/weather.js)
-});
+};
+// The sky (wind, clouds, rain) runs whatever the theme, and before it: themes get it as scene.fx
+scene.fx = startSky(Object.assign({}, scene, { front: weatherG }));
+startTheme(scene);
 
 // ---- Updating ----
 const lastState = {}; // per room, to notice changes (sent as a "room" event, e.g. for themes)

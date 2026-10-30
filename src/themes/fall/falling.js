@@ -50,11 +50,14 @@ export function startFalling(layer, scene, pal, floorSurface, tree, wind, wet) {
 
   // y: where to start; above the screen = a new leaf, which may come from the tree instead
   function spawn(y) {
-    // From the top: mostly over the side away from the tree, further right the windier it is
-    // (they get carried left)
+    // From the top: mostly over the side away from the tree, and further upwind the windier it
+    // is (they get carried downwind)
     const side = tree ? 0.7 : 1;
     const shift = 0.3 * strength();
-    let x0 = VIEW.x + VIEW.w * (shift + Math.random() * side * (1 - shift)),
+    // 0..1 across the screen; wind to the left: start further right, and the other way round
+    const u =
+      (wind && wind.dir() > 0 ? 0 : shift) + Math.random() * side * (1 - shift);
+    let x0 = VIEW.x + VIEW.w * u,
       vx = (Math.random() - 0.5) * 10,
       s = 0.6 + Math.random() * 0.5,
       fromTree = false;
@@ -160,7 +163,8 @@ export function startFalling(layer, scene, pal, floorSurface, tree, wind, wet) {
     const r = wet ? wet() : 0;
     const sway = 1 - FALLING.wet.sway * r;
     const gust = wind ? wind.gust() : 0;
-    const drift = -(FALLING.wind.drift * k + FALLING.wind.gustDrift * gust); // leftward
+    const dir = wind ? wind.dir() : -1;
+    const drift = dir * (FALLING.wind.drift * k + FALLING.wind.gustDrift * gust); // downwind
     nextSpawn -= dt;
     if (nextSpawn <= 0 && flying.length < scaled(mode.max)) {
       spawn(VIEW.y - 60);

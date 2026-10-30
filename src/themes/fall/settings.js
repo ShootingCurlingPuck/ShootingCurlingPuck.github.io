@@ -34,7 +34,7 @@ export const FALLING = {
   // the rest fall from above the top edge. Fewer leaves fall as the crown empties.
   fromTree: 0.75,
   breeze: [20, 65], // leftward drift of leaves from the tree, units per second
-  // What the wind (0..1, see themes/wind.js) does to them: extra leftward drift at full strength and
+  // What the wind (0..1, see sky/wind.js) does to them: extra drift downwind at full strength and
   // at a full gust (units per second), faster sway (+60% at full) and fall (+30%), and extra
   // leaves the crown sheds at a gust (still air .. stormy)
   wind: { drift: 160, gustDrift: 140, sway: 0.6, fall: 0.3, shed: [1, 6] },

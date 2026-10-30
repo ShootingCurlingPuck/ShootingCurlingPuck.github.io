@@ -1,5 +1,5 @@
 // "Rooms" and "Booths" panel in the left margin
-import { CHIP, NAME_DX, CLOSE_H } from "../config.js";
+import { CHIP, NAME_DX, CLOSE_H, HEAD_F } from "../config.js";
 import { svg, el, label, roomShape } from "../core/svg.js";
 import { fit } from "../core/text.js";
 import { nowMs, fmt, dayKey } from "../core/time.js";
@@ -14,7 +14,7 @@ export function drawList() {
   svg.appendChild(listG);
   label(
     "Rooms",
-    { x: LIST.x, y: LIST.head, class: "h lhead", "font-size": 52 },
+    { x: LIST.x, y: LIST.head, class: "h lhead", "font-size": HEAD_F },
     listG,
   );
 }
@@ -37,7 +37,7 @@ export function drawListRows() {
   }
   label(
     "Booths",
-    { x: LIST.x, y: BOOTH_Y, class: "h lhead", "font-size": 52 },
+    { x: LIST.x, y: BOOTH_Y, class: "h lhead", "font-size": HEAD_F },
     listG,
   );
   boothCells = ROOMS.filter((r) => r.booth).map((r, i, all) => {

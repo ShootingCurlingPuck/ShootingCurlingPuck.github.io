@@ -19,7 +19,7 @@ detail level on screen), `?weather=clear|cloudy|rain|heavy|snow|fog|windy|...` (
 every 30 seconds, to see the fades),
 `?detail=0..1` (fixed animation detail instead of self-adjusting), `?wind=<km/h>` (pretend wind),
 `?gusts=often` (a gust every few seconds), `?rain=0..1` (pretend rain amount), `?clouds=0..1` (pretend cloud cover),
-`?skip=tree,floor,fungi,spider,owl,wind,falling,clouds,rain` (leave out parts of the autumn theme), `?icons=text|emoji`. Autumn also has `?seed=<any text>` (another day's layout), `?fallpal=a|b`, `?haze=0`,
+`?skip=wind,clouds,precip,tree,floor,fungi,spider,owl,falling` (leave out parts of the weather or the autumn theme), `?icons=text|emoji`. Autumn also has `?seed=<any text>` (another day's layout), `?fallpal=a|b`, `?haze=0`,
 `?spider=now|tree` (a visit every 15-25 s; `tree`: in standby always from a branch).
 
 ## When the TV crashes
@@ -50,18 +50,25 @@ version within about 5 minutes and reloads by itself.
 | `src/floorplan.json` | Room and anchor coordinates |
 | `src/layout.js` | Geometry derived from the two above |
 | `src/main.js` | Wires everything together, in drawing order |
-| `src/core/` | Helpers: SVG, text measuring, time, shared state, events, debug, animation detail level |
+| `src/core/` | Helpers: SVG, text measuring, time, shared state, events, debug, the animation loop and detail level |
+| `src/sky/` | Weather effects for every season: wind, clouds, rain (`index.js` starts and connects them) |
 | `src/plan/` | The floor plan, clock, list panel, QR code |
 | `src/data/` | Fetching bookings and working out room states |
 | `src/system/` | Standby mode, auto-update and reload |
 | `src/weather/` | Live weather for the office (Open-Meteo), as a simple description themes can use |
-| `src/themes/` | Seasonal themes: `index.js` picks one by date, `toolkit.js` has shared helpers, `wind.js`, `clouds.js` and `rain.js` turn the weather into wind, clouds and rain |
+| `src/themes/` | Seasonal themes: `index.js` picks one by date, `toolkit.js` has shared helpers |
 | `src/themes/fall/settings.js` | Autumn tuning knobs (palettes, falling, ledges) |
 | `assets/themes/fall/sprites.svg` | Autumn shapes (leaves, acorns, mushrooms, stump), editable in any SVG editor |
 | `floorplan.css` | Styles |
 
 Themes get a "scene" from `main.js`: their own layer, the geometry, spots to keep clear (QR code,
 logos) and whether it's standby. They don't touch the plan itself.
+
+The weather effects (`src/sky/`) are not part of a theme: they run in every season, also with
+`?theme=none`, and start before the theme. A theme gets them as `scene.fx` (see `src/sky/index.js`)
+and can react to them (autumn's leaves in the wind) or change how they look: where the ground is,
+the wind's direction on screen, the clouds' colours, or a whole different kind of precipitation
+(`fx.precip.setKind`, e.g. snowflakes instead of rain streaks). It never changes what the weather is.
 
 ## Weather data
 
@@ -77,7 +84,7 @@ falling leaves, fewer resting ones, fewer raindrops). Thresholds are `PERF` in `
 `?debug=1` shows the live numbers.
 
 The TV redraws a whole drawing whenever anything in it moves, so everything that moves (falling leaves,
-owl, spider, rain) lives in its own transparent drawing on top of the plan (`overlay()` in
+owl, spider, and the weather's rain in front of them) lives in its own transparent drawing on top of the plan (`overlay()` in
 `src/core/svg.js`, the theme's `scene.front`), and the QR code in another one above that. The plan and
 the static scene (tree, floor, fungi) are then drawn once. New moving parts go in `scene.front`.
 Clouds have a layer of their own (`scene.sky`), between the moving layer and the QR code: they're

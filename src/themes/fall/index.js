@@ -1,5 +1,5 @@
 // Autumn: a tree on the right, a forest floor along the bottom edge, fungi on the tiles,
-// a visiting spider, falling leaves carried by the wind, and rain
+// a visiting spider, and falling leaves carried by the wind (the weather itself is in sky/)
 import { el } from "../../core/svg.js";
 import { QS } from "../../core/params.js";
 import { debugLog, crumb } from "../../core/debug.js";
@@ -11,9 +11,6 @@ import { drawLedgeFungi } from "./ledges.js";
 import { startSpider } from "./spider.js";
 import { drawTree } from "./tree.js";
 import { startOwl } from "./owl.js";
-import { startWind } from "../wind.js";
-import { startRain } from "../rain.js";
-import { startClouds } from "../clouds.js";
 
 export default function startFall(scene) {
   const pal = FALL_PALS[QS.get("fallpal")] || FALL_PALS.a;
@@ -45,7 +42,10 @@ export default function startFall(scene) {
       const moving = scene.front || scene.layer;
       const spider = part("spider", () => startSpider(moving, scene, tree));
       part("owl", () => tree && startOwl(moving, scene, tree, spider));
-      const wind = part("wind", () => startWind(scene));
+      // The weather (scene.fx, see sky/index.js) is general; autumn reacts to it and tells it
+      // where its ground is: rain lands on the leaf cover, up to 25 units into it
+      const fx = scene.fx || {};
+      if (fx.precip && surface) fx.precip.setGround(surface, 25);
       part("falling", () =>
         startFalling(
           moving,
@@ -53,27 +53,9 @@ export default function startFall(scene) {
           pal,
           surface || (() => scene.geo.VB - 20),
           tree || null,
-          wind || null,
-          () => (rain ? rain.amount() : 0),
+          fx.wind || null,
+          () => (fx.precip ? fx.precip.amount() : 0),
         ),
-      );
-      // Clouds in their own layer (scene.sky); they hang down at most halfway to the first text:
-      // the room names at the top of the plan and the "Rooms" heading (font size 52)
-      const g = scene.geo;
-      const textTop = Math.min(
-        g.LIST.head - 52 * 0.6,
-        ...g.ROOMS.filter((r) => !r.booth).map((r) => r.y + r.h / 2 - g.NAME_F * 0.6),
-      );
-      const clouds = scene.sky
-        ? part("clouds", () =>
-            startClouds(scene.sky, scene, wind || null, textTop, () =>
-              rain ? rain.amount() : 0,
-            ),
-          )
-        : null;
-      // Rain last: in front of the falling leaves, from under the clouds
-      const rain = part("rain", () =>
-        startRain(moving, scene, wind || null, surface, clouds || null),
       );
     })
     .catch((e) => debugLog("Autumn shapes: " + e));
