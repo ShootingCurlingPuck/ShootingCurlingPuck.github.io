@@ -150,7 +150,7 @@ export function startOwl(layer, scene, tree, spider) {
         x: bx + 18 * OWL.scale,
         y: by - 62 * OWL.scale,
         class: "h",
-        "font-size": 14,
+        "font-size": 24,
         fill: "#5E3B25",
       },
       zs,
