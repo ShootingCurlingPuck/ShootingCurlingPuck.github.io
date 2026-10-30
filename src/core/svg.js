@@ -4,6 +4,19 @@ export const XLINK = "http://www.w3.org/1999/xlink";
 export const svg = document.getElementById("plan");
 export const defs = svg.querySelector("defs");
 
+// A transparent drawing stacked on top of the plan, with the same coordinates. The TV redraws a
+// whole drawing whenever anything in it changes, so things that move get their own: then the plan
+// and the static scene are drawn once and kept, and only this (mostly empty) layer is redrawn.
+// Call after the plan's viewBox is set; stacks in call order.
+export function overlay(name) {
+  const o = document.createElementNS(SVGNS, "svg");
+  o.setAttribute("class", "overlay " + name);
+  o.setAttribute("viewBox", svg.getAttribute("viewBox"));
+  o.setAttribute("preserveAspectRatio", svg.getAttribute("preserveAspectRatio"));
+  document.body.appendChild(o);
+  return o;
+}
+
 export function el(tag, attrs, parent) {
   const n = document.createElementNS(SVGNS, tag);
   for (const k in attrs) n.setAttribute(k, attrs[k]);

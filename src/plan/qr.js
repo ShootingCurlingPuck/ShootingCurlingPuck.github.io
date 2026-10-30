@@ -1,10 +1,11 @@
 // Feedback QR in the free strip right of the floor, with the weather credit under it.
 // Drawn last so nothing (veil, theme) covers it.
 import { QR, WEATHER_CREDIT, CREDIT_F } from "../config.js";
-import { svg, el, label, img } from "../core/svg.js";
+import { el, label, img } from "../core/svg.js";
 import { QR_X, QR_Y, QR_TILE } from "../layout.js";
 
-export function drawQR() {
+// parent: the layer to draw in (the top one, so nothing covers it)
+export function drawQR(parent) {
   el(
     "rect",
     {
@@ -15,13 +16,13 @@ export function drawQR() {
       rx: 8,
       class: "floor",
     },
-    svg,
+    parent,
   );
-  img(QR.file, QR_X + QR.pad, QR_Y + QR.pad, QR.size, QR.size);
+  img(QR.file, QR_X + QR.pad, QR_Y + QR.pad, QR.size, QR.size, parent);
   label(
     "Feedback",
     { x: QR_X + QR_TILE / 2, y: QR_Y - 30, class: "h", "font-size": 26 },
-    svg,
+    parent,
   );
   // Weather data credit, small, just under the tile
   WEATHER_CREDIT.forEach((line, i) =>
@@ -34,7 +35,7 @@ export function drawQR() {
         fill: "#000",
         "fill-opacity": 0.75,
       },
-      svg,
+      parent,
     ),
   );
 }

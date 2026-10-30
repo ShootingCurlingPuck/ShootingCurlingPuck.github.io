@@ -25,6 +25,20 @@ body {
   width: 100vw;
   height: 100vh;
 }
+/* Layers on top of the plan (see overlay() in src/core/svg.js). will-change gives each its own
+   layer in the browser, so redrawing one leaves the others alone */
+#plan,
+.overlay {
+  will-change: transform;
+}
+.overlay {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+}
 text {
   text-anchor: middle;
   dominant-baseline: central;

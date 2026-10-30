@@ -5,10 +5,12 @@ export let debugLog = () => {};
 if (QS.get("debug")) {
   const box = document.createElement("div");
   box.style.cssText =
-    "position:fixed;left:0;top:0;right:0;z-index:9;padding:8px;background:#fff;color:#c00;font:20px monospace;white-space:pre-wrap";
+    "position:fixed;left:0;top:0;max-width:60vw;max-height:40vh;overflow:hidden;z-index:9;padding:6px;background:rgba(255,255,255,0.85);color:#c00;font:14px monospace;white-space:pre-wrap";
   document.body.appendChild(box);
+  // Only the latest lines, so the box never covers more than a corner of the screen
   debugLog = (m) => {
-    box.textContent += m + "\n";
+    const lines = (box.textContent + m + "\n").split("\n");
+    box.textContent = lines.slice(Math.max(0, lines.length - 25)).join("\n");
   };
   window.onerror = (m, src, line) => debugLog(m + " (line " + line + ")");
 }

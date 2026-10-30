@@ -38,12 +38,15 @@ export default function startFall(scene) {
         drawForestFloor(el("g", { class: "ground" }, scene.layer), scene, pal),
       );
       part("fungi", () => drawLedgeFungi(scene.layer, scene));
-      const spider = part("spider", () => startSpider(scene.layer, scene));
-      part("owl", () => tree && startOwl(scene.layer, scene, tree, spider));
+      // Everything that moves goes in the front layer (scene.front), which the TV can redraw on
+      // its own; the tree, floor and fungi stay in the plan's layer, drawn once
+      const moving = scene.front || scene.layer;
+      const spider = part("spider", () => startSpider(moving, scene));
+      part("owl", () => tree && startOwl(moving, scene, tree, spider));
       const wind = part("wind", () => startWind(scene));
       part("falling", () =>
         startFalling(
-          scene.front || scene.layer, // in front of the clock too
+          moving,
           scene,
           pal,
           surface || (() => scene.geo.VB - 20),
