@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en-GB">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Room Status diagnostics</title>
+    <!--
+      Diagnostics for the TV: plain old JavaScript (no modern syntax), so it runs on any browser.
+      Shows the browser version, the crash trail of the last run of the real page, and then tries to
+      load the real page's code here, printing any error with its exact position.
+      diag.html?app=0 skips loading the app (if loading it crashes the TV).
+    -->
+    <style>
+      body { margin: 0; background: #fff; color: #000; font: 22px monospace; }
+      #out { white-space: pre-wrap; padding: 12px; position: relative; z-index: 9; background: #fff; }
+      #plan { display: block; width: 100vw; height: 50vh; }
+      .err { color: #c00; }
+    </style>
+  </head>
+  <body>
+    <div id="out"></div>
+    <svg id="plan" viewBox="166 299 2206 1241" preserveAspectRatio="xMidYMid meet"><defs></defs></svg>
+    <script>
+      var out = document.getElementById("out");
+      function say(text, isErr) {
+        var line = document.createElement("div");
+        if (isErr) line.className = "err";
+        line.appendChild(document.createTextNode(text));
+        out.appendChild(line);
+      }
+      say("Browser: " + navigator.userAgent);
+      var m = navigator.userAgent.match(/Chrom(e|ium)\/(\d+)/);
+      say("Chromium version: " + (m ? m[2] : "not found in the browser name"));
+      say("Screen: " + screen.width + " x " + screen.height + ", window: " + window.innerWidth + " x " + window.innerHeight + ", pixel ratio: " + (window.devicePixelRatio || 1));
+      say("Page address: " + location.href);
+      var trail = null;
+      try { trail = localStorage.getItem("room-status-trail"); } catch (e) { say("Storage not available: " + e, true); }
+      if (trail) {
+        try { say("Last run of the room screen got to:\n  " + JSON.parse(trail).join("\n  ")); }
+        catch (e) { say("Saved trail unreadable: " + trail); }
+      } else say("No crash trail saved (the room screen's code never ran here, or storage is off).");
+
+      window.onerror = function (msg, src, line, col) {
+        say("ERROR: " + msg + "\n  in " + src + " line " + line + ", column " + col, true);
+      };
+      if (location.search.indexOf("app=0") < 0) {
+        say("Loading the app's code now (dist/app.js)...");
+        var s = document.createElement("script");
+        s.src = "dist/app.js?v=" + Date.now();
+        s.onload = function () { say("dist/app.js loaded and ran its first steps (errors, if any, are above/below)."); };
+        s.onerror = function () { say("dist/app.js could not be downloaded.", true); };
+        document.body.appendChild(s);
+      }
+    </script>
+  </body>
+</html>
