@@ -16,7 +16,8 @@ npm run dev        # http://localhost:8000, rebuilds on every save
 
 Useful URL switches: `?mode=live|standby`, `?theme=fall|winter|none`, `?debug=1` (errors, weather, fps and
 detail level on screen), `?weather=clear|cloudy|rain|heavy|snow|fog|windy|...` (pretend weather),
-`?detail=0..1` (fixed animation detail instead of self-adjusting),
+`?detail=0..1` (fixed animation detail instead of self-adjusting), `?wind=<km/h>` (pretend wind),
+`?gusts=often` (a gust every few seconds),
 `?icons=text|emoji`. Autumn also has `?seed=<any text>` (another day's layout), `?fallpal=a|b`, `?haze=0`.
 
 ## Publishing
@@ -37,7 +38,7 @@ version within about 5 minutes and reloads by itself.
 | `src/data/` | Fetching bookings and working out room states |
 | `src/system/` | Standby mode, auto-update and reload |
 | `src/weather/` | Live weather for the office (Open-Meteo), as a simple description themes can use |
-| `src/themes/` | Seasonal themes: `index.js` picks one by date, `toolkit.js` has shared helpers |
+| `src/themes/` | Seasonal themes: `index.js` picks one by date, `toolkit.js` has shared helpers, `wind.js` turns the weather into wind |
 | `src/themes/fall/settings.js` | Autumn tuning knobs (palettes, falling, ledges) |
 | `assets/themes/fall/sprites.svg` | Autumn shapes (leaves, acorns, mushrooms, stump), editable in any SVG editor |
 | `floorplan.css` | Styles |

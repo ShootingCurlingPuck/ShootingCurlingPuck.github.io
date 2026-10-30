@@ -1,5 +1,5 @@
 // Autumn: a tree on the right, a forest floor along the bottom edge, fungi on the tiles,
-// a visiting spider, and falling leaves
+// a visiting spider, and falling leaves carried by the wind
 import { el } from "../../core/svg.js";
 import { QS } from "../../core/params.js";
 import { debugLog } from "../../core/debug.js";
@@ -11,6 +11,7 @@ import { drawLedgeFungi } from "./ledges.js";
 import { startSpider } from "./spider.js";
 import { drawTree } from "./tree.js";
 import { startOwl } from "./owl.js";
+import { startWind } from "../wind.js";
 
 export default function startFall(scene) {
   const pal = FALL_PALS[QS.get("fallpal")] || FALL_PALS.a;
@@ -32,6 +33,7 @@ export default function startFall(scene) {
       part("ledge fungi", () => drawLedgeFungi(scene.layer, scene));
       const spider = part("spider", () => startSpider(scene.layer, scene));
       part("owl", () => tree && startOwl(scene.layer, scene, tree, spider));
+      const wind = part("wind", () => startWind(scene));
       part("falling", () =>
         startFalling(
           scene.front || scene.layer, // in front of the clock too
@@ -39,6 +41,7 @@ export default function startFall(scene) {
           pal,
           surface || (() => scene.geo.VB - 20),
           tree || null,
+          wind || null,
         ),
       );
     })

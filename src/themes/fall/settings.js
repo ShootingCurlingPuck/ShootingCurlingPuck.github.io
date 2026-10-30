@@ -34,6 +34,14 @@ export const FALLING = {
   // the rest fall from above the top edge. Fewer leaves fall as the crown empties.
   fromTree: 0.75,
   breeze: [20, 65], // leftward drift of leaves from the tree, units per second
+  // What the wind (0..1, see themes/wind.js) does to them: extra leftward drift at full strength and
+  // at a full gust (units per second), faster sway (+60% at full) and fall (+30%), and extra
+  // leaves the crown sheds at a gust (still air .. stormy)
+  wind: { drift: 160, gustDrift: 140, sway: 0.6, fall: 0.3, shed: [1, 6] },
+  // Gusts stir the ground: leaves hop up and swirl, then settle again. Hop height in still air and
+  // when stormy (units), how many leaves get kicked up out of the pile (still .. stormy), and how
+  // far around the gust's spot landed leaves get lifted too
+  swirl: { calm: [60, 120], stormy: [180, 320], kick: [4, 10], reach: 160 },
 };
 
 // Things on the forest floor: how many of each, per day (a random number in the range)

@@ -20,6 +20,25 @@ export const WEATHER_STALE_MS = 90 * 60 * 1000; // older than this: treat as "no
 // Credit shown under the QR code (required by the data licence), one entry per line
 export const WEATHER_CREDIT = ["Weather by", "Open-Meteo.com"];
 export const CREDIT_F = 15; // its font size
+// Wind (see themes/wind.js). levels: [km/h, strength] points: still under 10 km/h, a breeze to 25,
+// windy to 45, stormy beyond. noData: strength when there's no weather (a light breeze).
+// ease: seconds to follow a weather change. Gusts: every gustEvery seconds in still air (much more
+// often when windy), rising in gustRise and fading over gustFade seconds.
+export const WIND = {
+  levels: [
+    [0, 0],
+    [10, 0.15],
+    [25, 0.45],
+    [45, 0.8],
+    [65, 1],
+  ],
+  noData: 0.1,
+  ease: 40,
+  gustEvery: [60, 150],
+  gustRise: 0.6,
+  gustFade: 2.5,
+  standbyBoost: 1.3,
+};
 
 // ----- Animation performance (see core/perf.js) -----
 // Animations run at about `target` fps. Below `low` the detail level drops by `down` per second,
