@@ -1,7 +1,7 @@
 // Room status screen: builds the page in drawing order, then keeps it up to date.
 // Written as ES modules; esbuild bundles them into dist/app.js for the TV (old Chromium 56),
 // so modern syntax is fine here. Drawing order = z-order, so the order below matters.
-import "./core/debug.js"; // first, so it catches errors from everything else
+import { crumb } from "./core/debug.js"; // first, so it catches errors from everything else
 import {
   REFRESH_MS,
   STALE_MS,
@@ -44,6 +44,7 @@ drawClock(); // clock group + error line
 drawList(); // "Rooms" heading
 drawLive(); // live indicator inside the clock group
 drawListRows(); // list rows and booths
+crumb("plan drawn");
 
 // Standby veil: dims everything except the clock group, which sits above it
 const veil = el(

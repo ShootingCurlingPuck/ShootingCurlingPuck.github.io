@@ -18,7 +18,14 @@ Useful URL switches: `?mode=live|standby`, `?theme=fall|winter|none`, `?debug=1`
 detail level on screen), `?weather=clear|cloudy|rain|heavy|snow|fog|windy|...` (pretend weather),
 `?detail=0..1` (fixed animation detail instead of self-adjusting), `?wind=<km/h>` (pretend wind),
 `?gusts=often` (a gust every few seconds),
-`?icons=text|emoji`. Autumn also has `?seed=<any text>` (another day's layout), `?fallpal=a|b`, `?haze=0`.
+`?skip=tree,floor,fungi,spider,owl,wind,falling` (leave out parts of the autumn theme), `?icons=text|emoji`. Autumn also has `?seed=<any text>` (another day's layout), `?fallpal=a|b`, `?haze=0`.
+
+## When the TV crashes
+
+A crashed page can't show errors, so the page saves a trail of milestones in the browser's storage as it
+runs (startup steps, each theme part, then a heartbeat every 15 s, later every minute), always. Open
+the page with `?debug=1` afterwards: it shows how far the previous run got. Leave parts out with `?skip=`
+to find the one the TV can't handle.
 
 ## Publishing
 

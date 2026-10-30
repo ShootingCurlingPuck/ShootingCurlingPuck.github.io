@@ -1,6 +1,7 @@
 // Shared helpers for seasonal themes: seeded randomness, colours, and the sprite sheet loader.
 import { defs } from "../core/svg.js";
 import { measure } from "../core/perf.js";
+import { crumb } from "../core/debug.js";
 export { detail, scaled } from "../core/perf.js"; // so theme parts find everything here
 
 export const INK = "#000000"; // outline base colour (same as the brand ink)
@@ -94,6 +95,7 @@ function frame(now) {
   requestAnimationFrame(frame);
   if (now - last < 30) return;
   if (last) measure(now - last);
+  else crumb("first animation frame");
   const dt = last ? Math.min(0.1, (now - last) / 1000) : 0;
   last = now;
   frameFns.forEach((fn) => fn(now, dt));
