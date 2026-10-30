@@ -1,0 +1,194 @@
+{
+  "_readme": "Coordinates come straight from Floorplan.xml. booth = big single letter, no time line. Anchors are non-bookable spaces (dashed); f is the label size, omitted = room-name size.",
+  "rooms": [
+    {
+      "email": "bootha@ormittalent.be",
+      "name": "A",
+      "x": 650,
+      "y": 533,
+      "w": 53,
+      "h": 80,
+      "booth": true
+    },
+    {
+      "email": "boothb@ormittalent.be",
+      "name": "B",
+      "x": 880,
+      "y": 1278,
+      "w": 53,
+      "h": 62,
+      "booth": true
+    },
+    {
+      "email": "boothc@ormittalent.be",
+      "name": "C",
+      "x": 880,
+      "y": 1340,
+      "w": 53,
+      "h": 62,
+      "booth": true
+    },
+    {
+      "email": "boothd@ormittalent.be",
+      "name": "D",
+      "x": 1717,
+      "y": 965,
+      "w": 53,
+      "h": 62,
+      "booth": true
+    },
+    {
+      "email": "theboard@ormittalent.be",
+      "name": "Board",
+      "x": 1500,
+      "y": 740,
+      "w": 160,
+      "h": 240
+    },
+    {
+      "email": "developmentlab@ormittalent.be",
+      "name": "Development Lab",
+      "x": 1091,
+      "y": 566,
+      "w": 369,
+      "h": 174
+    },
+    {
+      "email": "thegrowthhub@ormittalent.be",
+      "name": "Growth Hub",
+      "x": 650,
+      "y": 339,
+      "w": 361,
+      "h": 161
+    },
+    {
+      "email": "thehive@ormittalent.be",
+      "name": "Hive",
+      "x": 933,
+      "y": 1278,
+      "w": 113,
+      "h": 102
+    },
+    {
+      "email": "thejungle@ormittalent.be",
+      "name": "Jungle",
+      "x": 1500,
+      "y": 980,
+      "w": 123,
+      "h": 120
+    },
+    {
+      "email": "thenest@ormittalent.be",
+      "name": "Nest",
+      "x": 1443,
+      "y": 1340,
+      "w": 123,
+      "h": 160
+    },
+    {
+      "email": "theoasis@ormittalent.be",
+      "name": "Oasis",
+      "x": 1320,
+      "y": 1340,
+      "w": 123,
+      "h": 160
+    },
+    {
+      "email": "theoval@ormittalent.be",
+      "name": "Oval",
+      "x": 650,
+      "y": 740,
+      "w": 170,
+      "h": 120
+    },
+    {
+      "email": "thepause@ormittalent.be",
+      "name": "Pause",
+      "x": 650,
+      "y": 613,
+      "w": 100,
+      "h": 127
+    },
+    {
+      "email": "theretreat@ormittalent.be",
+      "name": "Retreat",
+      "x": 1770,
+      "y": 900,
+      "w": 120,
+      "h": 127
+    },
+    {
+      "email": "thestudio@ormittalent.be",
+      "name": "Studio",
+      "x": 1770,
+      "y": 740,
+      "w": 120,
+      "h": 160
+    }
+  ],
+  "anchors": [
+    {
+      "x": 750,
+      "y": 566,
+      "w": 70,
+      "h": 174,
+      "dashed": true,
+      "note": "storage"
+    },
+    {
+      "x": 880,
+      "y": 566,
+      "w": 211,
+      "h": 174,
+      "label": "🚻",
+      "f": 48,
+      "dashed": true,
+      "note": "toilets"
+    },
+    {
+      "x": 1460,
+      "y": 566,
+      "w": 113,
+      "h": 174,
+      "label": "⬆️⬇️",
+      "f": 32,
+      "dashed": true,
+      "note": "elevators"
+    },
+    {
+      "x": 650,
+      "y": 1302,
+      "w": 155,
+      "h": 198,
+      "label": "Focus",
+      "dashed": true,
+      "note": "focus room"
+    },
+    {
+      "x": 1167,
+      "y": 1100,
+      "w": 493,
+      "h": 178,
+      "dashed": true,
+      "note": "Volve"
+    },
+    {
+      "x": 1721,
+      "y": 1027,
+      "w": 169,
+      "h": 120,
+      "dashed": true,
+      "note": "Pauwels room"
+    },
+    {
+      "x": 880,
+      "y": 1180,
+      "w": 133,
+      "h": 102,
+      "label": "🚻",
+      "f": 48,
+      "dashed": true,
+      "note": "toilets"
+    }
+  ]
+}

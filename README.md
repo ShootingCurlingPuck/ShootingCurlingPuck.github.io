@@ -1,0 +1,60 @@
+# Room status screen
+
+Floor plan of the office with live room bookings, shown on a TV in the open space.
+Room data comes from a Power Automate flow; outside office hours the screen goes to standby
+(big clock). Seasonal themes add some ambiance on top.
+
+The TV runs an old browser (Chromium 56). The code is written as modern ES modules in `src/`
+and bundled by esbuild into `dist/app.js`, compiled down for that browser.
+
+## Working on it
+
+```
+npm install        # once
+npm run dev        # http://localhost:8000, rebuilds on every save
+```
+
+Useful URL switches: `?mode=live|standby`, `?theme=fall|winter|none`, `?debug=1` (errors, weather, fps and
+detail level on screen), `?weather=clear|cloudy|rain|heavy|snow|fog|windy|...` (pretend weather),
+`?detail=0..1` (fixed animation detail instead of self-adjusting), `?wind=<km/h>` (pretend wind),
+`?gusts=often` (a gust every few seconds),
+`?icons=text|emoji`. Autumn also has `?seed=<any text>` (another day's layout), `?fallpal=a|b`, `?haze=0`.
+
+## Publishing
+
+Push to `main`. A GitHub Action builds and publishes to GitHub Pages; the TV notices the new
+version within about 5 minutes and reloads by itself.
+
+## Where things are
+
+| Path | What |
+|---|---|
+| `src/config.js` | All settings: data URL, office hours, timings, palette, asset positions |
+| `src/floorplan.json` | Room and anchor coordinates |
+| `src/layout.js` | Geometry derived from the two above |
+| `src/main.js` | Wires everything together, in drawing order |
+| `src/core/` | Helpers: SVG, text measuring, time, shared state, events, debug, animation detail level |
+| `src/plan/` | The floor plan, clock, list panel, QR code |
+| `src/data/` | Fetching bookings and working out room states |
+| `src/system/` | Standby mode, auto-update and reload |
+| `src/weather/` | Live weather for the office (Open-Meteo), as a simple description themes can use |
+| `src/themes/` | Seasonal themes: `index.js` picks one by date, `toolkit.js` has shared helpers, `wind.js` turns the weather into wind |
+| `src/themes/fall/settings.js` | Autumn tuning knobs (palettes, falling, ledges) |
+| `assets/themes/fall/sprites.svg` | Autumn shapes (leaves, acorns, mushrooms, stump), editable in any SVG editor |
+| `floorplan.css` | Styles |
+
+Themes get a "scene" from `main.js`: their own layer, the geometry, spots to keep clear (QR code,
+logos) and whether it's standby. They don't touch the plan itself.
+
+## Weather data
+
+Weather comes from [Open-Meteo](https://open-meteo.com) (free for non-commercial use, data licensed
+CC BY 4.0). The licence asks for a credit where the data is shown: it's under the QR code
+(`WEATHER_CREDIT` in `src/config.js`). The office location is `WEATHER_AT` in the same file.
+
+## Animation performance
+
+The TV is slow, so animations adjust themselves: `src/core/perf.js` watches the frame rate and lowers a
+shared detail level (0 to 1) when it drops, then slowly raises it again. Animations scale with it (fewer
+falling leaves, fewer resting ones, later also fewer raindrops). Thresholds are `PERF` in `src/config.js`;
+`?debug=1` shows the live numbers.

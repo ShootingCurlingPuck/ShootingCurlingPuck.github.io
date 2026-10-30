@@ -8,7 +8,7 @@
       // Loader: unique URL per load, so cached CSS/JS can never be reused
       var v = Date.now();
       document.write(
-        '<link href="floorplan.css?v=' + v + '" rel="stylesheet" />'
+        '<link href="floorplan.css?v=' + v + '" rel="stylesheet" />',
       );
     </script>
   </head>
@@ -29,7 +29,8 @@
     </svg>
 
     <script>
-      document.write('<script src="floorplan.js?v=' + v + '"><\/script>');
+      // Built by esbuild from src/ (npm run build / npm run dev)
+      document.write('<script src="dist/app.js?v=' + v + '"><\/script>');
     </script>
   </body>
 </html>
