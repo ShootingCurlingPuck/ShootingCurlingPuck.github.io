@@ -14,7 +14,7 @@ import {
   WEATHER_CREDIT,
   CREDIT_F,
 } from "./config.js";
-import { svg, el } from "./core/svg.js";
+import { svg, el, overlay } from "./core/svg.js";
 import { state } from "./core/state.js";
 import { nowMs } from "./core/time.js";
 import { on, emit } from "./core/events.js";
@@ -52,13 +52,14 @@ const veil = el(
   { x: L.VIEW.x, y: L.VIEW.y, width: L.VIEW.w, height: L.VIEW.h, class: "dim" },
   svg,
 );
-// Final z-order: ...map, logos, list, [theme], veil, clock, error line, [theme front], QR
+// Final z-order: ...map, logos, list, [theme], veil, clock, error line; then two layers on top:
+// [theme front] (everything that moves), then the QR code
 svg.insertBefore(listG, clockG);
 svg.insertBefore(veil, clockG);
-// Front layer for themes: above the clock group too (falling leaves pass in front of the clock),
-// still under the QR code
-const frontG = el("g", { class: "theme-front" }, svg);
-drawQR(); // last, so nothing covers it
+// Front layer for themes, in its own drawing on top: everything that moves goes here, so the TV
+// doesn't have to redraw the whole plan for every moving leaf (see overlay() in core/svg.js)
+const frontG = el("g", { class: "theme-front" }, overlay("moving"));
+drawQR(overlay("top")); // last, so nothing covers it
 
 // Seasonal theme. Live: above the plan and list, under the veil. Standby: above the veil.
 const themeG = el("g", { class: "theme" }, svg);
@@ -111,7 +112,7 @@ startTheme({
         };
       }),
     ),
-  front: frontG, // a layer above everything except the QR code, in live and standby
+  front: frontG, // above everything except the QR code, in live and standby: for things that move
   palette: P,
   isStandby: () => !!state.standby,
   on: on, // subscribe to events: "mode" (standby), "room" (a room changed state), "weather"

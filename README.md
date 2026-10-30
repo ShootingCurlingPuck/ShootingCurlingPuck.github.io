@@ -73,3 +73,8 @@ The TV is slow, so animations adjust themselves: `src/core/perf.js` watches the 
 shared detail level (0 to 1) when it drops, then slowly raises it again. Animations scale with it (fewer
 falling leaves, fewer resting ones, later also fewer raindrops). Thresholds are `PERF` in `src/config.js`;
 `?debug=1` shows the live numbers.
+
+The TV redraws a whole drawing whenever anything in it moves, so everything that moves (falling leaves,
+owl, spider, later rain) lives in its own transparent drawing on top of the plan (`overlay()` in
+`src/core/svg.js`, the theme's `scene.front`), and the QR code in another one above that. The plan and
+the static scene (tree, floor, fungi) are then drawn once. New moving parts go in `scene.front`.
