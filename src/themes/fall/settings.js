@@ -85,7 +85,11 @@ export const TREE = {
     [-84, 400],
     [-94, 240],
   ],
-  trunkWidth: [90, 38], // at the bottom, at the top
+  trunkWidth: [100, 46], // at the bottom, at the top
+  swell: { y: 930, extra: 16, spread: 160 }, // a gentle widening around the owl's hollow
+  barkLines: 9, // grooves in the bark
+  bend: 2, // how curvy the branches are
+  thickness: 1.25, // branches are drawn this much thicker than their size above
   // Main limbs: where they leave the trunk (y), direction (degrees, -90 = up,
   // -180 = left), length, thickness, and how many times they split
   limbs: [
@@ -113,4 +117,17 @@ export const TREE = {
   // leaves past 60 are still hanging on 30 November
   dropFrom: 4,
   dropTo: 64,
+};
+
+// The tawny owl in its hollow in the trunk
+export const OWL = {
+  y: 930, // height of the hollow on the trunk (see TREE.swell)
+  hollow: { rx: 34, ry: 42 },
+  scale: 1.15, // size of the owl
+  breath: 6, // seconds per breath
+  awakeEvery: [10, 20], // minutes between awake moments during the day
+  awakeFor: [30, 60], // seconds
+  lookFor: 5, // seconds it looks at a room that just changed state
+  blink: [2.5, 6], // seconds between blinks when awake (a bit slower in standby)
+  zEvery: [8, 14], // seconds between z's while it dozes
 };

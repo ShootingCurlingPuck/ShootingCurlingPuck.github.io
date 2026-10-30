@@ -10,6 +10,7 @@ import { startFalling } from "./falling.js";
 import { drawLedgeFungi } from "./ledges.js";
 import { startSpider } from "./spider.js";
 import { drawTree } from "./tree.js";
+import { startOwl } from "./owl.js";
 
 export default function startFall(scene) {
   const pal = FALL_PALS[QS.get("fallpal")] || FALL_PALS.a;
@@ -29,7 +30,8 @@ export default function startFall(scene) {
         drawForestFloor(el("g", { class: "ground" }, scene.layer), scene, pal)
       );
       part("ledge fungi", () => drawLedgeFungi(scene.layer, scene));
-      part("spider", () => startSpider(scene.layer, scene));
+      const spider = part("spider", () => startSpider(scene.layer, scene));
+      part("owl", () => tree && startOwl(scene.layer, scene, tree, spider));
       part("falling", () =>
         startFalling(
           scene.layer,

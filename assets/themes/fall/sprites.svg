@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 600" width="820" height="600">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 640" width="820" height="640">
   <!--
   Autumn sprite sheet. Loaded once by src/themes/toolkit.js, which copies every element whose id starts
   with "leaf-" or "prop-" into the page. Edit freely in Inkscape/Figma, but keep the ids.
@@ -12,6 +12,8 @@
 
   ledge-bracket: a bracket fungus growing out of a vertical edge at x = 0, pointing right
   (the code mirrors it for left edges). critter-spider: the thread attaches at 0,-16.
+  critter-owl-body and critter-owl-face: the owl in its hollow, 0,0 = bottom centre. The code adds
+  the eyes (centred at -7.5,-45 and 7.5,-45) and moves the face a little when the owl looks around.
   The outer groups with transform="translate(...)" and the yellow preview colours are only there so the
   shapes sit side by side in an editor; the page ignores them.
 -->
@@ -148,5 +150,11 @@
   </g>
   <g transform="translate(420 540)">
     <g id="critter-spider"><path d="M-6,-2Q-15,-13 -22,-5" fill="none" stroke="#3B2F2A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M-7,1Q-19,-4 -24,4" fill="none" stroke="#3B2F2A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M-7,4Q-18,5 -22,13" fill="none" stroke="#3B2F2A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M-5,7Q-13,12 -16,20" fill="none" stroke="#3B2F2A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M6,-2Q15,-13 22,-5" fill="none" stroke="#3B2F2A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M7,1Q19,-4 24,4" fill="none" stroke="#3B2F2A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M7,4Q18,5 22,13" fill="none" stroke="#3B2F2A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M5,7Q13,12 16,20" fill="none" stroke="#3B2F2A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><circle cy="-6" r="10" fill="#3B2F2A"/><ellipse cx="-3.5" cy="-10" rx="3" ry="2" fill="#FFFFFF" opacity="0.25"/><circle cy="8" r="7.5" fill="#3B2F2A"/><circle cx="-3" cy="8" r="2.8" fill="#FFFFFF"/><circle cx="3" cy="8" r="2.8" fill="#FFFFFF"/><circle cx="-2.7" cy="8.8" r="1.4" fill="#1C1512"/><circle cx="3.3" cy="8.8" r="1.4" fill="#1C1512"/><path d="M-2,12.5Q0,14 2,12.5" fill="none" stroke="#C9A57E" stroke-width="1" stroke-linecap="round"/></g>
+  </g>
+  <g transform="translate(560 600)">
+    <g id="critter-owl-body"><path d="M-22,0Q-27,-30 -20,-45Q-12,-59 0,-59Q12,-59 20,-45Q27,-30 22,0Q0,4 -22,0Z" fill="#8A5A3B" stroke="#3B2A1E" stroke-width="2" stroke-linejoin="round"/><path d="M-11,-2Q-14,-18 -9,-29Q0,-32 9,-29Q14,-18 11,-2Q0,1 -11,-2Z" fill="#C49A6C"/><path d="M-6,-21L-4,-18L-2,-21M2,-15L4,-12L6,-15M-7,-10L-5,-7L-3,-10M3,-6L5,-3L7,-6" fill="none" stroke="#8A5A3B" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M-22,-3Q-28,-24 -18,-40Q-11,-22 -13,-3Z" fill="#6E4630" stroke="#3B2A1E" stroke-width="2" stroke-linejoin="round"/><path d="M22,-3Q28,-24 18,-40Q11,-22 13,-3Z" fill="#6E4630" stroke="#3B2A1E" stroke-width="2" stroke-linejoin="round"/><path d="M-17,-35L-13,-30M-19,-26L-15,-21M17,-35L13,-30M19,-26L15,-21" fill="none" stroke="#C49A6C" stroke-opacity="0.7" stroke-width="1.4" stroke-linecap="round"/><path d="M-6,-57L-4,-53M0,-58L0,-54M6,-57L4,-53" fill="none" stroke="#5E3B25" stroke-width="1.4" stroke-linecap="round"/></g>
+  </g>
+  <g transform="translate(680 600)">
+    <g id="critter-owl-face"><path d="M0,-33Q-8,-30 -15,-37Q-21,-45 -15,-52Q-8,-57 0,-51Q8,-57 15,-52Q21,-45 15,-37Q8,-30 0,-33Z" fill="#D8B48A" stroke="#8A5A3B" stroke-width="1.6" stroke-linejoin="round"/><path d="M-2.6,-41L0,-35.5L2.6,-41Q0,-43 -2.6,-41Z" fill="#D9C27A" stroke="#5E3B25" stroke-width="1.1" stroke-linejoin="round"/></g>
   </g>
 </svg>

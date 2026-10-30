@@ -94,3 +94,10 @@ export function everyFrame(fn) {
 
 // Random whole number from min to max (inclusive)
 export const randInt = (rnd, min, max) => min + Math.floor(rnd() * (max - min + 1));
+
+// Add CSS for a theme (e.g. animations the browser runs smoothly by itself)
+export function addStyle(css) {
+  const st = document.createElement("style");
+  st.textContent = css;
+  document.head.appendChild(st);
+}

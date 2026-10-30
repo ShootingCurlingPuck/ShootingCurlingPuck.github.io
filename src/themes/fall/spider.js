@@ -145,4 +145,10 @@ export function startSpider(layer, scene) {
       draw(0);
     }
   });
+
+  // For whoever wants to watch it (the owl)
+  return {
+    out: () => phase !== "wait",
+    pos: () => ({ x: ax, y: y }),
+  };
 }

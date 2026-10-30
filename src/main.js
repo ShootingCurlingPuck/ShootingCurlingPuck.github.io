@@ -15,7 +15,7 @@ import {
 import { svg, el } from "./core/svg.js";
 import { state } from "./core/state.js";
 import { nowMs } from "./core/time.js";
-import { on } from "./core/events.js";
+import { on, emit } from "./core/events.js";
 import * as L from "./layout.js";
 import { drawStatic } from "./plan/static.js";
 import { layoutRoom } from "./plan/rooms.js";
@@ -100,9 +100,11 @@ startTheme({
     ),
   palette: P,
   isStandby: () => !!state.standby,
+  on: on, // subscribe to events: "mode" (standby), "room" (a room changed state)
 });
 
 // ---- Updating ----
+const lastState = {}; // per room, to notice changes (sent as a "room" event, e.g. for themes)
 function render() {
   const now = new Date(nowMs());
   const fresh = state.lastData && Date.now() - state.lastOk < STALE_MS;
@@ -112,6 +114,10 @@ function render() {
       ? roomState(state.lastData.get(r.email), now)
       : { state: "nodata" };
     r.g.setAttribute("class", "room " + res.state);
+    const before = lastState[r.email];
+    if (before && before !== "nodata" && res.state !== "nodata" && before !== res.state)
+      emit("room", { name: r.name, x: r.x + r.w / 2, y: r.y + r.h / 2, from: before, to: res.state });
+    lastState[r.email] = res.state;
     layoutRoom(r);
     avail.push({ r: r, res: res });
   });

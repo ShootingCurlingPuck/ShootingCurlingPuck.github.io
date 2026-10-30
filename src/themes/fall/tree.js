@@ -84,6 +84,7 @@ export function drawTree(layer, scene, pal) {
       segs.push({
         d: `M${p1[0].toFixed(1)},${p1[1].toFixed(1)}L${p2[0].toFixed(1)},${p2[1].toFixed(1)}`,
         w: w1 + (w2 - w1) * ((i + 0.5) / n),
+        y: (p1[1] + p2[1]) / 2,
       });
     }
     return pt; // to find points along the limb
@@ -94,19 +95,42 @@ export function drawTree(layer, scene, pal) {
     VR + p[0],
     p[1] === "bottom" ? VB + 40 : p[1],
   ]);
-  const tw = (i) =>
-    TREE.trunkWidth[0] +
-    (TREE.trunkWidth[1] - TREE.trunkWidth[0]) * (i / (trunk.length - 1));
-  for (let i = 0; i < trunk.length - 1; i++)
-    limb(
-      trunk[i][0],
-      trunk[i][1],
-      trunk[i + 1][0],
-      trunk[i + 1][1],
-      tw(i),
-      tw(i + 1),
-      0
-    );
+  // The trunk is one smooth shape: a centre line through the trunk points, a width that tapers
+  // upwards, a gentle swelling where the owl's hollow is, and a little natural irregularity
+  const swell = (y) =>
+    TREE.swell.extra * Math.exp(-(((y - TREE.swell.y) / TREE.swell.spread) ** 2));
+  const wobble = (y) => 3 * Math.sin(y / 47 + 1) + 2 * Math.sin(y / 113 + 2.5);
+  const centre = []; // fine samples along the centre line, bottom to top: [x, y, width]
+  for (let i = 0; i < trunk.length - 1; i++) {
+    // Catmull-Rom between trunk points, for a smooth curve
+    const p0 = trunk[Math.max(0, i - 1)],
+      p1 = trunk[i],
+      p2 = trunk[i + 1],
+      p3 = trunk[Math.min(trunk.length - 1, i + 2)];
+    for (let t = 0; t < 1; t += 0.1) {
+      const t2 = t * t,
+        t3 = t2 * t;
+      const c = (a, b, c2, d) =>
+        0.5 * (2 * b + (-a + c2) * t + (2 * a - 5 * b + 4 * c2 - d) * t2 + (-a + 3 * b - 3 * c2 + d) * t3);
+      const x = c(p0[0], p1[0], p2[0], p3[0]),
+        y = c(p0[1], p1[1], p2[1], p3[1]);
+      const k = (i + t) / (trunk.length - 1); // 0 at the bottom, 1 at the top
+      centre.push([x, y, TREE.trunkWidth[0] + (TREE.trunkWidth[1] - TREE.trunkWidth[0]) * k + swell(y) + wobble(y)]);
+    }
+  }
+  centre.push([trunk[trunk.length - 1][0], trunk[trunk.length - 1][1], TREE.trunkWidth[1]]);
+  // Centre and width of the trunk at height y (for things that live on it)
+  function trunkAt(y) {
+    for (let i = 0; i < centre.length - 1; i++) {
+      const a = centre[i],
+        b = centre[i + 1];
+      if (a[1] >= y && b[1] <= y) {
+        const t = (a[1] - y) / (a[1] - b[1] || 1);
+        return { x: a[0] + (b[0] - a[0]) * t, w: a[2] + (b[2] - a[2]) * t };
+      }
+    }
+    return { x: centre[0][0], w: centre[0][2] };
+  }
 
   // Branches: main limbs from the trunk, splitting until they're thin or reach the crown's edge
   const fine = []; // thin outer branches: where twigs and leaves grow
@@ -137,7 +161,7 @@ export function drawTree(layer, scene, pal) {
       L = len * best.k;
     const x2 = x + Math.cos(r) * L,
       y2 = y + Math.sin(r) * L;
-    const pt = limb(x, y, x2, y2, w, w * 0.7, (rnd() - 0.5) * 1.4);
+    const pt = limb(x, y, x2, y2, w, w * 0.7, (rnd() - 0.5) * TREE.bend);
     const tip = depth <= 0 || best.k < 0.7; // cut short by the edge: no further splitting
     if (w <= TREE.twigFrom)
       fine.push({ pt: pt, deg: deg, len: L, w: w, tip: tip });
@@ -221,7 +245,7 @@ export function drawTree(layer, scene, pal) {
   // Pieces of (about) the same width share one path: a few dozen elements instead of thousands
   const byWidth = {};
   segs.forEach((s) => {
-    const w = Math.max(1.5, Math.round(s.w * 2) / 2);
+    const w = Math.max(1.5, Math.round(s.w * (s.w > 3 ? TREE.thickness : 1) * 2) / 2);
     byWidth[w] = (byWidth[w] || "") + s.d;
   });
   const widths = Object.keys(byWidth).map(Number);
@@ -239,7 +263,56 @@ export function drawTree(layer, scene, pal) {
         wood
       )
     );
-  pass(TREE.barkLine, (w) => (w > 4 ? 4 : 2)); // outlines first, then fills, so joints look seamless
+  // Order: branch outlines, then the trunk, then branch fills, so branches grow seamlessly out
+  // of the trunk (their fill covers the trunk's outline where they join)
+  pass(TREE.barkLine, (w) => (w > 4 ? 4 : 2));
+  const left = [],
+    right = [];
+  centre.forEach((c, i) => {
+    const a = centre[Math.max(0, i - 1)],
+      b = centre[Math.min(centre.length - 1, i + 1)];
+    const dx = b[0] - a[0],
+      dy = b[1] - a[1],
+      len = Math.sqrt(dx * dx + dy * dy) || 1;
+    const nx = -dy / len,
+      ny = dx / len; // normal to the centre line
+    left.push(`${(c[0] - (nx * c[2]) / 2).toFixed(1)},${(c[1] - (ny * c[2]) / 2).toFixed(1)}`);
+    right.push(`${(c[0] + (nx * c[2]) / 2).toFixed(1)},${(c[1] + (ny * c[2]) / 2).toFixed(1)}`);
+  });
+  el(
+    "path",
+    {
+      d: "M" + left.join("L") + "L" + right.reverse().join("L") + "Z",
+      fill: TREE.bark,
+      stroke: TREE.barkLine,
+      "stroke-width": 2.5,
+      "stroke-linejoin": "round",
+    },
+    wood
+  );
+  // Bark: a few long grooves following the trunk, and a couple of knots (own seed, so the
+  // branches stay exactly as they are)
+  const br = seeded("fall-tree-bark");
+  for (let i = 0; i < TREE.barkLines; i++) {
+    const off = (br() - 0.5) * 0.7,
+      from = Math.floor(br() * (centre.length - 12)),
+      to = Math.min(centre.length - 1, from + 6 + Math.floor(br() * 14));
+    const pts = [];
+    for (let j = from; j <= to; j++) {
+      const c = centre[j];
+      if (Math.abs(c[1] - TREE.swell.y) < 60) break; // keep the hollow area clean
+      pts.push(`${(c[0] + off * c[2]).toFixed(1)},${c[1].toFixed(1)}`);
+    }
+    if (pts.length > 3)
+      el("path", { d: "M" + pts.join("L"), fill: "none", stroke: TREE.barkLine, "stroke-opacity": 0.35, "stroke-width": 2, "stroke-linecap": "round", "stroke-linejoin": "round" }, wood);
+  }
+  for (let i = 0; i < 2; i++) {
+    const c = centre[Math.floor(centre.length * (0.2 + br() * 0.6))];
+    if (Math.abs(c[1] - TREE.swell.y) < 90) continue;
+    const kx = c[0] + (br() - 0.5) * c[2] * 0.4;
+    el("ellipse", { cx: kx.toFixed(1), cy: c[1].toFixed(1), rx: 5, ry: 8, fill: "none", stroke: TREE.barkLine, "stroke-opacity": 0.45, "stroke-width": 2 }, wood);
+    el("ellipse", { cx: kx.toFixed(1), cy: c[1].toFixed(1), rx: 2, ry: 3.5, fill: TREE.barkLine, "fill-opacity": 0.35 }, wood);
+  }
   pass(TREE.bark, () => 0);
 
   // Leaves hang from the twigs by their stem: a few along each twig and at its end,
@@ -292,6 +365,7 @@ export function drawTree(layer, scene, pal) {
   });
 
   return {
+    trunkAt: trunkAt,
     fullness: total ? canopy.length / total : 0,
     // A random leaf in the crown: where a falling leaf starts
     spawnPoint() {
