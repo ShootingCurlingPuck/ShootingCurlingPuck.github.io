@@ -47,6 +47,9 @@ export const VOLVE_LOGO = { file: "assets/volve.svg", x: 1365, y: 1165, w: 96, h
 export const PSG_LOGO = { file: "assets/pauwels-consulting-logo.svg", x: 1650, y: 1349, w: 192, h: 96 };
 // Feedback QR: size = the code itself, pad = light border around it (the QR "quiet zone")
 export const QR = { file: "assets/feedback-qr.svg", size: 130, pad: 10 };
+// "Kitchen" label: anywhere in the kitchen (between the top-right corners of the elevator
+// zone and of the floor plan). Themes keep it clear.
+export const KITCHEN_LABEL = { x: 1650, y: 540 };
 // "You" marker: the TV hangs on the Oval's south wall, facing the open area
 export const YOU = { x: 764, y: 920, dot: 8, ring: 17 };
 // Pixel clusters: file + corner. sx/sy mirror the cluster so it hugs its corner.

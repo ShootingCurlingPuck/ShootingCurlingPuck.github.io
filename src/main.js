@@ -2,7 +2,16 @@
 // Written as ES modules; esbuild bundles them into dist/app.js for the TV (old Chromium 56),
 // so modern syntax is fine here. Drawing order = z-order, so the order below matters.
 import "./core/debug.js"; // first, so it catches errors from everything else
-import { REFRESH_MS, STALE_MS, P, ORMIT_LOGO, VOLVE_LOGO, PSG_LOGO, NAME_F } from "./config.js";
+import {
+  REFRESH_MS,
+  STALE_MS,
+  P,
+  ORMIT_LOGO,
+  VOLVE_LOGO,
+  PSG_LOGO,
+  NAME_F,
+  KITCHEN_LABEL,
+} from "./config.js";
 import { svg, el } from "./core/svg.js";
 import { state } from "./core/state.js";
 import { nowMs } from "./core/time.js";
@@ -10,7 +19,15 @@ import { on } from "./core/events.js";
 import * as L from "./layout.js";
 import { drawStatic } from "./plan/static.js";
 import { layoutRoom } from "./plan/rooms.js";
-import { clockG, errEl, drawClock, drawLive, placeClock, tick, renderLive } from "./plan/clock.js";
+import {
+  clockG,
+  errEl,
+  drawClock,
+  drawLive,
+  placeClock,
+  tick,
+  renderLive,
+} from "./plan/clock.js";
 import { listG, drawList, drawListRows, renderList } from "./plan/list.js";
 import { drawQR } from "./plan/qr.js";
 import { load, roomState } from "./data/schedule.js";
@@ -26,7 +43,11 @@ drawLive(); // live indicator inside the clock group
 drawListRows(); // list rows and booths
 
 // Standby veil: dims everything except the clock group, which sits above it
-const veil = el("rect", { x: L.VIEW.x, y: L.VIEW.y, width: L.VIEW.w, height: L.VIEW.h, class: "dim" }, svg);
+const veil = el(
+  "rect",
+  { x: L.VIEW.x, y: L.VIEW.y, width: L.VIEW.w, height: L.VIEW.h, class: "dim" },
+  svg
+);
 // Final z-order: ...map, logos, list, [theme], veil, clock, error line, QR
 svg.insertBefore(listG, clockG);
 svg.insertBefore(veil, clockG);
@@ -49,10 +70,34 @@ startTheme({
     NAME_F: NAME_F,
     BOOTH_CHIP_Y: L.BOOTH_CHIP_Y,
   },
-  // spots a theme must never cover: the QR code (with its label) and the logos
-  keepOut: [{ x: L.QR_X - 8, y: L.QR_Y - 60, w: L.QR_TILE + 16, h: L.QR_TILE + 64 }].concat(
-    [PSG_LOGO, ORMIT_LOGO, VOLVE_LOGO].map((l) => ({ x: l.x, y: l.y, w: l.w, h: l.h }))
-  ),
+  // spots a theme must never cover: the QR code (with its label), the logos, the Kitchen label,
+  keepOut: [
+    { x: L.QR_X - 8, y: L.QR_Y - 60, w: L.QR_TILE + 16, h: L.QR_TILE + 64 },
+  ]
+    .concat(
+      [PSG_LOGO, ORMIT_LOGO, VOLVE_LOGO].map((l) => ({
+        x: l.x,
+        y: l.y,
+        w: l.w,
+        h: l.h,
+      }))
+    )
+    .concat([
+      { x: KITCHEN_LABEL.x - 60, y: KITCHEN_LABEL.y - 18, w: 120, h: 36 },
+    ])
+    // and the labels/icons of the non-bookable spaces (toilets, lifts, Focus)
+    .concat(
+      L.ANCHORS.filter((a) => a.label).map((a) => {
+        const w = Math.min(a.w - 10, 90),
+          h = (a.f || NAME_F) * 1.4;
+        return {
+          x: a.x + a.w / 2 - w / 2,
+          y: a.y + a.h / 2 - h / 2,
+          w: w,
+          h: h,
+        };
+      })
+    ),
   palette: P,
   isStandby: () => !!state.standby,
 });
@@ -63,7 +108,9 @@ function render() {
   const fresh = state.lastData && Date.now() - state.lastOk < STALE_MS;
   const avail = [];
   L.ROOMS.forEach((r) => {
-    const res = fresh ? roomState(state.lastData.get(r.email), now) : { state: "nodata" };
+    const res = fresh
+      ? roomState(state.lastData.get(r.email), now)
+      : { state: "nodata" };
     r.g.setAttribute("class", "room " + res.state);
     layoutRoom(r);
     avail.push({ r: r, res: res });
@@ -89,7 +136,10 @@ tick();
 applyMode();
 // Re-measure once the brand fonts have really loaded
 (document.fonts
-  ? Promise.all([document.fonts.load("700 20px Obviously"), document.fonts.load("700 20px NeueHaas")])
+  ? Promise.all([
+      document.fonts.load("700 20px Obviously"),
+      document.fonts.load("700 20px NeueHaas"),
+    ])
   : Promise.resolve()
 )
   .catch(() => {})

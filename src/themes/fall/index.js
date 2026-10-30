@@ -1,4 +1,5 @@
-// Autumn: a forest floor along the bottom edge, fungi on the tiles, a visiting spider, and falling leaves
+// Autumn: a tree on the right, a forest floor along the bottom edge, fungi on the tiles,
+// a visiting spider, and falling leaves
 import { el } from "../../core/svg.js";
 import { QS } from "../../core/params.js";
 import { debugLog } from "../../core/debug.js";
@@ -8,6 +9,7 @@ import { drawForestFloor } from "./floor.js";
 import { startFalling } from "./falling.js";
 import { drawLedgeFungi } from "./ledges.js";
 import { startSpider } from "./spider.js";
+import { drawTree } from "./tree.js";
 
 export default function startFall(scene) {
   const pal = FALL_PALS[QS.get("fallpal")] || FALL_PALS.a;
@@ -21,10 +23,22 @@ export default function startFall(scene) {
   };
   loadShapes()
     .then(() => {
-      const surface = part("floor", () => drawForestFloor(el("g", { class: "ground" }, scene.layer), scene, pal));
+      // Tree first: the floor's leaves cover the foot of its trunk
+      const tree = part("tree", () => drawTree(scene.layer, scene, pal));
+      const surface = part("floor", () =>
+        drawForestFloor(el("g", { class: "ground" }, scene.layer), scene, pal)
+      );
       part("ledge fungi", () => drawLedgeFungi(scene.layer, scene));
       part("spider", () => startSpider(scene.layer, scene));
-      part("falling", () => startFalling(scene.layer, scene, pal, surface || (() => scene.geo.VB - 20)));
+      part("falling", () =>
+        startFalling(
+          scene.layer,
+          scene,
+          pal,
+          surface || (() => scene.geo.VB - 20),
+          tree || null
+        )
+      );
     })
     .catch((e) => debugLog("Autumn shapes: " + e));
 }
