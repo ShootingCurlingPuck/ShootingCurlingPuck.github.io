@@ -27,6 +27,14 @@ runs (startup steps, each theme part, then a heartbeat every 15 s, later every m
 the page with `?debug=1` afterwards: it shows how far the previous run got. Leave parts out with `?skip=`
 to find the one the TV can't handle.
 
+## Old browser on the TV
+
+The TV runs Chrome 56. The build makes everything it publishes readable for it: the app's code via
+esbuild, and the small inline scripts in `index.html` and `diag.html` via `scripts/build-html.cjs`
+(the deploy publishes those converted copies, not the originals). So write and format the source
+however you like; if something can't be converted, the build fails and the TV keeps the last good
+version. `diag.html` on the TV shows its browser version and any error when loading the app.
+
 ## Publishing
 
 Push to `main`. A GitHub Action builds and publishes to GitHub Pages; the TV notices the new

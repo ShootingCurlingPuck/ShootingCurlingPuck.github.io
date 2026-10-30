@@ -4,7 +4,7 @@
   "description": "Room status screen: floor plan with live room bookings, seasonal themes",
   "scripts": {
     "dev": "esbuild src/main.js --bundle --target=chrome56 --sourcemap --outfile=dist/app.js --servedir=. --serve=8000 --watch=forever",
-    "build": "esbuild src/main.js --bundle --target=chrome56 --minify --sourcemap --outfile=dist/app.js"
+    "build": "esbuild src/main.js --bundle --target=chrome56 --minify --sourcemap --outfile=dist/app.js && node scripts/build-html.cjs"
   },
   "devDependencies": {
     "esbuild": "0.28.2"
