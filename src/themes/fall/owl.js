@@ -1,6 +1,7 @@
 // A tawny owl living in a hollow in the tree's trunk.
 // Daytime: dozes (the odd nod, little z's, a sigh every few seconds), with a short awake moment every so often.
-// It wakes up to look at a room that just changed state, and watches the spider while it's out.
+// It wakes up to look at a room that just changed state, and watches the spider for a moment when
+// it shows up (then loses interest and goes back to what it was doing).
 // Standby (evenings, weekends): awake, looking around, with a glint in its eyes.
 // Test switches: ?owl=awake (frequent awake moments), ?owl=look (pretends rooms change often)
 import { QS } from "../../core/params.js";
@@ -126,6 +127,8 @@ export function startOwl(layer, scene, tree, spider) {
     nextNod = 25,
     nextZ = between(OWL.zEvery),
     wasAwake = false,
+    spiderWas = false,
+    spiderUntil = 0,
     gx = 0,
     gy = 0; // current gaze direction, -1..1
   const zList = [];
@@ -163,11 +166,13 @@ export function startOwl(layer, scene, tree, spider) {
     t += dt;
     const standby = scene.isStandby();
     const spiderOut = spider && spider.out();
+    if (spiderOut && !spiderWas) spiderUntil = t + OWL.spiderFor; // it just showed up
+    spiderWas = spiderOut;
 
     // What is it doing? Most important first.
     let target = null; // a point to look at, or null for "straight ahead"
     let awake = true;
-    if (spiderOut) target = spider.pos();
+    if (spiderOut && t < spiderUntil) target = spider.pos();
     else if (t < lookUntil) target = lookAt;
     else if (standby || t < awakeUntil) {
       // looking around: a new spot every few seconds, sometimes straight ahead
