@@ -15,10 +15,11 @@ npm run dev        # http://localhost:8000, rebuilds on every save
 ```
 
 Useful URL switches: `?mode=live|standby`, `?theme=fall|winter|none`, `?debug=1` (errors, weather, fps and
-detail level on screen), `?weather=clear|cloudy|rain|heavy|snow|fog|windy|...` (pretend weather),
+detail level on screen), `?weather=clear|cloudy|rain|heavy|snow|fog|windy|...` (pretend weather; `?weather=heavy>clear` changes it
+every 30 seconds, to see the fades),
 `?detail=0..1` (fixed animation detail instead of self-adjusting), `?wind=<km/h>` (pretend wind),
-`?gusts=often` (a gust every few seconds),
-`?skip=tree,floor,fungi,spider,owl,wind,falling` (leave out parts of the autumn theme), `?icons=text|emoji`. Autumn also has `?seed=<any text>` (another day's layout), `?fallpal=a|b`, `?haze=0`.
+`?gusts=often` (a gust every few seconds), `?rain=0..1` (pretend rain amount),
+`?skip=tree,floor,fungi,spider,owl,wind,falling,rain` (leave out parts of the autumn theme), `?icons=text|emoji`. Autumn also has `?seed=<any text>` (another day's layout), `?fallpal=a|b`, `?haze=0`.
 
 ## When the TV crashes
 
@@ -53,7 +54,7 @@ version within about 5 minutes and reloads by itself.
 | `src/data/` | Fetching bookings and working out room states |
 | `src/system/` | Standby mode, auto-update and reload |
 | `src/weather/` | Live weather for the office (Open-Meteo), as a simple description themes can use |
-| `src/themes/` | Seasonal themes: `index.js` picks one by date, `toolkit.js` has shared helpers, `wind.js` turns the weather into wind |
+| `src/themes/` | Seasonal themes: `index.js` picks one by date, `toolkit.js` has shared helpers, `wind.js` and `rain.js` turn the weather into wind and rain |
 | `src/themes/fall/settings.js` | Autumn tuning knobs (palettes, falling, ledges) |
 | `assets/themes/fall/sprites.svg` | Autumn shapes (leaves, acorns, mushrooms, stump), editable in any SVG editor |
 | `floorplan.css` | Styles |
@@ -71,10 +72,10 @@ CC BY 4.0). The licence asks for a credit where the data is shown: it's under th
 
 The TV is slow, so animations adjust themselves: `src/core/perf.js` watches the frame rate and lowers a
 shared detail level (0 to 1) when it drops, then slowly raises it again. Animations scale with it (fewer
-falling leaves, fewer resting ones, later also fewer raindrops). Thresholds are `PERF` in `src/config.js`;
+falling leaves, fewer resting ones, fewer raindrops). Thresholds are `PERF` in `src/config.js`;
 `?debug=1` shows the live numbers.
 
 The TV redraws a whole drawing whenever anything in it moves, so everything that moves (falling leaves,
-owl, spider, later rain) lives in its own transparent drawing on top of the plan (`overlay()` in
+owl, spider, rain) lives in its own transparent drawing on top of the plan (`overlay()` in
 `src/core/svg.js`, the theme's `scene.front`), and the QR code in another one above that. The plan and
 the static scene (tree, floor, fungi) are then drawn once. New moving parts go in `scene.front`.

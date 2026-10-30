@@ -41,6 +41,8 @@ export const FALLING = {
   // Gusts stir the ground: leaves hop up and swirl, then settle again. Hop height in still air and
   // when stormy (units), how many leaves get kicked up out of the pile (still .. stormy), and how
   // far around the gust's spot landed leaves get lifted too
+  // Wet leaves in heavy rain (scaled down in lighter rain): +40% falling speed, half the sway
+  wet: { fall: 0.4, sway: 0.5 },
   swirl: { calm: [60, 120], stormy: [180, 320], kick: [4, 10], reach: 160 },
 };
 
