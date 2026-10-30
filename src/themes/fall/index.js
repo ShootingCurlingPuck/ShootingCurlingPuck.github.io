@@ -42,7 +42,7 @@ export default function startFall(scene) {
       // Everything that moves goes in the front layer (scene.front), which the TV can redraw on
       // its own; the tree, floor and fungi stay in the plan's layer, drawn once
       const moving = scene.front || scene.layer;
-      const spider = part("spider", () => startSpider(moving, scene));
+      const spider = part("spider", () => startSpider(moving, scene, tree));
       part("owl", () => tree && startOwl(moving, scene, tree, spider));
       const wind = part("wind", () => startWind(scene));
       part("falling", () =>

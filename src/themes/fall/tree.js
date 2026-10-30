@@ -85,6 +85,8 @@ export function drawTree(layer, scene, pal) {
         d: `M${p1[0].toFixed(1)},${p1[1].toFixed(1)}L${p2[0].toFixed(1)},${p2[1].toFixed(1)}`,
         w: w1 + (w2 - w1) * ((i + 0.5) / n),
         y: (p1[1] + p2[1]) / 2,
+        a: p1,
+        b: p2,
       });
     }
     return pt; // to find points along the limb
@@ -425,6 +427,21 @@ export function drawTree(layer, scene, pal) {
 
   return {
     trunkAt: trunkAt,
+    // The undersides of all branches crossing x that something can hang from (at least minW
+    // thick and not too steep), as a list of y's; empty if there's no such wood there
+    branchesAt(x, minW) {
+      const ys = [];
+      segs.forEach((s) => {
+        const x1 = s.a[0],
+          x2 = s.b[0];
+        if (s.w < minW || x < Math.min(x1, x2) || x > Math.max(x1, x2)) return;
+        const dx = x2 - x1,
+          dy = s.b[1] - s.a[1];
+        if (Math.abs(dy) > Math.abs(dx) * 1.2) return; // too steep to hang from
+        ys.push(s.a[1] + (dx ? ((x - x1) / dx) * dy : 0) + s.w / 2);
+      });
+      return ys;
+    },
     fullness: total ? canopy.length / total : 0,
     // A random leaf in the crown: where a falling leaf starts
     spawnPoint() {

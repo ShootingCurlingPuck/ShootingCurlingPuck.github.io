@@ -77,6 +77,7 @@ export const SPIDER = {
   standby: { drop: [150, 520], hang: [120, 300] }, // from the top of the screen, stays longer
   speed: { down: 22, up: 32 }, // units per second
   scale: 0.75,
+  branchMinW: 5, // standby: only hangs from branches at least this thick (not from twigs)
 };
 
 // The tree on the right. Its shape is fixed; only the canopy changes with the date.
@@ -138,6 +139,7 @@ export const OWL = {
   awakeEvery: [10, 20], // minutes between awake moments during the day
   awakeFor: [30, 60], // seconds
   lookFor: 5, // seconds it looks at a room that just changed state
+  spiderFor: 8, // seconds it watches the spider when it shows up; then it loses interest
   blink: [2.5, 6], // seconds between blinks when awake (a bit slower in standby)
   zEvery: [8, 14], // seconds between z's while it dozes
 };

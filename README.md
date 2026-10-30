@@ -19,7 +19,8 @@ detail level on screen), `?weather=clear|cloudy|rain|heavy|snow|fog|windy|...` (
 every 30 seconds, to see the fades),
 `?detail=0..1` (fixed animation detail instead of self-adjusting), `?wind=<km/h>` (pretend wind),
 `?gusts=often` (a gust every few seconds), `?rain=0..1` (pretend rain amount),
-`?skip=tree,floor,fungi,spider,owl,wind,falling,rain` (leave out parts of the autumn theme), `?icons=text|emoji`. Autumn also has `?seed=<any text>` (another day's layout), `?fallpal=a|b`, `?haze=0`.
+`?skip=tree,floor,fungi,spider,owl,wind,falling,rain` (leave out parts of the autumn theme), `?icons=text|emoji`. Autumn also has `?seed=<any text>` (another day's layout), `?fallpal=a|b`, `?haze=0`,
+`?spider=now|tree` (a visit every 15-25 s; `tree`: in standby always from a branch).
 
 ## When the TV crashes
 
