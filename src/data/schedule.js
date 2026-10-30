@@ -7,7 +7,8 @@ import { debugLog } from "../core/debug.js";
 // fetch + JSON with a hard timeout. AbortController is optional (missing on old engines).
 export function fetchJson(url, ms) {
   return new Promise((resolve, reject) => {
-    const ctl = typeof AbortController === "function" ? new AbortController() : null;
+    const ctl =
+      typeof AbortController === "function" ? new AbortController() : null;
     const timer = setTimeout(() => {
       if (ctl) ctl.abort();
       reject(new Error("Timeout"));
@@ -25,7 +26,7 @@ export function fetchJson(url, ms) {
         (e) => {
           clearTimeout(timer);
           reject(e);
-        }
+        },
       );
   });
 }
@@ -43,7 +44,9 @@ export function load(done) {
       const list = data.value || (data.schedule && data.schedule.value);
       if (!Array.isArray(list)) throw new Error("Unexpected response");
       if (state.standby) return;
-      state.lastData = new Map(list.map((s) => [String(s.scheduleId).toLowerCase(), s]));
+      state.lastData = new Map(
+        list.map((s) => [String(s.scheduleId).toLowerCase(), s]),
+      );
       state.lastOk = Date.now();
       state.errMsg = "";
     })
@@ -60,7 +63,10 @@ export function roomState(sched, now) {
   if (!sched || sched.error) return { state: "nodata" };
   const iv = (sched.scheduleItems || [])
     .filter((i) => i.status !== "free")
-    .map((i) => [parseUtc(i.start.dateTime).getTime(), parseUtc(i.end.dateTime).getTime()])
+    .map((i) => [
+      parseUtc(i.start.dateTime).getTime(),
+      parseUtc(i.end.dateTime).getTime(),
+    ])
     .sort((a, b) => a[0] - b[0]);
   const merged = []; // merge touching/overlapping bookings
   for (const [s, e] of iv) {
@@ -73,5 +79,8 @@ export function roomState(sched, now) {
   if (cur) return { state: "busy", until: new Date(cur[1]) };
   const next = merged.find(([s]) => s > t);
   if (!next) return { state: "free" };
-  return { state: (next[0] - t) / 60000 <= SOON_MIN ? "soon" : "free", until: new Date(next[0]) };
+  return {
+    state: (next[0] - t) / 60000 <= SOON_MIN ? "soon" : "free",
+    until: new Date(next[0]),
+  };
 }

@@ -16,13 +16,21 @@ export function label(text, attrs, parent) {
   return t;
 }
 export function img(file, x, y, w, h, parent, extra) {
-  const n = el("image", Object.assign({ x, y, width: w, height: h }, extra || {}), parent || svg);
+  const n = el(
+    "image",
+    Object.assign({ x, y, width: w, height: h }, extra || {}),
+    parent || svg,
+  );
   n.setAttributeNS(XLINK, "xlink:href", file);
   return n;
 }
 // <use> of something in <defs>
 export function use(parent, id, transform, attrs) {
-  const u = el("use", Object.assign({ transform: transform }, attrs || {}), parent);
+  const u = el(
+    "use",
+    Object.assign({ transform: transform }, attrs || {}),
+    parent,
+  );
   u.setAttributeNS(XLINK, "xlink:href", "#" + id);
   return u;
 }
@@ -30,6 +38,10 @@ export function use(parent, id, transform, attrs) {
 export function roomShape(parent, x, y, w, h, state) {
   const g = el("g", { class: "room " + state }, parent);
   el("rect", { x, y, width: w, height: h, rx: 8, class: "base" }, g);
-  el("rect", { x: x + 2, y: y + 2, width: w - 4, height: h - 4, rx: 6, class: "base" }, g);
+  el(
+    "rect",
+    { x: x + 2, y: y + 2, width: w - 4, height: h - 4, rx: 6, class: "base" },
+    g,
+  );
   return g;
 }

@@ -46,7 +46,7 @@ drawListRows(); // list rows and booths
 const veil = el(
   "rect",
   { x: L.VIEW.x, y: L.VIEW.y, width: L.VIEW.w, height: L.VIEW.h, class: "dim" },
-  svg
+  svg,
 );
 // Final z-order: ...map, logos, list, [theme], veil, clock, error line, QR
 svg.insertBefore(listG, clockG);
@@ -80,7 +80,7 @@ startTheme({
         y: l.y,
         w: l.w,
         h: l.h,
-      }))
+      })),
     )
     .concat([
       { x: KITCHEN_LABEL.x - 60, y: KITCHEN_LABEL.y - 18, w: 120, h: 36 },
@@ -96,7 +96,7 @@ startTheme({
           w: w,
           h: h,
         };
-      })
+      }),
     ),
   palette: P,
   isStandby: () => !!state.standby,
@@ -115,8 +115,19 @@ function render() {
       : { state: "nodata" };
     r.g.setAttribute("class", "room " + res.state);
     const before = lastState[r.email];
-    if (before && before !== "nodata" && res.state !== "nodata" && before !== res.state)
-      emit("room", { name: r.name, x: r.x + r.w / 2, y: r.y + r.h / 2, from: before, to: res.state });
+    if (
+      before &&
+      before !== "nodata" &&
+      res.state !== "nodata" &&
+      before !== res.state
+    )
+      emit("room", {
+        name: r.name,
+        x: r.x + r.w / 2,
+        y: r.y + r.h / 2,
+        from: before,
+        to: res.state,
+      });
     lastState[r.email] = res.state;
     layoutRoom(r);
     avail.push({ r: r, res: res });

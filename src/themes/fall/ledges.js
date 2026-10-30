@@ -15,14 +15,14 @@ export function drawLedgeFungi(layer, scene) {
   const rnd = seeded(
     "fall-ledges " +
       (QS.get("seed") ||
-        new Date(nowMs()).toLocaleDateString("en-GB", { timeZone: TZ }))
+        new Date(nowMs()).toLocaleDateString("en-GB", { timeZone: TZ })),
   );
   const all = exposedEdges(scene.geo);
   const edges = all.filter((e) => !(e.tile.room && e.tile.room.booth));
   const hits = (x, y, r) =>
     scene.keepOut.some(
       (k) =>
-        x + r > k.x && x - r < k.x + k.w && y + r > k.y && y - r < k.y + k.h
+        x + r > k.x && x - r < k.x + k.w && y + r > k.y && y - r < k.y + k.h,
     );
   const shuffled = (list) => {
     const a = list.slice();
@@ -46,7 +46,7 @@ export function drawLedgeFungi(layer, scene) {
     use(
       g,
       propShape("mushrooms"),
-      `translate(${Math.round(x)} ${e.at + 3}) scale(${rnd() < 0.5 ? -s : s} ${s})`
+      `translate(${Math.round(x)} ${e.at + 3}) scale(${rnd() < 0.5 ? -s : s} ${s})`,
     );
     usedTiles.push(e.tile);
     n--;
@@ -62,7 +62,7 @@ export function drawLedgeFungi(layer, scene) {
     use(
       g,
       "prop-chanterelles",
-      `translate(${Math.round(x)} ${e.at + 3}) scale(${rnd() < 0.5 ? -s : s} ${s})`
+      `translate(${Math.round(x)} ${e.at + 3}) scale(${rnd() < 0.5 ? -s : s} ${s})`,
     );
     usedTiles.push(e.tile);
     n--;
@@ -71,7 +71,7 @@ export function drawLedgeFungi(layer, scene) {
   // Bracket fungi growing out of a side edge, pointing away from the tile
   n = randInt(rnd, LEDGE_FUNGI.brackets[0], LEDGE_FUNGI.brackets[1]);
   shuffled(
-    edges.filter((e) => e.side === "left" || e.side === "right")
+    edges.filter((e) => e.side === "left" || e.side === "right"),
   ).forEach((e) => {
     if (n <= 0 || usedTiles.indexOf(e.tile) >= 0 || e.y2 - e.y1 < 40) return;
     const y = e.y1 + 15 + rnd() * (e.y2 - e.y1 - 30),
@@ -81,7 +81,7 @@ export function drawLedgeFungi(layer, scene) {
     use(
       g,
       "ledge-bracket",
-      `translate(${e.at} ${Math.round(y)}) scale(${dir * s} ${s})`
+      `translate(${e.at} ${Math.round(y)}) scale(${dir * s} ${s})`,
     );
     usedTiles.push(e.tile);
     n--;

@@ -4,10 +4,17 @@
 // at: the edge's y (top/bottom) or x (left/right), tile }
 export function exposedEdges(geo, opts) {
   const minLen = (opts && opts.minLen) || 40;
-  const tiles = geo.ROOMS.map((r) => ({ x: r.x, y: r.y, w: r.w, h: r.h, room: r })).concat([
+  const tiles = geo.ROOMS.map((r) => ({
+    x: r.x,
+    y: r.y,
+    w: r.w,
+    h: r.h,
+    room: r,
+  })).concat([
     { x: geo.CORE.x, y: geo.CORE.y, w: geo.CORE.w, h: geo.CORE.h, core: true },
   ]);
-  const covered = (x, y) => tiles.some((t) => x > t.x && x < t.x + t.w && y > t.y && y < t.y + t.h);
+  const covered = (x, y) =>
+    tiles.some((t) => x > t.x && x < t.x + t.w && y > t.y && y < t.y + t.h);
   const edges = [];
   // Walk along one side in 8-unit steps, collecting open stretches
   function walk(tile, side, from, to, probe) {

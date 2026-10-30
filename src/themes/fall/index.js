@@ -27,7 +27,7 @@ export default function startFall(scene) {
       // Tree first: the floor's leaves cover the foot of its trunk
       const tree = part("tree", () => drawTree(scene.layer, scene, pal));
       const surface = part("floor", () =>
-        drawForestFloor(el("g", { class: "ground" }, scene.layer), scene, pal)
+        drawForestFloor(el("g", { class: "ground" }, scene.layer), scene, pal),
       );
       part("ledge fungi", () => drawLedgeFungi(scene.layer, scene));
       const spider = part("spider", () => startSpider(scene.layer, scene));
@@ -38,8 +38,8 @@ export default function startFall(scene) {
           scene,
           pal,
           surface || (() => scene.geo.VB - 20),
-          tree || null
-        )
+          tree || null,
+        ),
       );
     })
     .catch((e) => debugLog("Autumn shapes: " + e));

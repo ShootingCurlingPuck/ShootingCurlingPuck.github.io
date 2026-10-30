@@ -19,7 +19,13 @@ const sortKey = (ddmm) => ddmm.slice(3) + ddmm.slice(0, 2); // "29-10" -> "1029"
 function themeFor(d) {
   const f = QS.get("theme");
   if (f) return THEMES[f] ? f : null;
-  const p = d.toLocaleDateString("en-GB", { timeZone: TZ, day: "2-digit", month: "2-digit" }).split("/");
+  const p = d
+    .toLocaleDateString("en-GB", {
+      timeZone: TZ,
+      day: "2-digit",
+      month: "2-digit",
+    })
+    .split("/");
   const today = p[1] + p[0];
   return (
     Object.keys(THEMES).filter(function (k) {

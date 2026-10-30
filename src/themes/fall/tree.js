@@ -53,7 +53,7 @@ export function drawTree(layer, scene, pal) {
         x + (r || 0) > k.x &&
         x - (r || 0) < k.x + k.w &&
         y + (r || 0) > k.y &&
-        y - (r || 0) < k.y + k.h
+        y - (r || 0) < k.y + k.h,
     );
   // The crown's outline: an ellipse around the top-right (branches get shorter towards its edge)
   const C = TREE.crown;
@@ -98,7 +98,8 @@ export function drawTree(layer, scene, pal) {
   // The trunk is one smooth shape: a centre line through the trunk points, a width that tapers
   // upwards, a gentle swelling where the owl's hollow is, and a little natural irregularity
   const swell = (y) =>
-    TREE.swell.extra * Math.exp(-(((y - TREE.swell.y) / TREE.swell.spread) ** 2));
+    TREE.swell.extra *
+    Math.exp(-(((y - TREE.swell.y) / TREE.swell.spread) ** 2));
   const wobble = (y) => 3 * Math.sin(y / 47 + 1) + 2 * Math.sin(y / 113 + 2.5);
   const centre = []; // fine samples along the centre line, bottom to top: [x, y, width]
   for (let i = 0; i < trunk.length - 1; i++) {
@@ -111,14 +112,29 @@ export function drawTree(layer, scene, pal) {
       const t2 = t * t,
         t3 = t2 * t;
       const c = (a, b, c2, d) =>
-        0.5 * (2 * b + (-a + c2) * t + (2 * a - 5 * b + 4 * c2 - d) * t2 + (-a + 3 * b - 3 * c2 + d) * t3);
+        0.5 *
+        (2 * b +
+          (-a + c2) * t +
+          (2 * a - 5 * b + 4 * c2 - d) * t2 +
+          (-a + 3 * b - 3 * c2 + d) * t3);
       const x = c(p0[0], p1[0], p2[0], p3[0]),
         y = c(p0[1], p1[1], p2[1], p3[1]);
       const k = (i + t) / (trunk.length - 1); // 0 at the bottom, 1 at the top
-      centre.push([x, y, TREE.trunkWidth[0] + (TREE.trunkWidth[1] - TREE.trunkWidth[0]) * k + swell(y) + wobble(y)]);
+      centre.push([
+        x,
+        y,
+        TREE.trunkWidth[0] +
+          (TREE.trunkWidth[1] - TREE.trunkWidth[0]) * k +
+          swell(y) +
+          wobble(y),
+      ]);
     }
   }
-  centre.push([trunk[trunk.length - 1][0], trunk[trunk.length - 1][1], TREE.trunkWidth[1]]);
+  centre.push([
+    trunk[trunk.length - 1][0],
+    trunk[trunk.length - 1][1],
+    TREE.trunkWidth[1],
+  ]);
   // Centre and width of the trunk at height y (for things that live on it)
   function trunkAt(y) {
     for (let i = 0; i < centre.length - 1; i++) {
@@ -153,7 +169,7 @@ export function drawTree(layer, scene, pal) {
       (turn) => {
         const k = fitFor(deg + turn);
         if (k > best.k + 0.15) best = { deg: deg + turn, k: k };
-      }
+      },
     );
     if (best.k < 0.3) return; // too close to the edge: this branch simply doesn't grow
     deg = best.deg;
@@ -176,7 +192,7 @@ export function drawTree(layer, scene, pal) {
         const p = pt(d / L);
         const sd = Math.max(
           base - 75,
-          Math.min(base + 75, deg + side * (35 + rnd() * 25))
+          Math.min(base + 75, deg + side * (35 + rnd() * 25)),
         );
         branch(
           p[0],
@@ -185,7 +201,7 @@ export function drawTree(layer, scene, pal) {
           TREE.sideLen[0] + rnd() * (TREE.sideLen[1] - TREE.sideLen[0]),
           Math.max(4, w * 0.4),
           1,
-          base
+          base,
         );
         side = -side;
       }
@@ -245,7 +261,10 @@ export function drawTree(layer, scene, pal) {
   // Pieces of (about) the same width share one path: a few dozen elements instead of thousands
   const byWidth = {};
   segs.forEach((s) => {
-    const w = Math.max(1.5, Math.round(s.w * (s.w > 3 ? TREE.thickness : 1) * 2) / 2);
+    const w = Math.max(
+      1.5,
+      Math.round(s.w * (s.w > 3 ? TREE.thickness : 1) * 2) / 2,
+    );
     byWidth[w] = (byWidth[w] || "") + s.d;
   });
   const widths = Object.keys(byWidth).map(Number);
@@ -260,8 +279,8 @@ export function drawTree(layer, scene, pal) {
           "stroke-width": w + extra(w),
           "stroke-linecap": "round",
         },
-        wood
-      )
+        wood,
+      ),
     );
   // Order: branch outlines, then the trunk, then branch fills, so branches grow seamlessly out
   // of the trunk (their fill covers the trunk's outline where they join)
@@ -276,8 +295,12 @@ export function drawTree(layer, scene, pal) {
       len = Math.sqrt(dx * dx + dy * dy) || 1;
     const nx = -dy / len,
       ny = dx / len; // normal to the centre line
-    left.push(`${(c[0] - (nx * c[2]) / 2).toFixed(1)},${(c[1] - (ny * c[2]) / 2).toFixed(1)}`);
-    right.push(`${(c[0] + (nx * c[2]) / 2).toFixed(1)},${(c[1] + (ny * c[2]) / 2).toFixed(1)}`);
+    left.push(
+      `${(c[0] - (nx * c[2]) / 2).toFixed(1)},${(c[1] - (ny * c[2]) / 2).toFixed(1)}`,
+    );
+    right.push(
+      `${(c[0] + (nx * c[2]) / 2).toFixed(1)},${(c[1] + (ny * c[2]) / 2).toFixed(1)}`,
+    );
   });
   el(
     "path",
@@ -288,7 +311,7 @@ export function drawTree(layer, scene, pal) {
       "stroke-width": 2.5,
       "stroke-linejoin": "round",
     },
-    wood
+    wood,
   );
   // Bark: a few long grooves following the trunk, and a couple of knots (own seed, so the
   // branches stay exactly as they are)
@@ -304,14 +327,50 @@ export function drawTree(layer, scene, pal) {
       pts.push(`${(c[0] + off * c[2]).toFixed(1)},${c[1].toFixed(1)}`);
     }
     if (pts.length > 3)
-      el("path", { d: "M" + pts.join("L"), fill: "none", stroke: TREE.barkLine, "stroke-opacity": 0.35, "stroke-width": 2, "stroke-linecap": "round", "stroke-linejoin": "round" }, wood);
+      el(
+        "path",
+        {
+          d: "M" + pts.join("L"),
+          fill: "none",
+          stroke: TREE.barkLine,
+          "stroke-opacity": 0.35,
+          "stroke-width": 2,
+          "stroke-linecap": "round",
+          "stroke-linejoin": "round",
+        },
+        wood,
+      );
   }
   for (let i = 0; i < 2; i++) {
     const c = centre[Math.floor(centre.length * (0.2 + br() * 0.6))];
     if (Math.abs(c[1] - TREE.swell.y) < 90) continue;
     const kx = c[0] + (br() - 0.5) * c[2] * 0.4;
-    el("ellipse", { cx: kx.toFixed(1), cy: c[1].toFixed(1), rx: 5, ry: 8, fill: "none", stroke: TREE.barkLine, "stroke-opacity": 0.45, "stroke-width": 2 }, wood);
-    el("ellipse", { cx: kx.toFixed(1), cy: c[1].toFixed(1), rx: 2, ry: 3.5, fill: TREE.barkLine, "fill-opacity": 0.35 }, wood);
+    el(
+      "ellipse",
+      {
+        cx: kx.toFixed(1),
+        cy: c[1].toFixed(1),
+        rx: 5,
+        ry: 8,
+        fill: "none",
+        stroke: TREE.barkLine,
+        "stroke-opacity": 0.45,
+        "stroke-width": 2,
+      },
+      wood,
+    );
+    el(
+      "ellipse",
+      {
+        cx: kx.toFixed(1),
+        cy: c[1].toFixed(1),
+        rx: 2,
+        ry: 3.5,
+        fill: TREE.barkLine,
+        "fill-opacity": 0.35,
+      },
+      wood,
+    );
   }
   pass(TREE.bark, () => 0);
 
@@ -360,7 +419,7 @@ export function drawTree(layer, scene, pal) {
       L.behind ? back : front,
       leafShape(L.form, L.v),
       `translate(${L.x.toFixed(1)} ${L.y.toFixed(1)}) rotate(${L.deg}) scale(${L.s.toFixed(2)})`,
-      { fill: fill, stroke: mix(fill, INK, 0.5) }
+      { fill: fill, stroke: mix(fill, INK, 0.5) },
     );
   });
 

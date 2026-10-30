@@ -31,7 +31,7 @@ export function startOwl(layer, scene, tree, spider) {
       stroke: TREE.barkLine,
       "stroke-width": 3,
     },
-    g
+    g,
   );
   // The owl sits on the floor of the hollow; its feet are hidden by the hollow's lower lip
   const bx = hx,
@@ -41,7 +41,7 @@ export function startOwl(layer, scene, tree, spider) {
     {
       transform: `translate(${bx.toFixed(1)} ${by.toFixed(1)}) scale(${OWL.scale})`,
     },
-    g
+    g,
   );
   // Sighs: every few seconds the owl puffs up a little and settles back. A short CSS animation
   // (scaling around the owl's base, this group's 0,0); quick movements read well even at this
@@ -50,7 +50,7 @@ export function startOwl(layer, scene, tree, spider) {
     "@keyframes owl-breathe{0%,100%{transform:scale(1,1)}50%{transform:scale(1.03,1.08)}}" +
       ".owl-breathe{animation:owl-breathe " +
       OWL.breath +
-      "s ease-in-out infinite}"
+      "s ease-in-out infinite}",
   );
   const breath = el("g", { class: "owl-breathe" }, owl);
   use(breath, "critter-owl-body", "");
@@ -68,13 +68,13 @@ export function startOwl(layer, scene, tree, spider) {
         stroke: "#8A5A3B",
         "stroke-width": 1,
       },
-      eg
+      eg,
     );
     const iris = el("circle", { cx: 0, cy: 0, r: 4.6, fill: "#2B1D12" }, eg);
     const glint = el(
       "circle",
       { cx: -1.4, cy: -1.6, r: 1.4, fill: "#FFFFFF" },
-      eg
+      eg,
     );
     const shut = el(
       "path",
@@ -85,7 +85,7 @@ export function startOwl(layer, scene, tree, spider) {
         "stroke-width": 1.6,
         "stroke-linecap": "round",
       },
-      head
+      head,
     );
     return {
       ex: ex,
@@ -108,7 +108,7 @@ export function startOwl(layer, scene, tree, spider) {
       "stroke-width": 2.5,
       "stroke-linejoin": "round",
     },
-    g
+    g,
   );
   const zs = el("g", {}, g); // the little z's
 
@@ -153,7 +153,7 @@ export function startOwl(layer, scene, tree, spider) {
         "font-size": 14,
         fill: "#5E3B25",
       },
-      zs
+      zs,
     );
     z.textContent = "z";
     zList.push({ el: z, t: 0 });
@@ -238,14 +238,14 @@ export function startOwl(layer, scene, tree, spider) {
 
     head.setAttribute(
       "transform",
-      `translate(${(gx * 2.5).toFixed(2)} ${(nod + gy * 1).toFixed(2)}) rotate(${(gx * 6).toFixed(2)} 0 -45)`
+      `translate(${(gx * 2.5).toFixed(2)} ${(nod + gy * 1).toFixed(2)}) rotate(${(gx * 6).toFixed(2)} 0 -45)`,
     );
     const glintR = standby ? 2.1 : 1.4;
     eyes.forEach((e) => {
       const o = Math.max(0.08, e.open);
       e.g.setAttribute(
         "transform",
-        `translate(${e.ex} -45) scale(1 ${o.toFixed(3)})`
+        `translate(${e.ex} -45) scale(1 ${o.toFixed(3)})`,
       );
       e.iris.setAttribute("cx", (gx * 1.8).toFixed(2));
       e.iris.setAttribute("cy", (gy * 1.4).toFixed(2));
@@ -269,11 +269,11 @@ export function startOwl(layer, scene, tree, spider) {
       }
       z.el.setAttribute(
         "transform",
-        `translate(${(6 * k + 3 * Math.sin(k * 6)).toFixed(1)} ${(-34 * k).toFixed(1)})`
+        `translate(${(6 * k + 3 * Math.sin(k * 6)).toFixed(1)} ${(-34 * k).toFixed(1)})`,
       );
       z.el.setAttribute(
         "opacity",
-        (k < 0.2 ? k / 0.2 : 1 - (k - 0.2) / 0.8).toFixed(2)
+        (k < 0.2 ? k / 0.2 : 1 - (k - 0.2) / 0.8).toFixed(2),
       );
     }
   });

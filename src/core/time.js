@@ -37,7 +37,7 @@ export function isStandby(now) {
         hour: "2-digit",
         minute: "2-digit",
       }),
-      10
+      10,
     ) % 24;
   return weekday === "Sat" || weekday === "Sun" || h < OPEN_H || h >= CLOSE_H;
 }

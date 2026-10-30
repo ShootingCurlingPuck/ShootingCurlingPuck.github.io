@@ -16,7 +16,7 @@ export function startSpider(layer, scene) {
   const hits = (x, y, r) =>
     scene.keepOut.some(
       (k) =>
-        x + r > k.x && x - r < k.x + k.w && y + r > k.y && y - r < k.y + k.h
+        x + r > k.x && x - r < k.x + k.w && y + r > k.y && y - r < k.y + k.h,
     );
   const between = (r) => r[0] + Math.random() * (r[1] - r[0]);
   const nextWait = () =>
@@ -27,7 +27,7 @@ export function startSpider(layer, scene) {
   const thread = el(
     "line",
     { stroke: "#3B2F2A", "stroke-opacity": 0.5, "stroke-width": 1.3 },
-    g
+    g,
   );
   const body = use(g, "critter-spider", "");
   g.style.display = "none";
@@ -86,7 +86,7 @@ export function startSpider(layer, scene) {
   function draw(sway) {
     g.setAttribute(
       "transform",
-      `rotate(${sway.toFixed(2)} ${ax.toFixed(1)} ${ay})`
+      `rotate(${sway.toFixed(2)} ${ax.toFixed(1)} ${ay})`,
     );
     thread.setAttribute("x1", ax);
     thread.setAttribute("y1", ay);
@@ -94,7 +94,7 @@ export function startSpider(layer, scene) {
     thread.setAttribute("y2", (y - 16 * sc).toFixed(1));
     body.setAttribute(
       "transform",
-      `translate(${ax.toFixed(1)} ${y.toFixed(1)}) scale(${sc})`
+      `translate(${ax.toFixed(1)} ${y.toFixed(1)}) scale(${sc})`,
     );
   }
 
@@ -134,7 +134,7 @@ export function startSpider(layer, scene) {
       if (!inStandby)
         g.setAttribute(
           "opacity",
-          Math.max(0, Math.min(1, left / 20)).toFixed(2)
+          Math.max(0, Math.min(1, left / 20)).toFixed(2),
         );
       if (left <= 0) {
         g.style.display = "none";

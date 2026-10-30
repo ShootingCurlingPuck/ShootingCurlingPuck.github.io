@@ -54,14 +54,14 @@ export function startFalling(layer, scene, pal, floorSurface, tree) {
         g,
         leafShape(form, Math.floor(Math.random() * LEAF_VARIANTS)),
         "",
-        { fill: col, stroke: mix(col, INK, 0.45) }
+        { fill: col, stroke: mix(col, INK, 0.45) },
       ),
     });
   }
   function place(L, x, deg, sx, sy) {
     L.u.setAttribute(
       "transform",
-      `translate(${x.toFixed(1)} ${L.y.toFixed(1)}) rotate(${deg.toFixed(1)}) scale(${sx.toFixed(3)} ${sy.toFixed(3)})`
+      `translate(${x.toFixed(1)} ${L.y.toFixed(1)}) rotate(${deg.toFixed(1)}) scale(${sx.toFixed(3)} ${sy.toFixed(3)})`,
     );
   }
 
@@ -101,7 +101,7 @@ export function startFalling(layer, scene, pal, floorSurface, tree) {
           x,
           deg,
           flipX < 0 ? -L.s : L.s,
-          L.s * (0.7 + Math.random() * 0.3)
+          L.s * (0.7 + Math.random() * 0.3),
         );
         L.until =
           sec +

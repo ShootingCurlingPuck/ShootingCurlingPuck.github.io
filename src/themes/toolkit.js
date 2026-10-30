@@ -6,7 +6,8 @@ export const INK = "#000000"; // outline base colour (same as the brand ink)
 // Same numbers all day, new ones tomorrow: a scene doesn't jump on a reload
 export function seeded(text) {
   let h = 2166136261;
-  for (let i = 0; i < text.length; i++) h = Math.imul(h ^ text.charCodeAt(i), 16777619);
+  for (let i = 0; i < text.length; i++)
+    h = Math.imul(h ^ text.charCodeAt(i), 16777619);
   return function () {
     h = (h + 0x6d2b79f5) | 0;
     let t = Math.imul(h ^ (h >>> 15), 1 | h);
@@ -20,7 +21,8 @@ export function pick(rnd, list) {
   let total = 0;
   list.forEach((e) => (total += e[1]));
   let r = rnd() * total;
-  for (let i = 0; i < list.length; i++) if ((r -= list[i][1]) < 0) return list[i][0];
+  for (let i = 0; i < list.length; i++)
+    if ((r -= list[i][1]) < 0) return list[i][0];
   return list[list.length - 1][0];
 }
 
@@ -33,12 +35,17 @@ export function mix(a, b, t) {
       y = (cb >> sh) & 255;
     return Math.round(x + (y - x) * t);
   };
-  return "#" + ((1 << 24) | (ch(16) << 16) | (ch(8) << 8) | ch(0)).toString(16).slice(1);
+  return (
+    "#" +
+    ((1 << 24) | (ch(16) << 16) | (ch(8) << 8) | ch(0)).toString(16).slice(1)
+  );
 }
 
 // Nudge every number in a path a little, so copies of a shape are never perfectly identical
 export function roughen(d, rnd, amt) {
-  return d.replace(/-?\d+(\.\d+)?/g, (n) => (+n + (rnd() - 0.5) * 2 * amt).toFixed(1));
+  return d.replace(/-?\d+(\.\d+)?/g, (n) =>
+    (+n + (rnd() - 0.5) * 2 * amt).toFixed(1),
+  );
 }
 
 // Load a sprite sheet and copy every element whose id has one of the prefixes into <defs>.
@@ -54,7 +61,8 @@ export function loadSprites(url, prefixes) {
       const found = doc.querySelectorAll("[id]");
       for (let i = 0; i < found.length; i++) {
         const n = found[i];
-        if (prefixes.some((p) => n.getAttribute("id").indexOf(p) === 0)) defs.appendChild(document.importNode(n, true));
+        if (prefixes.some((p) => n.getAttribute("id").indexOf(p) === 0))
+          defs.appendChild(document.importNode(n, true));
       }
     });
 }
@@ -93,7 +101,8 @@ export function everyFrame(fn) {
 }
 
 // Random whole number from min to max (inclusive)
-export const randInt = (rnd, min, max) => min + Math.floor(rnd() * (max - min + 1));
+export const randInt = (rnd, min, max) =>
+  min + Math.floor(rnd() * (max - min + 1));
 
 // Add CSS for a theme (e.g. animations the browser runs smoothly by itself)
 export function addStyle(css) {

@@ -18,7 +18,11 @@ export const MIN_LIFE_MS = 30 * 1000; // ignore wake signals this soon after loa
 export const UPDATE_MS = 5 * 60 * 1000; // how often to check for new code
 export const SYNC_MS = 10 * 60 * 1000; // how often to sync the clock
 // Files whose change triggers a reload on the TV
-export const WATCH = ["dist/app.js", "floorplan.css", "assets/themes/fall/sprites.svg"];
+export const WATCH = [
+  "dist/app.js",
+  "floorplan.css",
+  "assets/themes/fall/sprites.svg",
+];
 
 // ----- Font sizes -----
 export const NAME_F = 26; // one size for every room name
@@ -42,9 +46,27 @@ export const P = {
 };
 
 // ----- Assets (change paths here if you move files; missing files just don't show) -----
-export const ORMIT_LOGO = { file: "assets/logo-black.svg", x: 695, y: 1000, w: 300, h: 60 };
-export const VOLVE_LOGO = { file: "assets/volve.svg", x: 1365, y: 1165, w: 96, h: 48 };
-export const PSG_LOGO = { file: "assets/pauwels-consulting-logo.svg", x: 1650, y: 1349, w: 192, h: 96 };
+export const ORMIT_LOGO = {
+  file: "assets/logo-black.svg",
+  x: 695,
+  y: 1000,
+  w: 300,
+  h: 60,
+};
+export const VOLVE_LOGO = {
+  file: "assets/volve.svg",
+  x: 1365,
+  y: 1165,
+  w: 96,
+  h: 48,
+};
+export const PSG_LOGO = {
+  file: "assets/pauwels-consulting-logo.svg",
+  x: 1650,
+  y: 1349,
+  w: 192,
+  h: 96,
+};
 // Feedback QR: size = the code itself, pad = light border around it (the QR "quiet zone")
 export const QR = { file: "assets/feedback-qr.svg", size: 130, pad: 10 };
 // "Kitchen" label: anywhere in the kitchen (between the top-right corners of the elevator

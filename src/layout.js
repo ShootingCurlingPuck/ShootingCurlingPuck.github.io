@@ -1,5 +1,15 @@
 // Geometry derived from config.js and floorplan.json. Pure numbers: nothing is drawn here.
-import { FLOOR, CORE, MAP_SHIFT, STANDBY_SCALE, CHIP, QR, PIXEL_CELL, PIXEL_GRID, CLOCK_FRAME_FILE } from "./config.js";
+import {
+  FLOOR,
+  CORE,
+  MAP_SHIFT,
+  STANDBY_SCALE,
+  CHIP,
+  QR,
+  PIXEL_CELL,
+  PIXEL_GRID,
+  CLOCK_FRAME_FILE,
+} from "./config.js";
 import plan from "./floorplan.json";
 
 export const ROOMS = plan.rooms;
@@ -18,7 +28,13 @@ export const VR = VIEW.x + VIEW.w,
 
 // Core-anchored: clock frame, date, error line
 export const CX = CORE.x + CORE.w / 2;
-export const CLOCK_FRAME = { file: CLOCK_FRAME_FILE, x: CORE.x, y: CORE.y + 75, w: CORE.w, h: 185 };
+export const CLOCK_FRAME = {
+  file: CLOCK_FRAME_FILE,
+  x: CORE.x,
+  y: CORE.y + 75,
+  w: CORE.w,
+  h: 185,
+};
 export const FRAME_C = { x: CX + 5.5, y: CLOCK_FRAME.y + 87.5 };
 export const DATE_Y = CORE.y + 256,
   ERR_Y = CORE.y + 344;
@@ -35,7 +51,14 @@ export const PIXEL_CORNERS = [
   { file: "assets/pxl-3.svg", x: VIEW.x + 400, y: VIEW.y + 101, sx: 1, sy: -1 },
   { file: "assets/pxl-2.svg", x: VIEW.x - 26, y: VB, sx: 1, sy: -1 },
   { file: "assets/pxl-1.svg", x: VR - 108, y: VB - 82, sx: 1, sy: 1 },
-  { file: "assets/pxl-3.svg", x: VR - 108, y: VIEW.y + 501, sx: 1, sy: 1, rotate: -90 },
+  {
+    file: "assets/pxl-3.svg",
+    x: VR - 108,
+    y: VIEW.y + 501,
+    sx: 1,
+    sy: 1,
+    rotate: -90,
+  },
 ];
 
 // Left panel: from screen edge to floor, with padding
