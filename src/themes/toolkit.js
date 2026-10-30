@@ -1,5 +1,7 @@
 // Shared helpers for seasonal themes: seeded randomness, colours, and the sprite sheet loader.
 import { defs } from "../core/svg.js";
+import { measure } from "../core/perf.js";
+export { detail, scaled } from "../core/perf.js"; // so theme parts find everything here
 
 export const INK = "#000000"; // outline base colour (same as the brand ink)
 
@@ -85,12 +87,13 @@ export function roughCopies(id, n, amounts) {
 
 // One shared animation loop for all moving theme parts, at about 30 fps (plenty, and kind to the TV).
 // fn(now, dt): now in ms (performance clock), dt in seconds since the last frame, capped at 0.1 so
-// nothing jumps after the TV slept.
+// nothing jumps after the TV slept. Frame times feed the shared detail level (core/perf.js).
 const frameFns = [];
 let last = 0;
 function frame(now) {
   requestAnimationFrame(frame);
   if (now - last < 30) return;
+  if (last) measure(now - last);
   const dt = last ? Math.min(0.1, (now - last) / 1000) : 0;
   last = now;
   frameFns.forEach((fn) => fn(now, dt));

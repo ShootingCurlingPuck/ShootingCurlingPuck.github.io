@@ -17,6 +17,21 @@ export const FETCH_TIMEOUT_MS = 20 * 1000;
 export const WEATHER_AT = { lat: 50.85, lon: 4.35 };
 export const WEATHER_EVERY_MS = 15 * 60 * 1000; // Open-Meteo's current data changes every 15 min
 export const WEATHER_STALE_MS = 90 * 60 * 1000; // older than this: treat as "no weather"
+// Credit shown under the QR code (required by the data licence), one entry per line
+export const WEATHER_CREDIT = ["Weather by", "Open-Meteo.com"];
+export const CREDIT_F = 15; // its font size
+
+// ----- Animation performance (see core/perf.js) -----
+// Animations run at about `target` fps. Below `low` the detail level drops by `down` per second,
+// above `high` it climbs back by `up` per second (slower, so it doesn't seesaw), never below `min`.
+export const PERF = {
+  target: 30,
+  low: 24,
+  high: 27,
+  down: 0.25,
+  up: 0.05,
+  min: 0.2,
+};
 
 // ----- Auto-refresh -----
 export const WAKE_GAP_MS = 30 * 1000; // a 1 s tick arriving this late means the TV slept
@@ -74,7 +89,13 @@ export const PSG_LOGO = {
   h: 96,
 };
 // Feedback QR: size = the code itself, pad = light border around it (the QR "quiet zone")
-export const QR = { file: "assets/feedback-qr.svg", size: 130, pad: 10 };
+// lift = space below the tile, for the weather credit and clear of the forest floor
+export const QR = {
+  file: "assets/feedback-qr.svg",
+  size: 130,
+  pad: 10,
+  lift: 100,
+};
 // "Kitchen" label: anywhere in the kitchen (between the top-right corners of the elevator
 // zone and of the floor plan). Themes keep it clear.
 export const KITCHEN_LABEL = { x: 1650, y: 540 };

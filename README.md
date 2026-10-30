@@ -14,8 +14,9 @@ npm install        # once
 npm run dev        # http://localhost:8000, rebuilds on every save
 ```
 
-Useful URL switches: `?mode=live|standby`, `?theme=fall|winter|none`, `?debug=1` (errors and weather on screen),
-`?weather=clear|cloudy|rain|heavy|snow|fog|windy|...` (pretend weather),
+Useful URL switches: `?mode=live|standby`, `?theme=fall|winter|none`, `?debug=1` (errors, weather, fps and
+detail level on screen), `?weather=clear|cloudy|rain|heavy|snow|fog|windy|...` (pretend weather),
+`?detail=0..1` (fixed animation detail instead of self-adjusting),
 `?icons=text|emoji`. Autumn also has `?seed=<any text>` (another day's layout), `?fallpal=a|b`, `?haze=0`.
 
 ## Publishing
@@ -31,7 +32,7 @@ version within about 5 minutes and reloads by itself.
 | `src/floorplan.json` | Room and anchor coordinates |
 | `src/layout.js` | Geometry derived from the two above |
 | `src/main.js` | Wires everything together, in drawing order |
-| `src/core/` | Helpers: SVG, text measuring, time, shared state, events, debug |
+| `src/core/` | Helpers: SVG, text measuring, time, shared state, events, debug, animation detail level |
 | `src/plan/` | The floor plan, clock, list panel, QR code |
 | `src/data/` | Fetching bookings and working out room states |
 | `src/system/` | Standby mode, auto-update and reload |
@@ -47,5 +48,12 @@ logos) and whether it's standby. They don't touch the plan itself.
 ## Weather data
 
 Weather comes from [Open-Meteo](https://open-meteo.com) (free for non-commercial use, data licensed
-CC BY 4.0). Once weather visibly affects the screen, show a small credit on it, e.g.
-"Weather: Open-Meteo.com". The office location is `WEATHER_AT` in `src/config.js`.
+CC BY 4.0). The licence asks for a credit where the data is shown: it's under the QR code
+(`WEATHER_CREDIT` in `src/config.js`). The office location is `WEATHER_AT` in the same file.
+
+## Animation performance
+
+The TV is slow, so animations adjust themselves: `src/core/perf.js` watches the frame rate and lowers a
+shared detail level (0 to 1) when it drops, then slowly raises it again. Animations scale with it (fewer
+falling leaves, fewer resting ones, later also fewer raindrops). Thresholds are `PERF` in `src/config.js`;
+`?debug=1` shows the live numbers.

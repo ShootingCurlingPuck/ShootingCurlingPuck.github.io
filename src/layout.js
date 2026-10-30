@@ -78,6 +78,6 @@ export const BOOTH_CHIP_Y = BOOTH_Y + 60;
 // Feedback QR tile, in the free strip right of the floor
 export const QR_TILE = QR.size + QR.pad * 2;
 export const QR_X = Math.round((FLOOR.x + FLOOR.w + VR) / 2 - QR_TILE / 2);
-export const QR_Y = FLOOR.y + FLOOR.h - QR_TILE - 40;
+export const QR_Y = FLOOR.y + FLOOR.h - QR_TILE - QR.lift;
 
 export { FLOOR, CORE, CHIP };

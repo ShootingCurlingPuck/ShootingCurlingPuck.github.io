@@ -11,6 +11,8 @@ import {
   PSG_LOGO,
   NAME_F,
   KITCHEN_LABEL,
+  WEATHER_CREDIT,
+  CREDIT_F,
 } from "./config.js";
 import { svg, el } from "./core/svg.js";
 import { state } from "./core/state.js";
@@ -74,9 +76,15 @@ startTheme({
     NAME_F: NAME_F,
     BOOTH_CHIP_Y: L.BOOTH_CHIP_Y,
   },
-  // spots a theme must never cover: the QR code (with its label), the logos, the Kitchen label,
+  // spots a theme must never cover: the QR code (with its label and the weather credit), the logos,
+  // the Kitchen label,
   keepOut: [
-    { x: L.QR_X - 8, y: L.QR_Y - 60, w: L.QR_TILE + 16, h: L.QR_TILE + 64 },
+    {
+      x: L.QR_X - 8,
+      y: L.QR_Y - 60,
+      w: L.QR_TILE + 16,
+      h: L.QR_TILE + 60 + CREDIT_F * (1.2 + 1.15 * WEATHER_CREDIT.length),
+    },
   ]
     .concat(
       [PSG_LOGO, ORMIT_LOGO, VOLVE_LOGO].map((l) => ({

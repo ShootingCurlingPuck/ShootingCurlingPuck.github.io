@@ -1,6 +1,6 @@
 // Leaves falling from the top, swaying and tumbling. On the ground they rest a while, then fade.
 import { el, use } from "../../core/svg.js";
-import { pick, mix, INK, everyFrame } from "../toolkit.js";
+import { pick, mix, INK, everyFrame, detail, scaled } from "../toolkit.js";
 import { FALLING } from "./settings.js";
 import { LEAF_FORM_WEIGHTS, LEAF_VARIANTS, leafShape } from "./shapes.js";
 
@@ -72,9 +72,10 @@ export function startFalling(layer, scene, pal, floorSurface, tree) {
     const sec = now / 1000;
     const mode = scene.isStandby() ? FALLING.standby : FALLING.live;
     nextSpawn -= dt;
-    if (nextSpawn <= 0 && flying.length < mode.max) {
+    if (nextSpawn <= 0 && flying.length < scaled(mode.max)) {
       spawn(VIEW.y - 60);
-      const rate = tree ? 0.35 + 0.65 * tree.fullness : 1; // fewer as the crown empties
+      // fewer as the crown empties, and when the TV is struggling
+      const rate = (tree ? 0.35 + 0.65 * tree.fullness : 1) * detail();
       nextSpawn = (mode.every * (0.6 + Math.random() * 0.8)) / rate;
     }
 
@@ -113,7 +114,7 @@ export function startFalling(layer, scene, pal, floorSurface, tree) {
       const L = landed[i];
       if (
         L.fadeFrom === undefined &&
-        (sec > L.until || landed.length - i > FALLING.landedMax)
+        (sec > L.until || landed.length - i > scaled(FALLING.landedMax, 3))
       )
         L.fadeFrom = sec;
       if (L.fadeFrom !== undefined) {
