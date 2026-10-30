@@ -39,6 +39,27 @@ export const WIND = {
   gustFade: 2.5,
   standbyBoost: 1.3,
 };
+// Rain (see themes/rain.js). levels: amount (0..1) per kind of rain, from its lightest to its
+// heaviest mm/h. max: drops on screen at amount 1. slant: sideways per downward at full wind.
+// speed in units per second, length of a streak in units (shorter in light rain).
+// ease: seconds to follow a weather change. splashFrom: amount above which drops splash.
+export const RAIN = {
+  levels: {
+    drizzle: { mm: [0.1, 0.5], amount: [0.15, 0.25] },
+    rain: { mm: [0.5, 4], amount: [0.35, 0.7] },
+    heavy: { mm: [4, 12], amount: [0.8, 1] },
+    thunder: { mm: [2, 12], amount: [0.8, 1] }, // no lightning: just heavy rain
+  },
+  max: { live: 160, standby: 240 },
+  slant: 0.45,
+  speed: [950, 1250],
+  length: [60, 110],
+  width: 3,
+  colour: "#4F6A8F",
+  opacity: 0.5,
+  ease: 60,
+  splashFrom: 0.3,
+};
 
 // ----- Animation performance (see core/perf.js) -----
 // Below `low` fps the detail level drops by `down` per second, above `high` it climbs back by `up`

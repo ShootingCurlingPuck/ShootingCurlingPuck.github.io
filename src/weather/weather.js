@@ -9,6 +9,7 @@
 // getWeather() returns the latest one, or null when there's none (yet) or it's too old.
 // A "weather" event fires on every successful update.
 // Test switch: ?weather=clear|partly|cloudy|overcast|drizzle|rain|heavy|snow|thunder|fog|windy
+// (or a change, e.g. ?weather=heavy>clear: switches every 30 seconds)
 import {
   WEATHER_AT,
   WEATHER_EVERY_MS,
@@ -149,28 +150,34 @@ function update() {
     .catch((e) => debugLog("Weather unavailable: " + e));
 }
 
+// Pretend weather: ?weather=rain, or a change to test fades: ?weather=heavy>clear switches after
+// 30 seconds (as many steps as you like: ?weather=clear>rain>clear)
+function forceWeather(name) {
+  const c = FORCED[name];
+  latest = describe({
+    cloud_cover: c.cloud,
+    weather_code:
+      c.weather_code ||
+      (c.cloud > 85 ? 3 : c.cloud > 50 ? 2 : c.cloud > 20 ? 1 : 0),
+    rain: c.rain,
+    snowfall: c.snowfall,
+    visibility: c.visibility,
+    wind_speed_10m: c.wind || 12,
+    wind_gusts_10m: c.gusts || 25,
+    wind_direction_10m: 225,
+    temperature_2m: 10,
+    is_day: 1,
+  });
+  latest.forced = true;
+  latest.fetched = Date.now();
+  debugLog("Weather (forced): " + summary(latest));
+  emit("weather", latest);
+}
+
 export function startWeather() {
-  const f = QS.get("weather");
-  if (f && FORCED[f]) {
-    const c = FORCED[f];
-    latest = describe({
-      cloud_cover: c.cloud,
-      weather_code:
-        c.weather_code ||
-        (c.cloud > 85 ? 3 : c.cloud > 50 ? 2 : c.cloud > 20 ? 1 : 0),
-      rain: c.rain,
-      snowfall: c.snowfall,
-      visibility: c.visibility,
-      wind_speed_10m: c.wind || 12,
-      wind_gusts_10m: c.gusts || 25,
-      wind_direction_10m: 225,
-      temperature_2m: 10,
-      is_day: 1,
-    });
-    latest.forced = true;
-    latest.fetched = Date.now();
-    debugLog("Weather (forced): " + summary(latest));
-    setTimeout(() => emit("weather", latest), 0);
+  const steps = (QS.get("weather") || "").split(">").filter((n) => FORCED[n]);
+  if (steps.length) {
+    steps.forEach((name, i) => setTimeout(() => forceWeather(name), i * 30000));
     return;
   }
   update();

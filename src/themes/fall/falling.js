@@ -1,11 +1,13 @@
 // Leaves falling from the tree and the top, swaying and tumbling, carried right to left by the wind.
+// In the rain they're wet: they fall faster and sway less.
 // On the ground they rest a while, then fade. Gusts make leaves on the ground hop up and swirl.
 import { el, use } from "../../core/svg.js";
 import { pick, mix, INK, everyFrame, detail, scaled } from "../toolkit.js";
 import { FALLING } from "./settings.js";
 import { LEAF_FORM_WEIGHTS, LEAF_VARIANTS, leafShape } from "./shapes.js";
 
-export function startFalling(layer, scene, pal, floorSurface, tree, wind) {
+// wet(): how hard it's raining, 0..1
+export function startFalling(layer, scene, pal, floorSurface, tree, wind, wet) {
   const { VIEW, VR } = scene.geo;
   const g = el("g", { class: "falling" }, layer);
   const flying = [],
@@ -155,6 +157,8 @@ export function startFalling(layer, scene, pal, floorSurface, tree, wind) {
     const sec = now / 1000;
     const mode = scene.isStandby() ? FALLING.standby : FALLING.live;
     const k = strength();
+    const r = wet ? wet() : 0;
+    const sway = 1 - FALLING.wet.sway * r;
     const gust = wind ? wind.gust() : 0;
     const drift = -(FALLING.wind.drift * k + FALLING.wind.gustDrift * gust); // leftward
     nextSpawn -= dt;
@@ -193,13 +197,13 @@ export function startFalling(layer, scene, pal, floorSurface, tree, wind) {
         if (h.vy >= L.vy) {
           // back to a normal fall, carrying on from exactly here
           L.hop = null;
-          L.x0 = x - L.amp * Math.sin(L.a);
+          L.x0 = x - L.amp * sway * Math.sin(L.a);
           L.deg0 = deg - 35 * Math.sin(L.a + 1.57);
         }
       } else {
-        L.y += L.vy * (1 + FALLING.wind.fall * k) * dt;
+        L.y += L.vy * (1 + FALLING.wind.fall * k + FALLING.wet.fall * r) * dt;
         L.x0 += (L.vx + drift * L.catch) * dt;
-        x = L.x0 + L.amp * Math.sin(L.a);
+        x = L.x0 + L.amp * sway * Math.sin(L.a);
         deg = L.deg0 + 35 * Math.sin(L.a + 1.57);
       }
       L.x = x;
