@@ -1,5 +1,6 @@
 // Tiny event bus, so parts can react to each other without importing each other.
-// Events: "mode" (standby: boolean), "room" ({ name, x, y, from, to }: a room changed state)
+// Events: "mode" (standby: boolean), "room" ({ name, x, y, from, to }: a room changed state),
+// "weather" (the new weather, see weather/weather.js)
 const handlers = {};
 export function on(name, fn) {
   (handlers[name] = handlers[name] || []).push(fn);

@@ -12,6 +12,12 @@ export const REFRESH_MS = 60 * 1000;
 export const STALE_MS = 5 * 60 * 1000; // keep showing last good data this long after failures
 export const FETCH_TIMEOUT_MS = 20 * 1000;
 
+// ----- Weather (Open-Meteo, free for non-commercial use, data under CC BY 4.0) -----
+// Where the office is: weather for this spot. Brussels centre by default; set to the office.
+export const WEATHER_AT = { lat: 50.85, lon: 4.35 };
+export const WEATHER_EVERY_MS = 15 * 60 * 1000; // Open-Meteo's current data changes every 15 min
+export const WEATHER_STALE_MS = 90 * 60 * 1000; // older than this: treat as "no weather"
+
 // ----- Auto-refresh -----
 export const WAKE_GAP_MS = 30 * 1000; // a 1 s tick arriving this late means the TV slept
 export const MIN_LIFE_MS = 30 * 1000; // ignore wake signals this soon after load (prevents reload loops)

@@ -34,6 +34,7 @@ import { load, roomState } from "./data/schedule.js";
 import { applyMode } from "./system/mode.js";
 import { startAutoRefresh, safeReload } from "./system/autorefresh.js";
 import { startTheme, themeChanged } from "./themes/index.js";
+import { startWeather, getWeather } from "./weather/weather.js";
 
 // ---- Drawing ----
 drawStatic(); // background, brand pixels, floor, anchors, rooms, core, logos, "You"
@@ -100,7 +101,8 @@ startTheme({
     ),
   palette: P,
   isStandby: () => !!state.standby,
-  on: on, // subscribe to events: "mode" (standby), "room" (a room changed state)
+  on: on, // subscribe to events: "mode" (standby), "room" (a room changed state), "weather"
+  weather: getWeather, // the latest weather, or null (see weather/weather.js)
 });
 
 // ---- Updating ----
@@ -168,6 +170,8 @@ setInterval(tick, 1000);
 setInterval(applyMode, 10 * 1000);
 setInterval(render, 10 * 1000); // re-evaluate states between fetches
 setInterval(() => load(render), REFRESH_MS);
+
+startWeather(); // live weather; themes can use it (nothing visible depends on it yet)
 
 startAutoRefresh(() => {
   tick();

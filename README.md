@@ -14,7 +14,8 @@ npm install        # once
 npm run dev        # http://localhost:8000, rebuilds on every save
 ```
 
-Useful URL switches: `?mode=live|standby`, `?theme=fall|winter|none`, `?debug=1` (errors on screen),
+Useful URL switches: `?mode=live|standby`, `?theme=fall|winter|none`, `?debug=1` (errors and weather on screen),
+`?weather=clear|cloudy|rain|heavy|snow|fog|windy|...` (pretend weather),
 `?icons=text|emoji`. Autumn also has `?seed=<any text>` (another day's layout), `?fallpal=a|b`, `?haze=0`.
 
 ## Publishing
@@ -34,6 +35,7 @@ version within about 5 minutes and reloads by itself.
 | `src/plan/` | The floor plan, clock, list panel, QR code |
 | `src/data/` | Fetching bookings and working out room states |
 | `src/system/` | Standby mode, auto-update and reload |
+| `src/weather/` | Live weather for the office (Open-Meteo), as a simple description themes can use |
 | `src/themes/` | Seasonal themes: `index.js` picks one by date, `toolkit.js` has shared helpers |
 | `src/themes/fall/settings.js` | Autumn tuning knobs (palettes, falling, ledges) |
 | `assets/themes/fall/sprites.svg` | Autumn shapes (leaves, acorns, mushrooms, stump), editable in any SVG editor |
@@ -41,3 +43,9 @@ version within about 5 minutes and reloads by itself.
 
 Themes get a "scene" from `main.js`: their own layer, the geometry, spots to keep clear (QR code,
 logos) and whether it's standby. They don't touch the plan itself.
+
+## Weather data
+
+Weather comes from [Open-Meteo](https://open-meteo.com) (free for non-commercial use, data licensed
+CC BY 4.0). Once weather visibly affects the screen, show a small credit on it, e.g.
+"Weather: Open-Meteo.com". The office location is `WEATHER_AT` in `src/config.js`.
