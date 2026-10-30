@@ -95,14 +95,8 @@ export function startFalling(layer, scene, pal, floorSurface, tree) {
       if (L.target === undefined && L.y > VIEW.y + VIEW.h * 0.6)
         L.target = floorSurface(x) + 8 + Math.random() * 22;
       if (L.target !== undefined && L.y >= L.target) {
-        // land flat, at whatever angle it had
-        place(
-          L,
-          x,
-          deg,
-          flipX < 0 ? -L.s : L.s,
-          L.s * (0.7 + Math.random() * 0.3),
-        );
+        // land exactly as it was in that moment: no snapping to another orientation
+        place(L, x, deg, L.s * flipX, L.s);
         L.until =
           sec +
           FALLING.rest[0] +

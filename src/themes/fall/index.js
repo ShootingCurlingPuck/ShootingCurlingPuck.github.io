@@ -34,7 +34,7 @@ export default function startFall(scene) {
       part("owl", () => tree && startOwl(scene.layer, scene, tree, spider));
       part("falling", () =>
         startFalling(
-          scene.layer,
+          scene.front || scene.layer, // in front of the clock too
           scene,
           pal,
           surface || (() => scene.geo.VB - 20),
