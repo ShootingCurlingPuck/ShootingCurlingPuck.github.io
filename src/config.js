@@ -39,6 +39,30 @@ export const WIND = {
   gustFade: 2.5,
   standbyBoost: 1.3,
 };
+// Clouds (see themes/clouds.js): `count` clouds spread over a field `period` screen widths long
+// that repeats as it drifts; each `width` units wide, made of puffs every `puffEvery` units with
+// radii `puff` (bigger in the middle) and a soft `halo`. They hang down at most `depth` of the way
+// from the top edge to the first text (0.95: to just above it, never over it). `opacity` of a cloud; from `bankFrom` cover on, the clouds
+// merge into one continuous bank. ease: seconds to follow a weather change. speed: drift in units
+// per second, still air .. full wind. Colours: body and outline, dry and when it rains.
+export const CLOUDS = {
+  count: 9,
+  period: 1.5,
+  width: [320, 560],
+  puffEvery: 70,
+  puff: [55, 105],
+  halo: 10,
+  depth: 0.95,
+  opacity: 0.9,
+  bankFrom: 0.75,
+  ease: 60,
+  speed: [4, 60],
+  body: "#FFFFFF",
+  line: "#AFC0DA",
+  rainBody: "#D3D9E3",
+  rainLine: "#8D9BB3",
+};
+
 // Rain (see themes/rain.js). levels: amount (0..1) per kind of rain, from its lightest to its
 // heaviest mm/h. max: drops on screen at amount 1. slant: sideways per downward at full wind.
 // speed in units per second, length of a streak in units (shorter in light rain).

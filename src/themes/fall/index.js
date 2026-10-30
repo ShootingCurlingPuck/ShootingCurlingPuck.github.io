@@ -13,6 +13,7 @@ import { drawTree } from "./tree.js";
 import { startOwl } from "./owl.js";
 import { startWind } from "../wind.js";
 import { startRain } from "../rain.js";
+import { startClouds } from "../clouds.js";
 
 export default function startFall(scene) {
   const pal = FALL_PALS[QS.get("fallpal")] || FALL_PALS.a;
@@ -56,9 +57,23 @@ export default function startFall(scene) {
           () => (rain ? rain.amount() : 0),
         ),
       );
-      // Rain last: in front of the falling leaves
+      // Clouds in their own layer (scene.sky); they hang down at most halfway to the first text:
+      // the room names at the top of the plan and the "Rooms" heading (font size 52)
+      const g = scene.geo;
+      const textTop = Math.min(
+        g.LIST.head - 52 * 0.6,
+        ...g.ROOMS.filter((r) => !r.booth).map((r) => r.y + r.h / 2 - g.NAME_F * 0.6),
+      );
+      const clouds = scene.sky
+        ? part("clouds", () =>
+            startClouds(scene.sky, scene, wind || null, textTop, () =>
+              rain ? rain.amount() : 0,
+            ),
+          )
+        : null;
+      // Rain last: in front of the falling leaves, from under the clouds
       const rain = part("rain", () =>
-        startRain(moving, scene, wind || null, surface),
+        startRain(moving, scene, wind || null, surface, clouds || null),
       );
     })
     .catch((e) => debugLog("Autumn shapes: " + e));

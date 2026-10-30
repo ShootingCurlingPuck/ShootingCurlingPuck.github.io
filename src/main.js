@@ -59,6 +59,7 @@ svg.insertBefore(veil, clockG);
 // Front layer for themes, in its own drawing on top: everything that moves goes here, so the TV
 // doesn't have to redraw the whole plan for every moving leaf (see overlay() in core/svg.js)
 const frontG = el("g", { class: "theme-front" }, overlay("moving"));
+const skyLayer = overlay("sky"); // clouds: in front of the rain, so it falls from under them
 drawQR(overlay("top")); // last, so nothing covers it
 
 // Seasonal theme. Live: above the plan and list, under the veil. Standby: above the veil.
@@ -112,6 +113,7 @@ startTheme({
         };
       }),
     ),
+  sky: skyLayer, // a layer of its own above the moving one (clouds drift by moving it whole)
   front: frontG, // above everything except the QR code, in live and standby: for things that move
   palette: P,
   isStandby: () => !!state.standby,

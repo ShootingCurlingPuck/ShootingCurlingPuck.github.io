@@ -31,6 +31,22 @@ body {
 .overlay {
   will-change: transform;
 }
+/* Clouds drift by moving their whole layer, so it may show beyond its box */
+.overlay.sky {
+  overflow: visible;
+}
+.cloud-halo {
+  fill: var(--cloud-body);
+  opacity: 0.35;
+}
+.cloud-line {
+  fill: none;
+  stroke: var(--cloud-line);
+  stroke-width: 5;
+}
+.cloud-body {
+  fill: var(--cloud-body);
+}
 .overlay {
   position: fixed;
   left: 0;

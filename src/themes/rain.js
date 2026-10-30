@@ -11,7 +11,8 @@ import { RAIN } from "../config.js";
 import { everyFrame, detail } from "./toolkit.js";
 
 // ground(x): y where a drop falling at x hits the ground
-export function startRain(layer, scene, wind, ground) {
+// clouds (optional): rain only falls from under them (see clouds.js coverAt)
+export function startRain(layer, scene, wind, ground, clouds) {
   const { VIEW, VR, VB } = scene.geo;
   const forced = parseFloat(QS.get("rain"));
   const g = el("g", { class: "rain" }, layer);
@@ -68,8 +69,12 @@ export function startRain(layer, scene, wind, ground) {
   };
   function newDrop(y) {
     const sl = slope();
-    // start further right the more it slants, so the whole width gets rain
-    const x = VIEW.x + Math.random() * (VIEW.w - sl * VIEW.h);
+    // start further right the more it slants, so the whole width gets rain; with clouds, mostly
+    // from under them (a few tries for a spot under a cloud; anywhere if there are none)
+    let x = VIEW.x + Math.random() * (VIEW.w - sl * VIEW.h);
+    if (clouds && clouds.cover() > 0.05)
+      for (let i = 0; i < 8 && Math.random() > clouds.coverAt(x); i++)
+        x = VIEW.x + Math.random() * (VIEW.w - sl * VIEW.h);
     const d = {
       x: x,
       y: y,
