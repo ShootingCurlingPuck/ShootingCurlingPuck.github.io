@@ -1,6 +1,6 @@
 // Acorns dropping from the oak now and then (more in a gust), mostly early in the season: they fall
 // straight (heavy, unlike leaves), make one small hop on the leaf cover, tip over onto their side, rest a while and fade.
-// Each one shades itself at night like the night veil (it's in front of the sky), with a small
+// Each one shades itself at night like the night veil (it's above it), with a small
 // filter of its own.
 // Test switch: ?acorns=often (one every few seconds)
 import { el, use } from "../../core/svg.js";

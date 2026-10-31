@@ -50,12 +50,13 @@ export default function startFall(scene) {
       // Everything that moves goes in a layer of its own, which the TV can redraw on its own; the
       // tree, floor and fungi stay in the plan's layer, drawn once. The owl (in the trunk, under
       // the night veil) goes in the moving layer (scene.front); the falling leaves and the spider
-      // are in front of the sky, stars and clouds included (scene.near), so they shade themselves
-      // at night: the leaves by their colours, the spider (a small drawing) with a filter.
+      // are above the night veil, in front of the stars and behind the clouds (scene.near), so they
+      // shade themselves at night: the leaves by their colours, the spider (a small drawing) with a
+      // filter.
       const fx = scene.fx || {};
       const moving = scene.front || scene.layer;
       const near = scene.near || moving;
-      // foxfire first: everything else in front of the sky passes in front of it
+      // foxfire first: everything else in the near layer passes in front of it
       part("foxfire", () => startFoxfire(near, scene, glows));
       const spiderLayer = el(
         "g",
