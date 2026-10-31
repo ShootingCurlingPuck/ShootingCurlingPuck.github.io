@@ -1,4 +1,5 @@
-// The sky: weather effects and the day/night cycle, for everything, whatever the season.
+// The sky and the weather, for everything, whatever the season: starts and connects the weather
+// effects (../weather/: wind, clouds, rain) and the day/night cycle (here: daylight, the night sky).
 // Started by main.js before the theme, so it also runs with ?theme=none. Themes get the result as
 // scene.fx: they can react to it (leaves in the wind, ...) and change how it looks, never what the
 // weather is:
@@ -12,9 +13,9 @@
 import { QS } from "../core/params.js";
 import { debugLog, crumb } from "../core/debug.js";
 import { HEAD_F, CLOUDS } from "../config.js";
-import { startWind } from "./wind.js";
-import { startClouds } from "./clouds.js";
-import { startPrecip } from "./precip.js";
+import { startWind } from "../weather/wind.js";
+import { startClouds } from "../weather/clouds.js";
+import { startPrecip } from "../weather/precip.js";
 import { startDaylight } from "./daylight.js";
 import { startNightSky } from "./night-sky.js";
 

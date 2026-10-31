@@ -1,4 +1,4 @@
-// Rain streaks: the default kind of precipitation (see sky/precip.js). Thin slanted streaks in front
+// Rain streaks: the default kind of precipitation (see weather/precip.js). Thin slanted streaks in front
 // of everything (still under the QR code), slanting with the wind, ending on the ground with a tiny
 // splash. Drops are only added at the top and only removed when they land, so rain builds up and
 // dies down naturally. All drops are one path and all splashes another, redrawn every frame: much

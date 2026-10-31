@@ -75,7 +75,7 @@ function moonAt(ms) {
 
 // layer: an overlay of its own, above the night veil and below the clouds; daylight: the clock and
 // darkness (sky/daylight.js); textTop: the top of the first text under the top strip; clouds(): the
-// clouds (sky/clouds.js), if any, for the moon's glow through them
+// clouds (weather/clouds.js), if any, for the moon's glow through them
 export function startNightSky(layer, scene, daylight, textTop, clouds) {
   const { VIEW, VB, FLOOR, CORE } = scene.geo;
   const N = NIGHT;

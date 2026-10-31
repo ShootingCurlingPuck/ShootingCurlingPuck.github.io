@@ -53,11 +53,11 @@ version within about 5 minutes and reloads by itself.
 | `src/layout.js` | Geometry derived from the two above |
 | `src/main.js` | Wires everything together, in drawing order |
 | `src/core/` | Helpers: SVG, text measuring, time, shared state, events, debug, the animation loop and detail level |
-| `src/sky/` | Weather effects and day/night for every season: wind, clouds, rain, the sun, stars and moon (`index.js` starts and connects them) |
+| `src/sky/` | Day and night for every season: daylight, the sun, stars, moon, planets and meteors; `index.js` starts and connects them with the weather effects |
 | `src/plan/` | The floor plan, clock, list panel, QR code |
 | `src/data/` | Fetching bookings and working out room states |
 | `src/system/` | Standby mode, auto-update and reload |
-| `src/weather/` | Live weather for the office (Open-Meteo), as a simple description themes can use |
+| `src/weather/` | The weather for every season: the live data for the office (Open-Meteo, `weather.js`), as a simple description themes can use, and its effects: wind, clouds, rain |
 | `src/themes/` | Seasonal themes: `index.js` picks one by date, `toolkit.js` has shared helpers |
 | `src/themes/fall/settings.js` | Autumn tuning knobs (palettes, falling, ledges) |
 | `assets/sky/sprites.svg` | Shapes for every season (the moon), editable in any SVG editor |
@@ -67,7 +67,7 @@ version within about 5 minutes and reloads by itself.
 Themes get a "scene" from `main.js`: their own layer, the geometry, spots to keep clear (QR code,
 logos) and whether it's standby. They don't touch the plan itself.
 
-The weather effects (`src/sky/`) are not part of a theme: they run in every season, also with
+The weather effects (`src/weather/`) and the sky (`src/sky/`) are not part of a theme: they run in every season, also with
 `?theme=none`, and start before the theme. A theme gets them as `scene.fx` (see `src/sky/index.js`)
 and can react to them (autumn's leaves in the wind) or change how they look: where the ground is,
 the wind's direction on screen, the clouds' colours, or a whole different kind of precipitation

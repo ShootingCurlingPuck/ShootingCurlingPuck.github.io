@@ -20,7 +20,7 @@ export const WEATHER_STALE_MS = 90 * 60 * 1000; // older than this: treat as "no
 // Credit shown under the QR code (required by the data licence), one entry per line
 export const WEATHER_CREDIT = ["Weather by", "Open-Meteo.com"];
 export const CREDIT_F = 15; // its font size
-// Wind (see sky/wind.js). levels: [km/h, strength] points: still under 10 km/h, a breeze to 25,
+// Wind (see weather/wind.js). levels: [km/h, strength] points: still under 10 km/h, a breeze to 25,
 // windy to 45, stormy beyond. noData: strength when there's no weather (a light breeze).
 // ease: seconds to follow a weather change. Gusts: every gustEvery seconds in still air (much more
 // often when windy), rising in gustRise and fading over gustFade seconds.
@@ -40,7 +40,7 @@ export const WIND = {
   standbyBoost: 1.3,
   direction: -1, // on screen: -1 right to left, 1 left to right (a theme may change it)
 };
-// Clouds (see sky/clouds.js): `count` clouds spread over a field `period` screen widths long
+// Clouds (see weather/clouds.js): `count` clouds spread over a field `period` screen widths long
 // that repeats as it drifts; each `width` units wide, made of puffs every `puffEvery` units with
 // radii `puff` (bigger in the middle) and a soft `halo`. They hang down at most `depth` of the way
 // from the top edge to the first text (0.95: to just above it, never over it). `opacity` of a cloud; from `bankFrom` cover on, the clouds
@@ -136,7 +136,7 @@ export const NIGHT = {
   },
 };
 
-// Rain (see sky/precip.js and sky/streaks.js). levels: amount (0..1) per kind of rain, from its lightest to its
+// Rain (see weather/precip.js and weather/streaks.js). levels: amount (0..1) per kind of rain, from its lightest to its
 // heaviest mm/h. max: drops on screen at amount 1. slant: sideways per downward at full wind.
 // speed in units per second, length of a streak in units (shorter in light rain).
 // ease: seconds to follow a weather change. splashFrom: amount above which drops splash.

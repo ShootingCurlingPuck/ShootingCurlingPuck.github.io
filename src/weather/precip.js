@@ -1,6 +1,6 @@
 // Precipitation, from the live weather, for everything (whatever the season). This part decides how
 // much is coming down and where; how it looks and moves is a "kind" that can be swapped:
-// rain streaks by default (sky/streaks.js), a theme may bring its own (snowflakes, ...) with
+// rain streaks by default (weather/streaks.js), a theme may bring its own (snowflakes, ...) with
 // setKind. A kind is a function (layer, api) => { frame(dt), remove() }, with api:
 //   amount()   how hard it's coming down now, 0..1 (eases towards the weather in about a minute)
 //   slope()    sideways per downward movement, from the wind (sign = wind direction)
