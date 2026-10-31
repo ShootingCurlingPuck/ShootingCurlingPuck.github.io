@@ -208,6 +208,26 @@ export const OWL = {
   rainAwakeEvery: [2, 5], // ...every few minutes instead
   // at night it sits hunched and fluffed up in rain or strong wind (no hunting in that)
   hunker: { rain: 0.35, wind: 0.55 },
+  // The night hunt (see owl-flight.js): not in rain or strong wind (when it hunkers down)
+  hunt: {
+    every: [8, 20], // minutes between hunts, at night
+    away: [2, 5], // minutes it's gone
+    spot: 1.5, // seconds it stares out before it takes off
+    speed: 230, // up close, units per second
+    beats: 2.6, // wingbeats per second
+    size: 1.3, // up close
+    // seen far off while it's away: how many times, how often it drops behind the leaves (else it
+    // just glides across), how long it stays down there (seconds), its speed, size and colour
+    far: {
+      sightings: [1, 3],
+      dive: 0.5,
+      hidden: [4, 8],
+      speed: 100,
+      size: 1.5,
+      colour: "#140F18",
+      opacity: 0.85,
+    },
+  },
 };
 
 // Foxfire (see foxfire.js): the glow of some fungi in the dark. It follows how dark the screen looks

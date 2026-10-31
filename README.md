@@ -22,7 +22,7 @@ every 30 seconds, to see the fades),
 clock, live/standby, sky, season, theme, layout and that hour's real weather; the rooms show today's bookings at that time of day), `?meteors=often` (40 times more shooting stars, to see them),
 `?darkness=0..1` (fixed darkness),
 `?skip=wind,clouds,precip,daylight,night,tree,floor,fungi,spider,owl,falling,acorns,foxfire,wisp` (leave out parts of the weather or the autumn theme), `?icons=text|emoji`. Autumn also has `?seed=<any text>` (another day's layout), `?fallpal=a|b`, `?haze=0`,
-`?spider=now|tree` (a visit every 15-25 s; `tree`: in standby always from a branch), `?acorns=often`, `?wisp=often` (a will-o'-the-wisp every 20 s or so, when it's dark: add `?time=23:00`).
+`?spider=now|tree` (a visit every 15-25 s; `tree`: in standby always from a branch), `?acorns=often`, `?owl=awake|look|hunt` (`hunt`: at night, hunts one after the other, each about 30 s away), `?wisp=often` (a will-o'-the-wisp every 20 s or so, when it's dark: add `?time=23:00`).
 
 ## When the TV crashes
 

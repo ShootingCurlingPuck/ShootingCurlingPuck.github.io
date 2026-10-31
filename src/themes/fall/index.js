@@ -76,7 +76,9 @@ export default function startFall(scene) {
               pos: () => (wisp && wisp.out() ? wisp.pos() : spider.pos()),
             }
           : null;
-      part("owl", () => tree && startOwl(moving, scene, tree, watched));
+      // the owl sits in the trunk; when it goes hunting it flies off up close in front of the
+      // veil, shading itself, and shows far off in the night sky (owl-flight.js)
+      part("owl", () => tree && startOwl(moving, scene, tree, watched, near));
       // The weather (scene.fx, see sky/index.js) is general; autumn reacts to it and tells it
       // where its ground is: rain lands on the leaf cover, up to 25 units into it
       if (fx.precip && surface) fx.precip.setGround(surface, 25);

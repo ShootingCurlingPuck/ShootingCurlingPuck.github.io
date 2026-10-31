@@ -409,6 +409,9 @@ export function startNightSky(layer, scene, daylight, textTop, clouds) {
   // for checking against the real sky: where something is now
   return {
     addForeground: addForeground,
+    // a group out in the sky, cut out like the stars: for far-away things (the owl hunting), which
+    // then pass behind the plan, the list, the clock and whatever the theme puts in front
+    far: g,
     moon: () => {
       const ms = daylight.time();
       const m = moonAt(ms);

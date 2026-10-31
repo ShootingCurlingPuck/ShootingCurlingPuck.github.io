@@ -5,13 +5,17 @@
 // eyes half shut, in rain or strong wind.
 // It wakes up to look at a room that just changed state, and watches the spider (or the wisp) for
 // a moment when it shows up (then loses interest and goes back to what it was doing).
-// Test switches: ?owl=awake (frequent awake moments), ?owl=look (pretends rooms change often)
+// At night, every so often, it goes hunting (see owl-flight.js), unless it's raining or windy.
+// Test switches: ?owl=awake (frequent awake moments), ?owl=look (pretends rooms change often),
+// ?owl=hunt (at night: hunts one after the other, each about 30 seconds away)
 import { QS } from "../../core/params.js";
 import { el, use } from "../../core/svg.js";
 import { everyFrame, addStyle } from "../toolkit.js";
 import { OWL, TREE } from "./settings.js";
+import { startOwlFlight } from "./owl-flight.js";
 
-export function startOwl(layer, scene, tree, spider) {
+// flightLayer (optional): where it flies up close when it goes hunting
+export function startOwl(layer, scene, tree, spider, flightLayer) {
   const test = QS.get("owl");
   const between = (r) => r[0] + Math.random() * (r[1] - r[0]);
   const fx = scene.fx || {};
@@ -127,6 +131,22 @@ export function startOwl(layer, scene, tree, spider) {
   );
   const zs = el("g", {}, g); // the little z's
 
+  // ---- Hunting ----
+  const hunt = test === "hunt";
+  const flight =
+    flightLayer
+      ? startOwlFlight(flightLayer, scene, { x: bx, y: by }, {
+          hide: () => (owl.style.display = "none"),
+          show: () => (owl.style.display = ""),
+          look: (p, s) => {
+            lookAt = { x: p[0], y: p[1] };
+            lookUntil = t + s;
+          },
+        })
+      : null;
+  if (flight && hunt) OWL.hunt.away = [0.4, 0.5]; // a short trip, with a sighting far off
+  let nextHunt = hunt ? 5 : between(OWL.hunt.every) * 60;
+
   // ---- State ----
   let t = 0,
     night = false,
@@ -186,6 +206,18 @@ export function startOwl(layer, scene, tree, spider) {
     const rough = night && (rain() >= OWL.hunker.rain || windy() >= OWL.hunker.wind);
     hunch += ((rough ? 1 : 0) - hunch) * Math.min(1, dt / 3);
     place();
+    // off hunting? (only on a calm, dry night, and not while it's watching something)
+    if (
+      flight &&
+      night &&
+      !rough &&
+      !flight.out() &&
+      t > nextHunt &&
+      t > lookUntil &&
+      !(spider && spider.out() && t < spiderUntil)
+    ) {
+      if (flight.go()) nextHunt = t + (hunt ? 15 : between(OWL.hunt.every) * 60);
+    }
     const spiderOut = spider && spider.out();
     if (spiderOut && !spiderWas) spiderUntil = t + OWL.spiderFor; // it just showed up
     spiderWas = spiderOut;
