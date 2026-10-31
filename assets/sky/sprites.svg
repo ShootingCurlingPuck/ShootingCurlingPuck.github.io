@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-60 -60 120 120">
+  <!-- Shapes for the sky (every season). Loaded by src/sky/ into the page; ids starting with "sky-".
+       Editable in any SVG editor; keep the ids. -->
+  <defs>
+    <!-- The full moon at radius 50, centred on 0,0, as seen from the northern hemisphere: the dark
+         "seas" (maria) roughly where they really are. The page cuts it to the lit part (the phase). -->
+    <g id="sky-moon">
+      <circle r="50" fill="#FFF6DA"/>
+      <g fill="#D8CCA6" opacity="0.7">
+        <!-- Oceanus Procellarum: the big one on the left -->
+        <path d="M-38,-14C-44,-2 -42,14 -34,24C-28,31 -20,30 -17,22C-14,13 -20,6 -18,-4C-16,-13 -22,-22 -30,-22C-34,-21 -36,-18 -38,-14Z"/>
+        <!-- Mare Imbrium: upper left, round -->
+        <path d="M-24,-30C-31,-26 -30,-15 -23,-11C-15,-7 -6,-10 -5,-18C-4,-26 -10,-33 -17,-33C-20,-33 -22,-32 -24,-30Z"/>
+        <!-- Mare Frigoris: a thin band along the top -->
+        <path d="M-26,-38C-18,-42 -2,-43 12,-40C18,-39 20,-36 15,-35C2,-36 -12,-36 -22,-33C-27,-32 -29,-36 -26,-38Z"/>
+        <!-- Mare Serenitatis -->
+        <path d="M4,-25C0,-21 1,-13 7,-11C13,-9 18,-13 18,-19C18,-25 13,-29 8,-28C6,-27.5 5,-26.5 4,-25Z"/>
+        <!-- Mare Tranquillitatis -->
+        <path d="M8,-8C4,-3 6,6 13,8C20,10 27,6 27,-1C27,-7 21,-11 15,-11C12,-11 10,-10 8,-8Z"/>
+        <!-- Mare Crisium: the isolated oval on the right -->
+        <ellipse cx="35" cy="-15" rx="6.5" ry="5"/>
+        <!-- Mare Fecunditatis and Nectaris, lower right -->
+        <path d="M24,8C21,13 23,20 28,21C33,22 36,17 35,12C34,8 31,6 28,6C26,6 25,7 24,8Z"/>
+        <path d="M12,14C10,17 11,21 15,21C18,21 19,18 18,15C17,13 14,12 12,14Z"/>
+        <!-- Mare Nubium and Humorum, lower left of centre -->
+        <path d="M-10,14C-14,18 -12,26 -6,27C0,28 4,24 3,19C2,15 -3,12 -7,12C-8,12 -9,13 -10,14Z"/>
+        <path d="M-26,24C-29,26 -28,31 -24,31C-20,31 -19,27 -21,25C-22,24 -24,23 -26,24Z"/>
+      </g>
+      <!-- a few bright craters (Tycho, Copernicus) -->
+      <circle cx="-6" cy="38" r="2.4" fill="#FFFDF2"/>
+      <circle cx="-16" cy="2" r="2" fill="#FFFDF2"/>
+      <circle r="50" fill="none" stroke="#E9DDB8" stroke-width="1.5"/>
+    </g>
+  </defs>
+  <use href="#sky-moon"/>
+</svg>

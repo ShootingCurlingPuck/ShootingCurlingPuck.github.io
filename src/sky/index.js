@@ -6,7 +6,9 @@
 //   fx.clouds             cover(), coverAt(x), setStyle({ body, line, rainBody, rainLine })
 //   fx.precip             amount(), setGround(fn, below), setKind(start) (see precip.js)
 //   fx.daylight           darkness() (0 day .. 1 night), sunAltitude(), veil() (see daylight.js)
-// Any part can be missing (?skip=wind,clouds,precip,daylight, or if it failed): check before using it.
+//   fx.night              addForeground(node): keep the stars and moon behind this drawing (in live
+//                         mode and standby)
+// Any part can be missing (?skip=wind,clouds,precip,daylight,night, or if it failed): check before using it.
 import { QS } from "../core/params.js";
 import { debugLog, crumb } from "../core/debug.js";
 import { HEAD_F } from "../config.js";
@@ -14,9 +16,10 @@ import { startWind } from "./wind.js";
 import { startClouds } from "./clouds.js";
 import { startPrecip } from "./precip.js";
 import { startDaylight } from "./daylight.js";
+import { startNightSky } from "./night-sky.js";
 
 // scene: as given to themes; it needs scene.front (moving layer), scene.night (the night veil's
-// layer, above the moving one) and scene.sky (the clouds' layer, above the veil)
+// layer, above the moving one), scene.stars (above the veil) and scene.sky (the clouds' layer, on top)
 export function startSky(scene) {
   const skip = (QS.get("skip") || "").split(",");
   // Each part runs on its own, so a bug in one doesn't take the others down
@@ -47,6 +50,12 @@ export function startSky(scene) {
   const daylight = scene.night
     ? part("daylight", () => startDaylight(scene.night, scene))
     : null;
+  const night =
+    daylight && scene.stars
+      ? part("night", () =>
+          startNightSky(scene.stars, scene, daylight, textTop, () => clouds),
+        )
+      : null;
   const wind = part("wind", () => startWind(scene));
   const clouds = scene.sky
     ? part("clouds", () =>
@@ -70,5 +79,6 @@ export function startSky(scene) {
     clouds: clouds || null,
     precip: precip || null,
     daylight: daylight || null,
+    night: night || null,
   };
 }

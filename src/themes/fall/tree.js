@@ -426,6 +426,7 @@ export function drawTree(layer, scene, pal) {
   });
 
   return {
+    group: g, // the whole tree (e.g. so the night sky can keep its stars behind it)
     trunkAt: trunkAt,
     // The undersides of all branches crossing x that something can hang from (at least minW
     // thick and not too steep), as a list of y's; empty if there's no such wood there

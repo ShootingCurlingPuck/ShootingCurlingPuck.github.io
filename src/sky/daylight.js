@@ -3,7 +3,8 @@
 // 0 (day) to 1 (full night), through sunset and the three twilights. The whole screen follows it
 // under a night veil, darker in standby than in live mode (where people still need to read the
 // rooms). The QR code only gets a share of it (DAYLIGHT.qr), so it keeps scanning.
-// Test switches: ?time=17:40 (pretend it's that time today), ?darkness=0..1 (fixed darkness)
+// Test switches: ?time=17:40 (pretend it's that time today), ?date=2026-11-05 (pretend it's that
+// day, e.g. for another moon phase), ?darkness=0..1 (fixed darkness)
 import { el } from "../core/svg.js";
 import { QS } from "../core/params.js";
 import { nowMs, fmt } from "../core/time.js";
@@ -56,6 +57,14 @@ export function startDaylight(layer, scene) {
   if (asked) {
     const now = fmt(new Date(nowMs())).split(":");
     shift = ((+asked[1] - +now[0]) * 60 + (+asked[2] - +now[1])) * 60000;
+  }
+  // ?date=YYYY-MM-DD: the same, whole days
+  const day = /^(\d{4})-(\d\d)-(\d\d)$/.exec(QS.get("date") || "");
+  if (day) {
+    const today = new Date(nowMs());
+    const then = Date.UTC(+day[1], +day[2] - 1, +day[3]);
+    const now0 = Date.UTC(today.getFullYear(), today.getMonth(), today.getDate());
+    shift += Math.round((then - now0) / 86400000) * 86400000;
   }
   const time = () => nowMs() + shift;
   const alt = () => sunAltitude(time(), WEATHER_AT.lat, WEATHER_AT.lon);
@@ -132,6 +141,7 @@ export function startDaylight(layer, scene) {
 
   return {
     darkness: () => d, // 0 day .. 1 full night
+    time: time, // the clock the sky runs on (ms; shifted by ?time and ?date)
     sunAltitude: alt,
     // what the veil does, for layers above it that darken themselves (clouds): its colour and
     // opacity right now

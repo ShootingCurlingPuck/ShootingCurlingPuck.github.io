@@ -87,6 +87,36 @@ export const DAYLIGHT = {
   qr: 0.4,
 };
 
+// The night sky (see sky/night-sky.js). The screen is a window facing `facing` degrees (0 north,
+// 90 east, 135 south-east), its middle `centre` degrees up, the top edge `top` degrees up (the
+// bottom edge is the horizon). Positions are updated every `every` seconds. stars: brightness
+// groups (up to magnitude `mag`), each with a dot `size` (and a soft `glow` around the brightest),
+// its opacity, and the darkness `from` which it comes out. moon: its radius, its height in the top
+// strip (0 top .. 1 just above the text), the darkness from which it shows fully, its opacity by
+// day (a pale day moon, only when more than `dayLit` of it is lit), how strongly its glow shows
+// through a cloud, and its colour if the sprite (assets/sky/sprites.svg) can't be loaded.
+export const NIGHT = {
+  facing: 135,
+  centre: 30,
+  top: 60,
+  every: 20,
+  stars: [
+    { mag: 1, size: 9, glow: 22, opacity: 1, from: 0.45 },
+    { mag: 2, size: 7, glow: 15, opacity: 0.95, from: 0.55 },
+    { mag: 3, size: 5.2, opacity: 0.85, from: 0.68 },
+    { mag: 4, size: 4, opacity: 0.7, from: 0.8 },
+  ],
+  moon: {
+    size: 40,
+    height: 0.5,
+    from: 0.15,
+    day: 0.35,
+    dayLit: 0.2,
+    glow: 0.9,
+    colour: "#FFF6DA",
+  },
+};
+
 // Rain (see sky/precip.js and sky/streaks.js). levels: amount (0..1) per kind of rain, from its lightest to its
 // heaviest mm/h. max: drops on screen at amount 1. slant: sideways per downward at full wind.
 // speed in units per second, length of a streak in units (shorter in light rain).
@@ -132,6 +162,7 @@ export const SYNC_MS = 10 * 60 * 1000; // how often to sync the clock
 export const WATCH = [
   "dist/app.js",
   "floorplan.css",
+  "assets/sky/sprites.svg",
   "assets/themes/fall/sprites.svg",
 ];
 

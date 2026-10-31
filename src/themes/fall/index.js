@@ -33,9 +33,8 @@ export default function startFall(scene) {
     .then(() => {
       // Tree first: the floor's leaves cover the foot of its trunk
       const tree = part("tree", () => drawTree(scene.layer, scene, pal));
-      const surface = part("floor", () =>
-        drawForestFloor(el("g", { class: "ground" }, scene.layer), scene, pal),
-      );
+      const ground = el("g", { class: "ground" }, scene.layer);
+      const surface = part("floor", () => drawForestFloor(ground, scene, pal));
       part("fungi", () => drawLedgeFungi(scene.layer, scene));
       // Everything that moves goes in the front layer (scene.front), which the TV can redraw on
       // its own; the tree, floor and fungi stay in the plan's layer, drawn once
@@ -46,6 +45,11 @@ export default function startFall(scene) {
       // where its ground is: rain lands on the leaf cover, up to 25 units into it
       const fx = scene.fx || {};
       if (fx.precip && surface) fx.precip.setGround(surface, 25);
+      // and keeps the night sky behind the tree and the leaf litter
+      if (fx.night) {
+        if (tree) fx.night.addForeground(tree.group);
+        fx.night.addForeground(ground);
+      }
       part("falling", () =>
         startFalling(
           moving,

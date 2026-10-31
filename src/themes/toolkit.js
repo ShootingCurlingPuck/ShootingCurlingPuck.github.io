@@ -4,6 +4,7 @@ import { seeded } from "../core/anim.js";
 // so theme parts find everything here
 export { detail, scaled } from "../core/perf.js";
 export { everyFrame, seeded, mix } from "../core/anim.js";
+export { loadSprites } from "../core/sprites.js";
 
 export const INK = "#000000"; // outline base colour (same as the brand ink)
 
@@ -24,24 +25,6 @@ export function roughen(d, rnd, amt) {
   );
 }
 
-// Load a sprite sheet and copy every element whose id has one of the prefixes into <defs>.
-// Resolves when done; rejects if the file can't be loaded.
-export function loadSprites(url, prefixes) {
-  return fetch(url + "?v=" + Date.now(), { cache: "no-store" })
-    .then((res) => {
-      if (!res.ok) throw new Error("HTTP " + res.status + " for " + url);
-      return res.text();
-    })
-    .then((text) => {
-      const doc = new DOMParser().parseFromString(text, "image/svg+xml");
-      const found = doc.querySelectorAll("[id]");
-      for (let i = 0; i < found.length; i++) {
-        const n = found[i];
-        if (prefixes.some((p) => n.getAttribute("id").indexOf(p) === 0))
-          defs.appendChild(document.importNode(n, true));
-      }
-    });
-}
 
 // Make n roughened copies of a shape already in <defs> (id-0, id-1, ...). Paths are roughened in the
 // order of `amounts` ({ className: amount }), each copy with its own fixed seed.
