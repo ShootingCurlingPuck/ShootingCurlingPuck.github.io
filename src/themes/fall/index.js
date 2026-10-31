@@ -11,9 +11,14 @@ import { drawLedgeFungi } from "./ledges.js";
 import { startSpider } from "./spider.js";
 import { drawTree } from "./tree.js";
 import { startOwl } from "./owl.js";
+import { startAcorns } from "./acorns.js";
+import { season } from "./season.js";
 
 export default function startFall(scene) {
-  const pal = FALL_PALS[QS.get("fallpal")] || FALL_PALS.a;
+  // The season decides the colours (from green and yellow to brown), how deep the litter is, and
+  // how many acorns and mushrooms there are (see season.js)
+  const now = season();
+  const pals = now.palettes(FALL_PALS[QS.get("fallpal")] || FALL_PALS.a);
   // Each part runs on its own, so a bug in one doesn't take the others down.
   // ?skip=tree,owl,... leaves parts out (to find what a TV can't handle); each start is logged.
   const skip = (QS.get("skip") || "").split(",");
@@ -32,10 +37,12 @@ export default function startFall(scene) {
   loadShapes()
     .then(() => {
       // Tree first: the floor's leaves cover the foot of its trunk
-      const tree = part("tree", () => drawTree(scene.layer, scene, pal));
+      const tree = part("tree", () => drawTree(scene.layer, scene, pals.tree));
       const ground = el("g", { class: "ground" }, scene.layer);
-      const surface = part("floor", () => drawForestFloor(ground, scene, pal));
-      part("fungi", () => drawLedgeFungi(scene.layer, scene));
+      const surface = part("floor", () =>
+        drawForestFloor(ground, scene, pals.litter, now),
+      );
+      part("fungi", () => drawLedgeFungi(scene.layer, scene, now.fungi));
       // Everything that moves goes in a layer of its own, which the TV can redraw on its own; the
       // tree, floor and fungi stay in the plan's layer, drawn once. The owl (in the trunk, under
       // the night veil) goes in the moving layer (scene.front); the falling leaves and the spider
@@ -63,12 +70,19 @@ export default function startFall(scene) {
         startFalling(
           near,
           scene,
-          pal,
+          pals.tree, // they come from the tree
           surface || (() => scene.geo.VB - 20),
           tree || null,
           fx.wind || null,
           () => (fx.precip ? fx.precip.amount() : 0),
         ),
+      );
+      part(
+        "acorns",
+        () =>
+          tree &&
+          surface &&
+          startAcorns(near, scene, tree, surface, fx.wind || null, now.acornsPerMinute),
       );
     })
     .catch((e) => debugLog("Autumn shapes: " + e));

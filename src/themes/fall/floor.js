@@ -3,10 +3,22 @@
 // The layout is seeded by date: stable all day, different tomorrow.
 import { TZ } from "../../config.js";
 import { QS } from "../../core/params.js";
-import { nowMs } from "../../core/time.js";
+import { sceneNow } from "../../core/time.js";
 import { use } from "../../core/svg.js";
 import { seeded, pick, mix, INK, randInt } from "../toolkit.js";
-import { HAZE, FLOOR_PROPS } from "./settings.js";
+import { HAZE, FLOOR_PROPS, ACORNS } from "./settings.js";
+
+// Floor props that follow the season (see season.js), and by which amount
+const SEASONAL = {
+  acorn: "acornsOnGround",
+  conker: "acornsOnGround",
+  husk: "acornsOnGround",
+  mushroom: "fungi",
+  mushrooms: "fungi",
+  chanterelles: "fungi",
+  mycena: "fungi",
+  puffball: "fungi",
+};
 import {
   LEAF_FORM_WEIGHTS,
   LEAF_VARIANTS,
@@ -14,7 +26,9 @@ import {
   propShape,
 } from "./shapes.js";
 
-export function drawForestFloor(g, scene, pal) {
+// amounts (optional, see season.js): { litter: depth 0..1, acornsOnGround, fungi: times the usual }
+export function drawForestFloor(g, scene, pal, amounts) {
+  const A = amounts || { litter: 1, acornsOnGround: 1, fungi: 1 };
   const { VIEW, VR, VB, ROOMS, LIST, CHIP, NAME_F, BOOTH_CHIP_Y } = scene.geo;
   const P = scene.palette;
   const haze = QS.get("haze") === "0" ? 0 : HAZE;
@@ -22,7 +36,7 @@ export function drawForestFloor(g, scene, pal) {
   const rnd = seeded(
     "fall-floor " +
       (QS.get("seed") ||
-        new Date(nowMs()).toLocaleDateString("en-GB", { timeZone: TZ })),
+        new Date(sceneNow()).toLocaleDateString("en-GB", { timeZone: TZ })),
   );
 
   const oasis = ROOMS.filter((r) => r.name === "Oasis")[0];
@@ -54,11 +68,13 @@ export function drawForestFloor(g, scene, pal) {
       0.15 * Math.sin(x / 23 + p3);
     return Math.max(0, Math.min(1, n));
   };
+  // the season's depth (A.litter) scales everything above the always-covered strip along the bottom
   const surface = (x) => {
-    const floor = carpet - (carpet - groundTop) * floorH(x);
-    return Math.max(pileTop, Math.min(floor, groundTop - mound(x)));
+    const floor = carpet - (carpet - groundTop) * floorH(x) * A.litter;
+    const pile = carpet - (carpet - (groundTop - mound(x))) * A.litter;
+    return Math.max(pileTop, Math.min(floor, pile));
   };
-  const inPile = (x) => mound(x) > 12;
+  const inPile = (x) => mound(x) * A.litter > 12;
 
   const keepOut = scene.keepOut; // QR code, logos
   const hits = (x, y, r) =>
@@ -166,12 +182,14 @@ export function drawForestFloor(g, scene, pal) {
     let name = kind,
       s = 1.1 + rnd() * 0.25,
       deg;
-    if (kind === "acorn")
+    if (kind === "acorn") {
       name = pick(rnd, [
         ["acorn", 6],
         ["nut", 2],
         ["cap", 1],
       ]);
+      s = ACORNS.size * (0.95 + rnd() * 0.15); // the same size as the ones falling from the tree
+    }
     if (kind === "twig") name = rnd() < 0.5 ? "twig" : "twig-fork";
     if (name === "cap")
       deg = (rnd() < 0.5 ? 0 : 180) + (rnd() - 0.5) * 24; // bowl-up or dome-up
@@ -224,7 +242,10 @@ export function drawForestFloor(g, scene, pal) {
   const todo = [];
   Object.keys(FLOOR_PROPS).forEach((k) => {
     if (k === "stump") return;
-    for (let n = randInt(rnd, FLOOR_PROPS[k][0], FLOOR_PROPS[k][1]); n > 0; n--)
+    // the season: more or fewer acorns (and nuts) and mushrooms
+    const times = SEASONAL[k] ? A[SEASONAL[k]] : 1;
+    const n0 = randInt(rnd, FLOOR_PROPS[k][0], FLOOR_PROPS[k][1]);
+    for (let n = Math.round(n0 * times + (rnd() - 0.5) * 0.6); n > 0; n--)
       todo.push(k);
   });
   for (let i = todo.length - 1; i > 0; i--) {

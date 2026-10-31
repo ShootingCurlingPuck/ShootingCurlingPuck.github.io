@@ -2,32 +2,12 @@
 // top-right corner of the plan, and a canopy that thins as autumn goes on.
 // The tree's shape never changes (fixed seed). Each canopy leaf has its own "drop day", so the
 // crown empties gradually from 1 October to 30 November and never grows back mid-season.
-// Test switch: ?treeday=0..60 (days since 1 October)
-import { TZ } from "../../config.js";
-import { QS } from "../../core/params.js";
-import { nowMs } from "../../core/time.js";
+// To see another point in the season: ?date=2026-11-25 (see core/time.js)
+import { seasonDay } from "./season.js";
 import { el, use } from "../../core/svg.js";
 import { seeded, pick, mix, INK } from "../toolkit.js";
 import { TREE } from "./settings.js";
 import { LEAF_FORM_WEIGHTS, LEAF_VARIANTS, leafShape } from "./shapes.js";
-
-// Days since 1 October (Brussels date), 0..60
-function seasonDay() {
-  const forced = QS.get("treeday");
-  if (forced !== null) return Math.max(0, Math.min(60, +forced));
-  const p = new Date(nowMs())
-    .toLocaleDateString("en-GB", {
-      timeZone: TZ,
-      day: "2-digit",
-      month: "2-digit",
-    })
-    .split("/");
-  const day = +p[0],
-    month = +p[1];
-  if (month === 10) return day - 1;
-  if (month === 11) return 30 + day;
-  return month < 10 ? 0 : 60;
-}
 
 // Returns { fullness: 0..1, spawnPoint(): {x, y} | null } for the falling leaves
 export function drawTree(layer, scene, pal) {

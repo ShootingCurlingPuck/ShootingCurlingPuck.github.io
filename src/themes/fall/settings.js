@@ -24,6 +24,41 @@ export const FALL_PALS = {
 };
 export const HAZE = 0.4; // how far back-layer floor leaves fade towards the background
 
+// The season (see season.js), in days since 1 October (0) to 30 November (60).
+// colourPeaks: when each palette colour (same order as FALL_PALS) is most common: greens and yellows
+// early, oranges and reds mid-season, browns late; colourSpread: how many days a colour stays
+// common; colourRare: how rare it gets out of season. litterLag: the litter's colours follow the
+// tree's this many days later. The rest are [day, value] points: litter depth (share of the full
+// pile), acorns on the ground (times FLOOR_PROPS), acorns falling from the tree (per minute) and
+// mushrooms (times FLOOR_PROPS and LEDGE_FUNGI): fungi peak around mid-October.
+export const FALL_SEASON = {
+  colourPeaks: [26, 46, 14, 8, 0, 30, 36, 58],
+  colourSpread: 16,
+  colourRare: 0.05,
+  litterLag: 10,
+  litter: [
+    [0, 0.3],
+    [30, 0.7],
+    [60, 1],
+  ],
+  acornsOnGround: [
+    [0, 0.5],
+    [25, 1.3],
+    [60, 0.25],
+  ],
+  acornsFalling: [
+    [0, 0.6],
+    [20, 0.4],
+    [40, 0],
+  ],
+  fungi: [
+    [0, 0.5],
+    [18, 1.5],
+    [45, 0.8],
+    [60, 0.3],
+  ],
+};
+
 export const FALLING = {
   live: { max: 6, every: 7 }, // at most this many in the air, a new one about every N seconds
   standby: { max: 20, every: 2 },
@@ -44,6 +79,19 @@ export const FALLING = {
   // Wet leaves in heavy rain (scaled down in lighter rain): +40% falling speed, half the sway
   wet: { fall: 0.4, sway: 0.5 },
   swirl: { calm: [60, 120], stormy: [180, 320], kick: [4, 10], reach: 160 },
+};
+
+// Acorns dropping from the tree (how often: FALL_SEASON.acornsFalling): at most this many at once,
+// their size (the acorns lying on the floor are about the same), how fast they fall (units per
+// second, per second), how much of their speed is left after their one small hop on the leaves,
+// and how many seconds they rest there before fading
+export const ACORNS = {
+  max: 4,
+  size: 0.8,
+  gravity: 900,
+  bounce: 0.12,
+  rest: [40, 90],
+  tip: 0.35, // seconds to tip over a quarter turn onto its side after landing
 };
 
 // Things on the forest floor: how many of each, per day (a random number in the range)
