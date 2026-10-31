@@ -1,8 +1,10 @@
 // A tawny owl living in a hollow in the tree's trunk.
-// Daytime: dozes (the odd nod, little z's, a sigh every few seconds), with a short awake moment every so often.
-// It wakes up to look at a room that just changed state, and watches the spider for a moment when
-// it shows up (then loses interest and goes back to what it was doing).
-// Standby (evenings, weekends): awake, looking around, with a glint in its eyes.
+// Day (by the sky, see sky/daylight.js): dozes (the odd nod, little z's, a sigh every few seconds),
+// with a short awake moment every so often, more often when heavy rain drums on the tree.
+// Night, dusk to dawn: awake, looking around, with a glint in its eyes; hunched and fluffed up,
+// eyes half shut, in rain or strong wind.
+// It wakes up to look at a room that just changed state, and watches the spider (or the wisp) for
+// a moment when it shows up (then loses interest and goes back to what it was doing).
 // Test switches: ?owl=awake (frequent awake moments), ?owl=look (pretends rooms change often)
 import { QS } from "../../core/params.js";
 import { el, use } from "../../core/svg.js";
@@ -12,8 +14,13 @@ import { OWL, TREE } from "./settings.js";
 export function startOwl(layer, scene, tree, spider) {
   const test = QS.get("owl");
   const between = (r) => r[0] + Math.random() * (r[1] - r[0]);
+  const fx = scene.fx || {};
+  const rain = () => (fx.precip ? fx.precip.amount() : 0);
+  const windy = () => (fx.wind ? fx.wind.strength() : 0);
   const awakeEvery = () =>
-    test === "awake" ? 20 : between(OWL.awakeEvery) * 60;
+    test === "awake"
+      ? 20
+      : between(rain() >= OWL.rainWakes ? OWL.rainAwakeEvery : OWL.awakeEvery) * 60;
 
   // ---- Drawing ----
   const at = tree.trunkAt(OWL.y);
@@ -37,13 +44,20 @@ export function startOwl(layer, scene, tree, spider) {
   // The owl sits on the floor of the hollow; its feet are hidden by the hollow's lower lip
   const bx = hx,
     by = hy + H.ry - 6;
-  const owl = el(
-    "g",
-    {
-      transform: `translate(${bx.toFixed(1)} ${by.toFixed(1)}) scale(${OWL.scale})`,
-    },
-    g,
-  );
+  const owl = el("g", {}, g);
+  // hunched in bad weather: a bit lower and wider (0 normal .. 1 fully hunched)
+  let hunch = 0,
+    lastHunch = -1;
+  function place() {
+    const k = Math.round(hunch * 20) / 20;
+    if (k === lastHunch) return;
+    lastHunch = k;
+    owl.setAttribute(
+      "transform",
+      `translate(${bx.toFixed(1)} ${by.toFixed(1)}) scale(${(OWL.scale * (1 + 0.07 * k)).toFixed(3)} ${(OWL.scale * (1 - 0.07 * k)).toFixed(3)})`,
+    );
+  }
+  place();
   // Sighs: every few seconds the owl puffs up a little and settles back. A short CSS animation
   // (scaling around the owl's base, this group's 0,0); quick movements read well even at this
   // small size, where slow continuous breathing showed up as pixel steps.
@@ -115,6 +129,7 @@ export function startOwl(layer, scene, tree, spider) {
 
   // ---- State ----
   let t = 0,
+    night = false,
     awakeUntil = 0,
     nextAwake = awakeEvery(),
     lookUntil = 0,
@@ -164,7 +179,13 @@ export function startOwl(layer, scene, tree, spider) {
 
   everyFrame((now, dt) => {
     t += dt;
-    const standby = scene.isStandby();
+    // day or night, by the sky (with a gap, so it doesn't flip back and forth at dusk)
+    const dark = fx.daylight ? fx.daylight.darkness() : scene.isStandby() ? 1 : 0;
+    if (dark >= OWL.night[1]) night = true;
+    else if (dark < OWL.night[0]) night = false;
+    const rough = night && (rain() >= OWL.hunker.rain || windy() >= OWL.hunker.wind);
+    hunch += ((rough ? 1 : 0) - hunch) * Math.min(1, dt / 3);
+    place();
     const spiderOut = spider && spider.out();
     if (spiderOut && !spiderWas) spiderUntil = t + OWL.spiderFor; // it just showed up
     spiderWas = spiderOut;
@@ -174,7 +195,7 @@ export function startOwl(layer, scene, tree, spider) {
     let awake = true;
     if (spiderOut && t < spiderUntil) target = spider.pos();
     else if (t < lookUntil) target = lookAt;
-    else if (standby || t < awakeUntil) {
+    else if (night || t < awakeUntil) {
       // looking around: a new spot every few seconds, sometimes straight ahead
       if (t > nextWander) {
         wanderAt =
@@ -184,12 +205,12 @@ export function startOwl(layer, scene, tree, spider) {
                 x: hx - 300 - Math.random() * 1500,
                 y: hy - 400 + Math.random() * 700,
               };
-        nextWander = t + 2.5 + Math.random() * (standby ? 5 : 3);
+        nextWander = t + 2.5 + Math.random() * (night ? 5 : 3);
       }
       target = wanderAt;
     } else awake = false;
 
-    if (!standby && t > nextAwake) {
+    if (!night && t > nextAwake) {
       awakeUntil = t + between(OWL.awakeFor);
       nextAwake = awakeUntil + awakeEvery();
     }
@@ -204,11 +225,12 @@ export function startOwl(layer, scene, tree, spider) {
     // Blinks
     if (awake && t > nextBlink) {
       blinkUntil = t + 0.15;
-      nextBlink = t + between(OWL.blink) * (standby ? 1.5 : 1);
+      nextBlink = t + between(OWL.blink) * (night ? 1.5 : 1);
     }
 
     eyes.forEach((e) => {
-      e.target = awake && t >= e.delay ? (t < blinkUntil ? 0 : 1) : 0;
+      // eyes half shut when it's hunched against the weather
+      e.target = awake && t >= e.delay ? (t < blinkUntil ? 0 : 1 - 0.45 * hunch) : 0;
       const speed = t < blinkUntil ? 14 : awake ? 4 : 1.2; // drowsy eyes close slowly
       e.open += Math.max(-speed * dt, Math.min(speed * dt, e.target - e.open));
     });
@@ -243,9 +265,9 @@ export function startOwl(layer, scene, tree, spider) {
 
     head.setAttribute(
       "transform",
-      `translate(${(gx * 2.5).toFixed(2)} ${(nod + gy * 1).toFixed(2)}) rotate(${(gx * 6).toFixed(2)} 0 -45)`,
+      `translate(${(gx * 2.5).toFixed(2)} ${(nod + gy * 1 + 3 * hunch).toFixed(2)}) rotate(${(gx * 6).toFixed(2)} 0 -45)`,
     );
-    const glintR = standby ? 2.1 : 1.4;
+    const glintR = night ? 2.1 : 1.4;
     eyes.forEach((e) => {
       const o = Math.max(0.08, e.open);
       e.g.setAttribute(

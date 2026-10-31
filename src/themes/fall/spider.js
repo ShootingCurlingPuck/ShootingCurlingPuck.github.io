@@ -2,6 +2,9 @@
 // tile (a different one each time), hangs and sways, then climbs back. Standby: it comes down
 // from the top of the screen, at a different spot each time, and stays longer; where the tree's
 // branches are above that spot, it comes down from the underside of one of them instead.
+// Weather: in rain it only peeks (a short way down, a moment, straight back up); in strong wind it
+// stays in; out already, it swings with the wind and climbs back up in a strong gust or when the rain
+// starts. A few more visits at night.
 // Test switches: ?spider=now (first visit after 2 s, then every 15-25 s), ?spider=tree (the same,
 // and in standby always from a branch)
 import { QS } from "../../core/params.js";
@@ -22,8 +25,14 @@ export function startSpider(layer, scene, tree) {
         x + r > k.x && x - r < k.x + k.w && y + r > k.y && y - r < k.y + k.h,
     );
   const between = (r) => r[0] + Math.random() * (r[1] - r[0]);
+  const fx = scene.fx || {};
+  const rain = () => (fx.precip ? fx.precip.amount() : 0);
+  const windy = () => (fx.wind ? fx.wind.strength() : 0);
+  const night = () => (fx.daylight ? fx.daylight.darkness() > 0.5 : false);
   const nextWait = () =>
-    test ? 15 + Math.random() * 10 : between(SPIDER.every) * 60;
+    test
+      ? 15 + Math.random() * 10
+      : (between(SPIDER.every) * 60) / (night() ? SPIDER.nightMore : 1);
 
   const sc = SPIDER.scale;
   const g = el("g", { class: "spider" }, layer);
@@ -38,7 +47,13 @@ export function startSpider(layer, scene, tree) {
   let phase = "wait",
     wait = test ? 2 : nextWait(),
     t = 0;
-  let ax, ay, drop, hang, y, inStandby, lastTile, lastX, fromEdge;
+  let ax, ay, drop, hang, y, inStandby, lastTile, lastX, fromEdge, peek;
+  let sway = 0; // degrees, eased: it swings with the wind
+  // a strong gust while it hangs there: back up
+  if (fx.wind)
+    fx.wind.onGust((amp) => {
+      if (phase === "hang" && amp >= SPIDER.gustUp) phase = "up";
+    });
 
   // Pick where to come down; false if no good spot right now
   function choose() {
@@ -131,9 +146,19 @@ export function startSpider(layer, scene, tree) {
     if (phase === "wait") {
       wait -= dt;
       if (wait > 0) return;
+      if (windy() > SPIDER.windy) {
+        wait = 60; // too windy: stays in, tries again in a minute
+        return;
+      }
       if (!choose()) {
         wait = 30; // try again a bit later
         return;
+      }
+      // raining: only a peek at the weather, then back in
+      peek = rain() > SPIDER.wet;
+      if (peek) {
+        drop = Math.min(drop, between(SPIDER.peek.drop));
+        hang = between(SPIDER.peek.hang);
       }
       phase = "down";
       t = 0;
@@ -141,9 +166,18 @@ export function startSpider(layer, scene, tree) {
       g.style.display = "";
       g.setAttribute("opacity", fromEdge ? 0 : 1);
     }
-    // Mode changed while visiting: head back up
+    // Mode changed while visiting, or the rain started: head back up
     if (scene.isStandby() !== inStandby && phase !== "up") phase = "up";
+    if (!peek && rain() > SPIDER.wet && phase !== "up") phase = "up";
     t += dt;
+    // swinging: a gentle sway while it hangs, more in the wind, pushed the way the wind blows
+    const w = windy(),
+      gust = fx.wind ? fx.wind.gust() : 0;
+    const dir = fx.wind ? fx.wind.dir() : 1;
+    const swing =
+      (phase === "hang" ? 4 * Math.min(1, t / 2) : 0) * Math.sin(t * 1.3) +
+      SPIDER.windSway * (w * 0.6 + gust * 0.4) * (0.6 * dir + 0.4 * Math.sin(t * 1.7));
+    sway += (swing - sway) * Math.min(1, dt * 3);
     if (phase === "down") {
       y += SPIDER.speed.down * dt;
       if (fromEdge)
@@ -153,12 +187,13 @@ export function startSpider(layer, scene, tree) {
         phase = "hang";
         t = 0;
       }
-      draw(0);
+      draw(sway);
     } else if (phase === "hang") {
-      draw(4 * Math.sin(t * 1.3) * Math.min(1, t / 2)); // a gentle sway, easing in
+      draw(sway);
       if (t >= hang) phase = "up";
     } else if (phase === "up") {
-      y -= SPIDER.speed.up * dt * (scene.isStandby() !== inStandby ? 2 : 1);
+      const hurry = scene.isStandby() !== inStandby || peek || rain() > SPIDER.wet ? 2 : 1;
+      y -= SPIDER.speed.up * dt * hurry;
       const left = y - ay;
       if (fromEdge)
         g.setAttribute(
@@ -171,7 +206,7 @@ export function startSpider(layer, scene, tree) {
         wait = nextWait();
         return;
       }
-      draw(0);
+      draw(sway);
     }
   });
 

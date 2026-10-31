@@ -126,6 +126,16 @@ export const SPIDER = {
   speed: { down: 22, up: 32 }, // units per second
   scale: 0.75,
   branchMinW: 5, // standby: only hangs from branches at least this thick (not from twigs)
+  // Weather. In rain (precip amount above `wet`) it only peeks: a short way down, a moment, then
+  // straight back up. In strong wind (wind strength above `windy`) it doesn't come out at all; out
+  // already, it swings more in the wind (up to windSway degrees) and climbs back up in a gust
+  // stronger than gustUp (0..1). At night (darkness above 0.5) it visits nightMore times as often.
+  wet: 0.2,
+  windy: 0.6,
+  peek: { drop: [15, 35], hang: [1.5, 3] },
+  windSway: 14,
+  gustUp: 0.5,
+  nightMore: 1.5,
 };
 
 // The tree on the right. Its shape is fixed; only the canopy changes with the date.
@@ -190,6 +200,13 @@ export const OWL = {
   spiderFor: 8, // seconds it watches the spider when it shows up; then it loses interest
   blink: [2.5, 6], // seconds between blinks when awake (a bit slower in standby)
   zEvery: [8, 14], // seconds between z's while it dozes
+  // Day and night go by the sky's darkness (0..1), not live/standby: night from `night[1]` up, day
+  // again below `night[0]` (a gap, so it doesn't flip back and forth at dusk)
+  night: [0.3, 0.4],
+  rainWakes: 0.6, // heavy rain (precip amount, 0..1) wakes it more often in the day...
+  rainAwakeEvery: [2, 5], // ...every few minutes instead
+  // at night it sits hunched and fluffed up in rain or strong wind (no hunting in that)
+  hunker: { rain: 0.35, wind: 0.55 },
 };
 
 // Foxfire (see foxfire.js): the glow of some fungi in the dark. It follows how dark the screen looks
