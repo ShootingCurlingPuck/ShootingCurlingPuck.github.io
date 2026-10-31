@@ -16,7 +16,7 @@ import {
 } from "./config.js";
 import { svg, el, overlay } from "./core/svg.js";
 import { state } from "./core/state.js";
-import { nowMs } from "./core/time.js";
+import { roomNow } from "./core/time.js";
 import { on, emit } from "./core/events.js";
 import * as L from "./layout.js";
 import { drawStatic } from "./plan/static.js";
@@ -145,7 +145,7 @@ startTheme(scene);
 // ---- Updating ----
 const lastState = {}; // per room, to notice changes (sent as a "room" event, e.g. for themes)
 function render() {
-  const now = new Date(nowMs());
+  const now = new Date(roomNow()); // today's bookings, at the pretend time of day if ?time
   const fresh = state.lastData && Date.now() - state.lastOk < STALE_MS;
   const avail = [];
   L.ROOMS.forEach((r) => {

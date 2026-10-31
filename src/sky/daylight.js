@@ -3,11 +3,11 @@
 // 0 (day) to 1 (full night), through sunset and the three twilights. The whole screen follows it
 // under a night veil, darker in standby than in live mode (where people still need to read the
 // rooms). The QR code only gets a share of it (DAYLIGHT.qr), so it keeps scanning.
-// Test switches: ?time=17:40 (pretend it's that time today), ?date=2026-11-05 (pretend it's that
-// day, e.g. for another moon phase), ?darkness=0..1 (fixed darkness)
+// Test switches: ?time=17:40 and ?date=2026-11-05 (pretend another time or day, see core/time.js),
+// ?darkness=0..1 (fixed darkness)
 import { el, defs } from "../core/svg.js";
 import { QS } from "../core/params.js";
-import { nowMs, fmt } from "../core/time.js";
+import { sceneNow } from "../core/time.js";
 import { debugLog } from "../core/debug.js";
 import { WEATHER_AT, DAYLIGHT } from "../config.js";
 import { everyFrame, mix } from "../core/anim.js";
@@ -51,22 +51,7 @@ function darknessFor(alt) {
 export function startDaylight(layer, scene) {
   const { VIEW } = scene.geo;
   const forced = parseFloat(QS.get("darkness"));
-  // ?time=HH:MM: shift the clock so it's that time now (today), then let it run on
-  let shift = 0;
-  const asked = /^(\d\d?):(\d\d)$/.exec(QS.get("time") || "");
-  if (asked) {
-    const now = fmt(new Date(nowMs())).split(":");
-    shift = ((+asked[1] - +now[0]) * 60 + (+asked[2] - +now[1])) * 60000;
-  }
-  // ?date=YYYY-MM-DD: the same, whole days
-  const day = /^(\d{4})-(\d\d)-(\d\d)$/.exec(QS.get("date") || "");
-  if (day) {
-    const today = new Date(nowMs());
-    const then = Date.UTC(+day[1], +day[2] - 1, +day[3]);
-    const now0 = Date.UTC(today.getFullYear(), today.getMonth(), today.getDate());
-    shift += Math.round((then - now0) / 86400000) * 86400000;
-  }
-  const time = () => nowMs() + shift;
+  const time = sceneNow; // the real time, or a pretend one (?time, ?date: see core/time.js)
   const alt = () => sunAltitude(time(), WEATHER_AT.lat, WEATHER_AT.lon);
   const darkness = () => (isNaN(forced) ? darknessFor(alt()) : forced);
 

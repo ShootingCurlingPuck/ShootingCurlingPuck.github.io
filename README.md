@@ -18,8 +18,8 @@ Useful URL switches: `?mode=live|standby`, `?theme=fall|winter|none`, `?debug=1`
 detail level on screen), `?weather=clear|cloudy|rain|heavy|snow|fog|windy|...` (pretend weather; `?weather=heavy>clear` changes it
 every 30 seconds, to see the fades),
 `?detail=0..1` (fixed animation detail instead of self-adjusting), `?wind=<km/h>` (pretend wind),
-`?gusts=often` (a gust every few seconds), `?rain=0..1` (pretend rain amount), `?clouds=0..1` (pretend cloud cover), `?time=17:40` (pretend it's that time today, for day and night), `?date=2026-11-17` (pretend it's that
-day, e.g. for another moon phase), `?meteors=often` (40 times more shooting stars, to see them),
+`?gusts=often` (a gust every few seconds), `?rain=0..1` (pretend rain amount), `?clouds=0..1` (pretend cloud cover), `?time=17:40` and `?date=2026-11-17` (pretend another time or day: the whole screen follows,
+clock, live/standby, sky, season, theme, layout and that hour's real weather; the rooms show today's bookings at that time of day), `?meteors=often` (40 times more shooting stars, to see them),
 `?darkness=0..1` (fixed darkness),
 `?skip=wind,clouds,precip,daylight,night,tree,floor,fungi,spider,owl,falling` (leave out parts of the weather or the autumn theme), `?icons=text|emoji`. Autumn also has `?seed=<any text>` (another day's layout), `?fallpal=a|b`, `?haze=0`,
 `?spider=now|tree` (a visit every 15-25 s; `tree`: in standby always from a branch).

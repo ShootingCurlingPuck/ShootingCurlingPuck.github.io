@@ -2,7 +2,7 @@
 import { CHIP, NAME_DX, CLOSE_H, HEAD_F } from "../config.js";
 import { svg, el, label, roomShape } from "../core/svg.js";
 import { fit } from "../core/text.js";
-import { nowMs, fmt, dayKey } from "../core/time.js";
+import { roomNow, fmt, dayKey } from "../core/time.js";
 import { state } from "../core/state.js";
 import { LIST, ROOMS, BOOTH_Y, BOOTH_CHIP_Y } from "../layout.js";
 
@@ -67,7 +67,7 @@ function timeLabel(res) {
   const word = res.state === "busy" ? "busy" : "free";
   const closed =
     !res.until ||
-    dayKey(res.until) !== dayKey(new Date(nowMs())) ||
+    dayKey(res.until) !== dayKey(new Date(roomNow())) ||
     parseInt(fmt(res.until), 10) % 24 >= CLOSE_H;
   return word + (closed ? " for the day" : ` until ${fmt(res.until)}`);
 }
