@@ -54,8 +54,8 @@ const veil = el(
   svg,
 );
 // Final z-order: ...map, logos, list, [theme], veil, clock, error line; then layers on top: moving
-// things ([theme front], then the weather's rain), the night veil, stars and moon, clouds, then
-// the QR code
+// things ([theme front], then the weather's rain), the night veil, stars and moon, clouds, near
+// things (falling leaves, the spider), then the QR code
 svg.insertBefore(listG, clockG);
 svg.insertBefore(veil, clockG);
 // Front layer for themes, in its own drawing on top: everything that moves goes here, so the TV
@@ -66,6 +66,9 @@ const weatherG = el("g", { class: "weather-front" }, movingLayer); // rain in fr
 const nightLayer = overlay("night"); // darkens everything below it at night (sky/daylight.js)
 const starsLayer = overlay("stars"); // stars and moon: above the veil, behind the clouds
 const skyLayer = overlay("sky"); // clouds: in front of the rain, so it falls from under them
+// Near things (falling leaves, the spider): in front of the sky, clouds included; they darken
+// themselves at night (see sky/daylight.js shade)
+const nearG = el("g", { class: "near" }, overlay("near"));
 const topLayer = overlay("top");
 drawQR(topLayer); // last, so nothing covers it
 
@@ -128,6 +131,7 @@ const scene = {
   top: topLayer, // the QR code's layer (only the night dims it a little, see sky/daylight.js)
   qr: { x: L.QR_X, y: L.QR_Y, size: L.QR_TILE }, // the QR code's tile
   sky: skyLayer, // a layer of its own above the moving one (clouds drift by moving it whole)
+  near: nearG, // in front of the stars and clouds: things close to the window (they shade themselves)
   front: frontG, // above everything except the QR code, in live and standby: for things that move
   palette: P,
   isStandby: () => !!state.standby,

@@ -36,14 +36,23 @@ export default function startFall(scene) {
       const ground = el("g", { class: "ground" }, scene.layer);
       const surface = part("floor", () => drawForestFloor(ground, scene, pal));
       part("fungi", () => drawLedgeFungi(scene.layer, scene));
-      // Everything that moves goes in the front layer (scene.front), which the TV can redraw on
-      // its own; the tree, floor and fungi stay in the plan's layer, drawn once
+      // Everything that moves goes in a layer of its own, which the TV can redraw on its own; the
+      // tree, floor and fungi stay in the plan's layer, drawn once. The owl (in the trunk, under
+      // the night veil) goes in the moving layer (scene.front); the falling leaves and the spider
+      // are in front of the sky, stars and clouds included (scene.near), so they shade themselves
+      // at night: the leaves by their colours, the spider (a small drawing) with a filter.
+      const fx = scene.fx || {};
       const moving = scene.front || scene.layer;
-      const spider = part("spider", () => startSpider(moving, scene, tree));
+      const near = scene.near || moving;
+      const spiderLayer = el(
+        "g",
+        fx.daylight && scene.near ? { filter: fx.daylight.shadeFilter } : {},
+        near,
+      );
+      const spider = part("spider", () => startSpider(spiderLayer, scene, tree));
       part("owl", () => tree && startOwl(moving, scene, tree, spider));
       // The weather (scene.fx, see sky/index.js) is general; autumn reacts to it and tells it
       // where its ground is: rain lands on the leaf cover, up to 25 units into it
-      const fx = scene.fx || {};
       if (fx.precip && surface) fx.precip.setGround(surface, 25);
       // and keeps the night sky behind the tree and the leaf litter
       if (fx.night) {
@@ -52,7 +61,7 @@ export default function startFall(scene) {
       }
       part("falling", () =>
         startFalling(
-          moving,
+          near,
           scene,
           pal,
           surface || (() => scene.geo.VB - 20),

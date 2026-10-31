@@ -15,6 +15,14 @@ export function startFalling(layer, scene, pal, floorSurface, tree, wind, wet) {
   let nextSpawn = 0;
   const between = (r) => r[0] + Math.random() * (r[1] - r[0]);
   const strength = () => (wind ? wind.strength() : 0);
+  // At night they're in front of the night veil (and the stars), so they darken themselves
+  const daylight = scene.fx && scene.fx.daylight;
+  const shade = (c) => (daylight ? daylight.shade(c) : c);
+  function colour(L) {
+    L.u.setAttribute("fill", shade(L.col));
+    L.u.setAttribute("stroke", shade(L.line));
+  }
+  if (daylight) daylight.onChange(() => flying.concat(landed).forEach(colour));
 
   // A new leaf at x, y. fromTree: let go of the crown (fade in, start at its spot in the crown)
   function makeLeaf(x0, y, vx, s, fadeIn) {
@@ -41,9 +49,12 @@ export function startFalling(layer, scene, pal, floorSurface, tree, wind, wet) {
         g,
         leafShape(form, Math.floor(Math.random() * LEAF_VARIANTS)),
         "",
-        { fill: col, stroke: mix(col, INK, 0.45) },
+        {},
       ),
+      col: col,
+      line: mix(col, INK, 0.45),
     };
+    colour(L);
     flying.push(L);
     return L;
   }

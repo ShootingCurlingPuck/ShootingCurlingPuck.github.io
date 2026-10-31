@@ -5,7 +5,7 @@
 // rooms). The QR code only gets a share of it (DAYLIGHT.qr), so it keeps scanning.
 // Test switches: ?time=17:40 (pretend it's that time today), ?date=2026-11-05 (pretend it's that
 // day, e.g. for another moon phase), ?darkness=0..1 (fixed darkness)
-import { el } from "../core/svg.js";
+import { el, defs } from "../core/svg.js";
 import { QS } from "../core/params.js";
 import { nowMs, fmt } from "../core/time.js";
 import { debugLog } from "../core/debug.js";
@@ -104,6 +104,16 @@ export function startDaylight(layer, scene) {
         scene.top,
       )
     : null;
+  // Things above the veil that should still darken with it (falling leaves, the spider, ...):
+  // a colour can be shaded like the veil would (shade), or a small drawing can use this filter
+  // (it does exactly what the veil does, on just that drawing)
+  const shadeFilter = el(
+    "filter",
+    { id: "night-shade", "color-interpolation-filters": "sRGB" }, // same colour maths as the veil
+    defs,
+  );
+  const shadeMatrix = el("feColorMatrix", { type: "matrix" }, shadeFilter);
+  const listeners = [];
   let d = darkness(),
     shown = target(), // the veil's opacity now (eases on mode changes)
     colour = mix(DAYLIGHT.dusk, DAYLIGHT.night, d),
@@ -116,6 +126,14 @@ export function startDaylight(layer, scene) {
       qrVeil.setAttribute("fill", colour);
       qrVeil.setAttribute("opacity", (shown * DAYLIGHT.qr).toFixed(3));
     }
+    // the filter: each colour channel mixed towards the veil's colour by its opacity
+    const a = shown,
+      rgb = [1, 3, 5].map((i) => parseInt(colour.substr(i, 2), 16) / 255);
+    shadeMatrix.setAttribute(
+      "values",
+      `${1 - a} 0 0 0 ${(a * rgb[0]).toFixed(3)}  0 ${1 - a} 0 0 ${(a * rgb[1]).toFixed(3)}  0 0 ${1 - a} 0 ${(a * rgb[2]).toFixed(3)}  0 0 0 1 0`,
+    );
+    listeners.forEach((fn) => fn());
   }
   paint();
 
@@ -146,5 +164,11 @@ export function startDaylight(layer, scene) {
     // what the veil does, for layers above it that darken themselves (clouds): its colour and
     // opacity right now
     veil: () => ({ colour: colour, opacity: shown }),
+    // a colour as the veil would shade it now
+    shade: (c) => mix(c, colour, shown),
+    // fn() whenever the veil visibly changes (to shade colours again)
+    onChange: (fn) => listeners.push(fn),
+    // a filter (attribute value) that shades a small drawing like the veil
+    shadeFilter: "url(#night-shade)",
   };
 }

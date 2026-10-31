@@ -110,5 +110,6 @@ is cut out of their layer (themes add theirs with `fx.night.addForeground`). In 
 standby only the clock, so the stars cover the dimmed room data. The moon (a sprite in
 `assets/sky/sprites.svg`) has its real phase, is a pale day moon in daylight, and glows through clouds. Then the clouds, in a
 layer of their own (`scene.sky`), so they can hide the stars and moon: they darken themselves to match
-the veil. They're drawn once and drift by moving that whole
+the veil. In front of the clouds come near things (`scene.near`: autumn's falling leaves and the
+spider), which darken themselves too (`fx.daylight.shade` for colours, `shadeFilter` for small drawings). They're drawn once and drift by moving that whole
 layer, which costs the TV nothing. The QR code stays on top, never darkened, so it keeps scanning.
