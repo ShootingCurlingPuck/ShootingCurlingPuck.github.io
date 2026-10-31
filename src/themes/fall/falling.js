@@ -1,9 +1,13 @@
-// Leaves falling from the tree and the top, swaying and tumbling, carried right to left by the wind.
-// In the rain they're wet: they fall faster and sway less.
-// On the ground they rest a while, then fade. Gusts make leaves on the ground hop up and swirl.
+// Leaves falling from the tree and the top. Each is a real little body (see core/physics.js): light
+// and flat, so it drifts down slowly, swings and glides from side to side, and goes where the wind
+// and the air's eddies take it; nothing here says how it should sway. In the rain they're wet:
+// heavier, so they fall faster and swing less. On the ground they rest a while, then fade. Gusts
+// swirl up off the ground there and carry leaves up with them.
 import { el, use } from "../../core/svg.js";
 import { pick, mix, INK, everyFrame, detail, scaled } from "../toolkit.js";
 import { FALLING } from "./settings.js";
+import { PHYSICS } from "../../config.js";
+import { body, fall, airSpeed } from "../../core/physics.js";
 import { LEAF_FORM_WEIGHTS, LEAF_VARIANTS, leafShape } from "./shapes.js";
 
 // wet(): how hard it's raining, 0..1
@@ -24,24 +28,29 @@ export function startFalling(layer, scene, pal, floorSurface, tree, wind, wet) {
   }
   if (daylight) daylight.onChange(() => flying.concat(landed).forEach(colour));
 
-  // A new leaf at x, y. fromTree: let go of the crown (fade in, start at its spot in the crown)
+  // A new leaf at x, y. vx: units per second sideways to start with; fadeIn: let go of the crown
+  // (fade in, start at its spot in the crown). Wet leaves (rain) carry water: heavier, a bit less flat.
   function makeLeaf(x0, y, vx, s, fadeIn) {
     const form = pick(Math.random, LEAF_FORM_WEIGHTS);
     const col = pal[Math.floor(Math.random() * pal.length)];
-    const ph = fadeIn ? 0 : Math.random() * 6.3; // tree leaves start exactly at their spot in the crown
-    const L = {
-      x0: x0,
+    const F = FALLING.body,
+      k = Math.random(),
+      r = wet ? wet() : 0;
+    const L = body({
       x: x0,
-      vx: vx,
-      fadeIn: fadeIn ? 0.5 : 0, // seconds
       y: y,
-      vy: 64 + Math.random() * 18, // units per second
-      amp: 25 + Math.random() * 45, // sway width
-      w: 0.7 + Math.random() * 0.7, // sway speed
-      a: ph, // sway phase, advances faster in wind
+      mass: (F.mass[0] + k * (F.mass[1] - F.mass[0])) * (1 + F.wet * r),
+      area: F.area[0] + Math.random() * (F.area[1] - F.area[0]),
+      flat: (F.flat[0] + Math.random() * (F.flat[1] - F.flat[0])) * (1 - 0.3 * r),
+      vx: vx / PHYSICS.scale,
+      vy: fadeIn ? 0 : undefined, // let go of the crown: from standstill; else already falling
+    });
+    if (fadeIn) L.tilt = L.turn = 0; // starts exactly as it hung in the crown
+    L.vyTop = Math.sqrt(9.81 / L.kd); // its top speed in still air, m/s
+    Object.assign(L, {
+      fadeIn: fadeIn ? 0.5 : 0, // seconds
       tumble: 0.6 + Math.random() * 1.2,
       tb: 0, // tumble phase
-      catch: 0.7 + Math.random() * 0.6, // how much this leaf catches the wind
       deg0: Math.random() * 360,
       s: s,
       t: 0,
@@ -53,7 +62,7 @@ export function startFalling(layer, scene, pal, floorSurface, tree, wind, wet) {
       ),
       col: col,
       line: mix(col, INK, 0.45),
-    };
+    });
     colour(L);
     flying.push(L);
     return L;
@@ -100,20 +109,23 @@ export function startFalling(layer, scene, pal, floorSurface, tree, wind, wet) {
     list.splice(i, 1);
   }
 
-  // A hop: the leaf is thrown up from where it is, circles a little while it rises, and drops back
-  // into its normal fall when it's as fast as a falling leaf again
+  // A gust swirling up off the ground where the leaf lies: rising air (strong enough to carry it
+  // about `height` up), turning round as it rises and dying down over a second or so; the leaf just
+  // goes with the air, and falls again once it's gone
   function hop(L, height, deg) {
-    const grav = 320;
+    const dur = FALLING.swirl.lasts;
+    const climb = height / PHYSICS.scale / dur; // m/s on average
     L.hop = {
-      vy: -Math.sqrt(2 * grav * height),
-      grav: grav,
-      x: L.x,
-      R: 8 + Math.random() * (10 + height * 0.15), // swirl radius
+      t: 0,
+      dur: dur,
+      up: 2 * (climb + L.vyTop), // rising air at the start, fading to nothing
+      R: (8 + Math.random() * (10 + height * 0.15)) / PHYSICS.scale, // swirl radius, m
       om: (Math.random() < 0.5 ? -1 : 1) * (4 + Math.random() * 3), // swirl speed, rad/s
       th: Math.random() * 6.3,
-      deg: deg,
       spin: (Math.random() - 0.5) * 500, // degrees per second
     };
+    L.deg0 = deg;
+    L.vx = L.vy = 0;
     L.target = undefined;
   }
 
@@ -171,11 +183,7 @@ export function startFalling(layer, scene, pal, floorSurface, tree, wind, wet) {
     const sec = now / 1000;
     const mode = scene.isStandby() ? FALLING.standby : FALLING.live;
     const k = strength();
-    const r = wet ? wet() : 0;
-    const sway = 1 - FALLING.wet.sway * r;
-    const gust = wind ? wind.gust() : 0;
-    const dir = wind ? wind.dir() : -1;
-    const drift = dir * (FALLING.wind.drift * k + FALLING.wind.gustDrift * gust); // downwind
+    const air = airSpeed(wind);
     nextSpawn -= dt;
     if (nextSpawn <= 0 && flying.length < scaled(mode.max)) {
       spawn(VIEW.y - 60);
@@ -194,34 +202,23 @@ export function startFalling(layer, scene, pal, floorSurface, tree, wind, wet) {
           L.u.removeAttribute("opacity");
         }
       }
-      L.a += L.w * (1 + FALLING.wind.sway * k) * dt;
       L.tb += L.tumble * (1 + k) * dt;
       let flipX = Math.cos(L.tb); // 3D-ish tumble: the leaf turns edge-on and back
       if (Math.abs(flipX) < 0.15) flipX = flipX < 0 ? -0.15 : 0.15;
-      let x, deg;
 
       if (L.hop) {
+        // in the swirl: the air rises (less and less) and turns round
         const h = L.hop;
-        h.vy += h.grav * dt;
-        L.y += h.vy * dt;
-        h.x += drift * L.catch * dt;
+        h.t += dt;
         h.th += h.om * dt;
-        h.deg += h.spin * dt;
-        x = h.x + h.R * Math.sin(h.th);
-        deg = h.deg;
-        if (h.vy >= L.vy) {
-          // back to a normal fall, carrying on from exactly here
-          L.hop = null;
-          L.x0 = x - L.amp * sway * Math.sin(L.a);
-          L.deg0 = deg - 35 * Math.sin(L.a + 1.57);
-        }
-      } else {
-        L.y += L.vy * (1 + FALLING.wind.fall * k + FALLING.wet.fall * r) * dt;
-        L.x0 += (L.vx + drift * L.catch) * dt;
-        x = L.x0 + L.amp * sway * Math.sin(L.a);
-        deg = L.deg0 + 35 * Math.sin(L.a + 1.57);
-      }
-      L.x = x;
+        const left = Math.max(0, 1 - h.t / h.dur);
+        fall(L, dt, air + h.R * h.om * Math.cos(h.th) * left, h.up * left + h.R * h.om * Math.sin(h.th) * left);
+        L.deg0 += h.spin * left * dt;
+        if (h.t >= h.dur) L.hop = null;
+      } else fall(L, dt, air);
+      const x = L.x;
+      // how it hangs: its tilt as it swings (the physics' tilt), on top of its own angle
+      const deg = L.deg0 + (L.tilt * 180) / Math.PI;
       L.deg = deg;
 
       // blown off the side of the screen

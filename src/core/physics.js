@@ -44,9 +44,10 @@ export function body(p, air) {
   return b;
 }
 
-// Move a body on by dt seconds; air: the wind's speed in m/s (+ to the right). Small steps when the
-// frame is long, so slow frames on the TV don't change how things fall.
-export function fall(b, dt, air) {
+// Move a body on by dt seconds; air: the wind's speed in m/s (+ to the right); up (optional): air
+// rising under it, m/s (a gust swirling up off the ground). Small steps when the frame is long, so
+// slow frames on the TV don't change how things fall.
+export function fall(b, dt, air, up) {
   const P = PHYSICS,
     n = Math.max(1, Math.ceil(dt / 0.02)),
     h = dt / n;
@@ -55,7 +56,7 @@ export function fall(b, dt, air) {
     b.age += h;
     const E = P.eddies,
       ex = E * (0.65 * Math.sin(b.age * 0.9 + b.e1) + 0.35 * Math.sin(b.age * 2.1 + b.e2)),
-      ey = 0.35 * E * Math.sin(b.age * 1.3 + b.e2);
+      ey = 0.35 * E * Math.sin(b.age * 1.3 + b.e2) - (up || 0);
     const ax0 = (air || 0) + ex;
     const ux = b.vx - ax0,
       uy = b.vy - ey;
@@ -65,10 +66,12 @@ export function fall(b, dt, air) {
     if (b.flat) {
       const s = Math.sin(b.tilt);
       k *= 1 - 0.7 * b.flat * s * s; // edge-on: less drag
-      ax = P.glide * b.flat * b.kd * u * u * Math.sin(2 * b.tilt); // gliding the way it tilts
+      // gliding the way it tilts, driven by its fall through the air (not by its sideways speed,
+      // which would only feed itself)
+      ax = P.glide * b.flat * b.kd * uy * Math.abs(uy) * Math.sin(2 * b.tilt);
       // the swing: back and forth (a self-sustaining swing that settles at the flatness' reach)
       const rate = Math.min(P.swingRate, Math.sqrt((3.4 * u) / b.size));
-      const reach = b.flat * P.swingReach;
+      const reach = (b.flat * P.swingReach) / 2; // this kind of swing settles at twice this
       b.turn +=
         (-rate * rate * b.tilt + 0.4 * rate * (1 - (b.tilt * b.tilt) / (reach * reach)) * b.turn) * h;
       b.tilt += b.turn * h;

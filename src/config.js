@@ -191,7 +191,7 @@ export const PHYSICS = {
   eddies: 0.35,
   glide: 2.5,
   swingReach: 1.0,
-  swingRate: 7,
+  swingRate: 5,
 };
 
 // ----- Animation performance (see core/perf.js) -----

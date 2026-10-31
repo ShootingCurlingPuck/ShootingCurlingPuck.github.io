@@ -68,23 +68,24 @@ export const FALLING = {
   // Share of new leaves that come from the tree's crown (scaled by how full it still is);
   // the rest fall from above the top edge. Fewer leaves fall as the crown empties.
   fromTree: 0.75,
-  breeze: [20, 65], // leftward drift of leaves from the tree, units per second
-  // What the wind (0..1, see weather/wind.js) does to them: extra drift downwind at full strength and
-  // at a full gust (units per second), faster sway (+60% at full) and fall (+30%), and extra
-  // leaves the crown sheds at a gust (still air .. stormy)
-  wind: { drift: 160, gustDrift: 140, sway: 0.6, fall: 0.3, shed: [1, 6] },
-  // Gusts stir the ground: leaves hop up and swirl, then settle again. Hop height in still air and
-  // when stormy (units), how many leaves get kicked up out of the pile (still .. stormy), and how
-  // far around the gust's spot landed leaves get lifted too
-  // Wet leaves in heavy rain (scaled down in lighter rain): +40% falling speed, half the sway
-  wet: { fall: 0.4, sway: 0.5 },
-  swirl: { calm: [60, 120], stormy: [180, 320], kick: [4, 10], reach: 160 },
+  breeze: [20, 65], // leftward drift of leaves from the tree as they let go, units per second
+  // Each leaf as a falling body (see core/physics.js): mass (kg), area (m2) and flatness, picked in
+  // these ranges (a dry oak or maple leaf: a third of a gram to most of a gram, 45 to 65 cm2, very flat);
+  // wet: extra mass from rain water at full rain (+80%)
+  body: { mass: [0.0003, 0.0007], area: [0.0045, 0.0065], flat: [0.75, 1], wet: 0.8 },
+  // extra leaves the crown sheds at a gust (still air .. stormy)
+  wind: { shed: [1, 6] },
+  // Gusts swirl up off the ground: the rising air carries leaves up and round, then lets them fall
+  // again. How high it carries them in still air and when stormy (units), how long the swirl lasts
+  // (s), how many leaves come up out of the pile (still .. stormy), and how far around the gust's
+  // spot landed leaves get lifted too
+  swirl: { calm: [60, 120], stormy: [180, 320], lasts: 1.2, kick: [4, 10], reach: 160 },
 };
 
 // Acorns dropping from the tree (how often: FALL_SEASON.acornsFalling): at most this many at once,
-// their size (the acorns lying on the floor are about the same), how fast they fall (units per
-// second, per second), how much of their speed is left after their one small hop on the leaves,
-// and how many seconds they rest there before fading
+// their size (the acorns lying on the floor are about the same), what they're like as falling
+// bodies, how much of their speed is left after their one small hop on the leaves, and how many
+// seconds they rest there before fading
 export const ACORNS = {
   max: 4,
   size: 0.8,
