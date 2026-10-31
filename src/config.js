@@ -95,6 +95,10 @@ export const DAYLIGHT = {
 // strip (0 top .. 1 just above the text), the darkness from which it shows fully, its opacity by
 // day (a pale day moon, only when more than `dayLit` of it is lit), how strongly its glow shows
 // through a cloud, and its colour if the sprite (assets/sky/sprites.svg) can't be loaded.
+// planets: dot size, colour, and the darkness from which each shows (Venus first). meteors: the
+// share of the whole sky the window shows (the real rates are for the whole sky), a multiplier
+// for tuning (times: 1 = the real rate), the darkness from which they show, their speed (units
+// per second), how far they fly, the longest their tail gets, and its width.
 export const NIGHT = {
   facing: 135,
   centre: 30,
@@ -114,6 +118,21 @@ export const NIGHT = {
     dayLit: 0.2,
     glow: 0.9,
     colour: "#FFF6DA",
+  },
+  planets: {
+    venus: { size: 12, colour: "#FFFFFF", from: 0.3 },
+    jupiter: { size: 10, colour: "#FFF1D6", from: 0.4 },
+    mars: { size: 8, colour: "#FFB38F", from: 0.5 },
+    saturn: { size: 8, colour: "#F3DFA8", from: 0.5 },
+  },
+  meteors: {
+    share: 0.3,
+    times: 1,
+    from: 0.75,
+    speed: 900,
+    length: [120, 320],
+    tail: 140,
+    width: 3,
   },
 };
 

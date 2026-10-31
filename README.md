@@ -19,7 +19,7 @@ detail level on screen), `?weather=clear|cloudy|rain|heavy|snow|fog|windy|...` (
 every 30 seconds, to see the fades),
 `?detail=0..1` (fixed animation detail instead of self-adjusting), `?wind=<km/h>` (pretend wind),
 `?gusts=often` (a gust every few seconds), `?rain=0..1` (pretend rain amount), `?clouds=0..1` (pretend cloud cover), `?time=17:40` (pretend it's that time today, for day and night), `?date=2026-11-17` (pretend it's that
-day, e.g. for another moon phase),
+day, e.g. for another moon phase), `?meteors=often` (40 times more shooting stars, to see them),
 `?darkness=0..1` (fixed darkness),
 `?skip=wind,clouds,precip,daylight,night,tree,floor,fungi,spider,owl,falling` (leave out parts of the weather or the autumn theme), `?icons=text|emoji`. Autumn also has `?seed=<any text>` (another day's layout), `?fallpal=a|b`, `?haze=0`,
 `?spider=now|tree` (a visit every 15-25 s; `tree`: in standby always from a branch).
@@ -84,7 +84,9 @@ CC BY 4.0). The licence asks for a credit where the data is shown: it's under th
 Star positions and brightness come from the Yale Bright Star Catalogue (5th edition), via
 [brettonw/YaleBrightStarCatalog](https://github.com/brettonw/YaleBrightStarCatalog); the stars down to
 magnitude 4 that rise in Brussels are embedded in `src/sky/stars-data.js`. The sun and moon are worked
-out with standard low-precision formulas (good to a minute or two for rising and setting).
+out with standard low-precision formulas (good to a minute or two for rising and setting), the planets
+with NASA/JPL's approximate orbital elements (E.M. Standish), and the meteor showers come from the
+International Meteor Organization's working list (`src/sky/meteors.js`).
 
 ## Animation performance
 
@@ -99,7 +101,8 @@ owl, spider, and the weather's rain in front of them) lives in its own transpare
 the static scene (tree, floor, fungi) are then drawn once. New moving parts go in `scene.front`.
 Above the moving layer comes the night veil (`src/sky/daylight.js`): it darkens everything below it as
 the real sun sets, through the twilights, darker in standby than in live mode (`DAYLIGHT` in
-`src/config.js`). Above the veil come the real stars and moon (`src/sky/night-sky.js`), as seen through the screen as a
+`src/config.js`). Above the veil come the real stars, planets and moon, and shooting stars at the real rate (more during
+the meteor showers) (`src/sky/night-sky.js`, `planets.js`, `meteors.js`), as seen through the screen as a
 window facing south-east (`NIGHT` in `src/config.js`): they come out with the darkness and the sky turns
 from left to right through the night. They look as if they're behind everything because the foreground
 is cut out of their layer (themes add theirs with `fx.night.addForeground`). In live mode that's the plan

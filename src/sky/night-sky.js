@@ -1,4 +1,5 @@
-// The night sky, for everything (whatever the season): the real stars and the real moon, as seen
+// The night sky, for everything (whatever the season): the real stars, planets and moon, and
+// shooting stars at the real rate (more during the meteor showers), as seen
 // from the office through the screen as a window facing NIGHT.facing (south-east), so the sky turns
 // from left to right through the night. They come out with the darkness (the moon and the brightest
 // stars first, the faint ones only at full night), and hide behind the clouds.
@@ -15,8 +16,12 @@ import { el, use, defs, XLINK } from "../core/svg.js";
 import { loadSprites } from "../core/sprites.js";
 import { WEATHER_AT, NIGHT } from "../config.js";
 import { everyFrame } from "../core/anim.js";
+import { debugLog } from "../core/debug.js";
 import { sunAltitude } from "./daylight.js";
 import { STARS } from "./stars-data.js";
+import { planetAt, PLANET_NAMES } from "./planets.js";
+import { meteorsNow } from "./meteors.js";
+import { QS } from "../core/params.js";
 
 const rad = Math.PI / 180;
 
@@ -182,6 +187,118 @@ export function startNightSky(layer, scene, daylight, textTop, clouds) {
     groups.forEach((grp, b) => grp.paths.forEach((p) => p.setAttribute("d", d[b] || "M0 0")));
   }
 
+  // ---- Planets: brighter dots in their real colours; Saturn with a hint of its rings ----
+  const planets = PLANET_NAMES.map((name) => {
+    const P = N.planets[name];
+    const pg = el("g", { opacity: 0 }, g);
+    el("circle", { r: P.size * 1.6, fill: P.colour, opacity: 0.22 }, pg); // glow
+    if (name === "saturn")
+      el(
+        "ellipse",
+        {
+          rx: P.size * 1.9,
+          ry: P.size * 0.55,
+          fill: "none",
+          stroke: P.colour,
+          "stroke-width": P.size * 0.35,
+          transform: "rotate(-18)",
+        },
+        pg,
+      );
+    el("circle", { r: P.size * 0.6, fill: P.colour }, pg);
+    return { name: name, g: pg, up: false };
+  });
+  function drawPlanets(ms) {
+    const lst = siderealDeg(ms, WEATHER_AT.lon);
+    planets.forEach((pl) => {
+      const at = planetAt(pl.name, ms);
+      const h = horizon(at.ra, at.dec, lst, WEATHER_AT.lat);
+      const p = toScreen(project(h.alt, h.az));
+      pl.up = h.alt > 1 && p.y < VB && p.y > VIEW.y - 30;
+      pl.g.setAttribute("transform", `translate(${p.x.toFixed(1)} ${p.y.toFixed(1)})`);
+    });
+  }
+
+  // ---- Shooting stars: at the real rate for the part of the sky the window shows ----
+  // ?meteors=often: many more, to see them
+  const often = QS.get("meteors") === "often" ? 40 : 1;
+  const flying = [];
+  const trail = (w, op) =>
+    el(
+      "path",
+      { fill: "none", stroke: "#FFFFFF", "stroke-width": w, "stroke-linecap": "round", opacity: op },
+      g,
+    );
+  function launch(src, lst) {
+    // somewhere in the sky part of the window, flying away from its shower's radiant
+    const x = VIEW.x + Math.random() * VIEW.w,
+      y = VIEW.y + Math.random() * (VB - VIEW.y) * 0.7;
+    let dx, dy;
+    if (src.ra !== null) {
+      const h = horizon(src.ra, src.dec, lst, WEATHER_AT.lat);
+      const r = toScreen(project(h.alt, h.az));
+      dx = x - r.x;
+      dy = y - r.y;
+    } else {
+      const a = Math.random() * Math.PI * 2;
+      dx = Math.cos(a);
+      dy = Math.abs(Math.sin(a)) + 0.2; // random ones mostly head down
+    }
+    const len = Math.sqrt(dx * dx + dy * dy) || 1;
+    const speed = N.meteors.speed * (0.6 + src.speed / 70); // faster showers streak faster
+    flying.push({
+      x: x,
+      y: y,
+      ux: dx / len,
+      uy: dy / len,
+      v: speed,
+      life: (N.meteors.length[0] + Math.random() * (N.meteors.length[1] - N.meteors.length[0])) / speed,
+      t: 0,
+      bright: 0.6 + Math.random() * 0.4,
+      glow: trail(N.meteors.width * 3, 0),
+      core: trail(N.meteors.width, 0),
+    });
+  }
+  let rates = [],
+    perSecond = 0;
+  function updateRates(ms) {
+    const lst = siderealDeg(ms, WEATHER_AT.lon);
+    rates = meteorsNow(ms, (ra, dec) => horizon(ra, dec, lst, WEATHER_AT.lat).alt);
+    const total = rates.reduce((sum, r) => sum + r.perHour, 0);
+    perSecond = (total * N.meteors.share * N.meteors.times * often) / 3600;
+  }
+  function meteorFrame(dt, dark) {
+    // only in the dark: fewer as the sky brightens
+    const k = Math.max(0, Math.min(1, (dark - N.meteors.from) / (1 - N.meteors.from)));
+    if (k > 0 && Math.random() < perSecond * k * dt) {
+      // which source: in proportion to their rates
+      let pickAt = Math.random() * rates.reduce((sum, r) => sum + r.perHour, 0);
+      const src = rates.find((r) => (pickAt -= r.perHour) <= 0) || rates[0];
+      if (src) launch(src, siderealDeg(daylight.time(), WEATHER_AT.lon));
+    }
+    for (let i = flying.length - 1; i >= 0; i--) {
+      const m = flying[i];
+      m.t += dt;
+      const f = m.t / m.life; // 0..1 through its short life
+      if (f >= 1) {
+        g.removeChild(m.glow);
+        g.removeChild(m.core);
+        flying.splice(i, 1);
+        continue;
+      }
+      // the head moves on; the tail grows, then the whole streak fades
+      const hx = m.x + m.ux * m.v * m.t,
+        hy = m.y + m.uy * m.v * m.t;
+      const tail = Math.min(m.v * m.t, N.meteors.tail);
+      const d = `M${hx.toFixed(1)} ${hy.toFixed(1)}L${(hx - m.ux * tail).toFixed(1)} ${(hy - m.uy * tail).toFixed(1)}`;
+      const op = (f < 0.15 ? f / 0.15 : 1 - (f - 0.15) / 0.85) * m.bright;
+      m.core.setAttribute("d", d);
+      m.glow.setAttribute("d", d);
+      m.core.setAttribute("opacity", op.toFixed(2));
+      m.glow.setAttribute("opacity", (op * 0.3).toFixed(2));
+    }
+  }
+
   // ---- The moon, in the top strip: the sprite (assets/sky/sprites.svg), cut to its lit part ----
   const R = N.moon.size;
   const moonG = el("g", { opacity: 0 }, g);
@@ -240,18 +357,34 @@ export function startNightSky(layer, scene, daylight, textTop, clouds) {
 
   // ---- Keeping up: positions every few seconds, brightness when the darkness changes ----
   let nextMove = 0,
+    nextLog = 0,
     lastKey = "";
-  everyFrame((now) => {
+  everyFrame((now, dt) => {
     const ms = daylight.time();
     if (now > nextMove) {
       nextMove = now + N.every * 1000;
       drawStars(ms);
+      drawPlanets(ms);
       drawMoon(ms);
+      updateRates(ms);
+      if (now > nextLog) {
+        nextLog = now + 60000;
+        const list = rates
+          .filter((r) => r.perHour * N.meteors.share > 0.05)
+          .map((r) => r.name + " " + (r.perHour * N.meteors.share * N.meteors.times).toFixed(1));
+        debugLog(
+          "Meteors through the window: " + (perSecond * 3600).toFixed(1) + " per hour in the dark (" + list.join(", ") + ")",
+        );
+      }
     }
     // stars come out by brightness; the moon is bright enough from early twilight on, and in
     // daylight it's a pale day moon (if enough of it is lit to be seen by day)
     const dark = daylight.darkness();
     const ops = N.stars.map((s) => Math.max(0, Math.min(1, (dark - s.from) / 0.15)));
+    const planetOps = planets.map((pl) =>
+      pl.up ? Math.max(0, Math.min(1, (dark - N.planets[pl.name].from) / 0.15)) : 0,
+    );
+    meteorFrame(dt, dark);
     const night = Math.max(0, Math.min(1, (dark - N.moon.from) / 0.25));
     const day = moonLit > N.moon.dayLit ? N.moon.day : 0;
     const moonOp = moonUp ? Math.max(night, day) : 0;
@@ -259,10 +392,14 @@ export function startNightSky(layer, scene, daylight, textTop, clouds) {
     const c = clouds && clouds();
     const covered = c && moonUp ? c.coverAt(moonX) : 0;
     const glowOp = covered * night * N.moon.glow * (1 - 0.6 * Math.max(0, c ? c.cover() - 0.75 : 0) / 0.25);
-    const key = ops.concat(moonOp, night, glowOp).map((o) => Math.round(o * 40)).join();
+    const key = ops
+      .concat(planetOps, moonOp, night, glowOp)
+      .map((o) => Math.round(o * 40))
+      .join();
     if (key !== lastKey) {
       lastKey = key; // only repaint (which redraws this layer) on a visible change
       groups.forEach((grp, b) => grp.g.setAttribute("opacity", (ops[b] * N.stars[b].opacity).toFixed(2)));
+      planets.forEach((pl, i) => pl.g.setAttribute("opacity", planetOps[i].toFixed(2)));
       moonG.setAttribute("opacity", moonOp.toFixed(2));
       halo.setAttribute("opacity", (0.35 * night).toFixed(3)); // no halo by day
       if (glow) glow.setAttribute("opacity", glowOp.toFixed(2));
@@ -279,5 +416,11 @@ export function startNightSky(layer, scene, daylight, textTop, clouds) {
       return { alt: h.alt, az: h.az, lit: m.lit, waxing: m.waxing };
     },
     sunAltitude: () => sunAltitude(daylight.time(), WEATHER_AT.lat, WEATHER_AT.lon),
+    // shooting stars per hour through the window right now, by source
+    meteors: () =>
+      rates.map((r) => ({
+        name: r.name,
+        perHour: +(r.perHour * N.meteors.share * N.meteors.times).toFixed(2),
+      })),
   };
 }
