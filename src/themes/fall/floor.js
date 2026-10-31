@@ -337,5 +337,41 @@ export function drawForestFloor(g, scene, pal, amounts, glows) {
         glows.push({ x: P.x + q[0] * P.s, y: P.y + q[1] * P.s, rx: q[2] * P.s, ry: q[3] * P.s, o: q[4] }),
       ),
     );
-  return surface; // falling leaves land on this
+  return landing(kept, surface); // falling leaves, acorns and rain land on this
+}
+
+// The top of the leaves as they were drawn. The surface line above is where the cover may reach,
+// but on the thinner floor many columns stop short of it (and leaves without support are taken
+// away), so things that landed on that line could sit on thin air. This follows the leaves
+// themselves: the highest leaf edge in each strip, smoothed a little; never higher than the line
+// (where the cover is full, nothing changes).
+function landing(kept, surface) {
+  const BIN = 10;
+  const tops = {};
+  const raise = (b, y) => {
+    if (tops[b] === undefined || y < tops[b]) tops[b] = y;
+  };
+  kept.forEach((L) => {
+    const half = L.r * 0.5; // the visible leaf, about half its nominal size
+    for (let b = Math.floor((L.x - half) / BIN); b <= Math.floor((L.x + half) / BIN); b++)
+      raise(b, L.y - half * Math.max(0.6, L.squash));
+  });
+  // never above the cover's own line, and smoothed over five strips
+  const at = (b) => (tops[b] === undefined ? null : Math.max(tops[b], surface(b * BIN + BIN / 2)));
+  const cache = {};
+  return (x) => {
+    const b = Math.floor(x / BIN);
+    if (cache[b] !== undefined) return cache[b];
+    let sum = 0,
+      n = 0;
+    for (let k = b - 2; k <= b + 2; k++) {
+      const y = at(k);
+      if (y !== null) {
+        sum += y;
+        n++;
+      }
+    }
+    // no leaves around: the bottom of the cover line (the always-covered strip)
+    return (cache[b] = n ? sum / n : surface(x) + 30);
+  };
 }
