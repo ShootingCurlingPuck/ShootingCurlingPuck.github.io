@@ -18,7 +18,7 @@ Useful URL switches: `?mode=live|standby`, `?theme=fall|winter|none`, `?debug=1`
 detail level on screen), `?weather=clear|cloudy|rain|heavy|snow|fog|windy|...` (pretend weather; `?weather=heavy>clear` changes it
 every 30 seconds, to see the fades),
 `?detail=0..1` (fixed animation detail instead of self-adjusting), `?wind=<km/h>` (pretend wind),
-`?gusts=often` (a gust every few seconds), `?rain=0..1` (pretend rain amount), `?clouds=0..1` (pretend cloud cover), `?time=17:40` and `?date=2026-11-17` (pretend another time or day: the whole screen follows,
+`?gusts=often` (a gust every few seconds), `?rain=0..1` (pretend rain amount), `?snow=0..1` (pretend snow amount), `?clouds=0..1` (pretend cloud cover), `?time=17:40` and `?date=2026-11-17` (pretend another time or day: the whole screen follows,
 clock, live/standby, sky, season, theme, layout and that hour's real weather; the rooms show today's bookings at that time of day), `?meteors=often` (40 times more shooting stars, to see them),
 `?darkness=0..1` (fixed darkness),
 `?skip=wind,clouds,precip,daylight,night,tree,floor,fungi,spider,owl,falling,acorns,foxfire,wisp` (leave out parts of the weather or the autumn theme), `?icons=text|emoji`. Autumn also has `?seed=<any text>` (another day's layout), `?fallpal=a|b`, `?haze=0`,
@@ -52,12 +52,12 @@ version within about 5 minutes and reloads by itself.
 | `src/floorplan.json` | Room and anchor coordinates |
 | `src/layout.js` | Geometry derived from the two above |
 | `src/main.js` | Wires everything together, in drawing order |
-| `src/core/` | Helpers: SVG, text measuring, time, shared state, events, debug, the animation loop and detail level |
+| `src/core/` | Helpers: SVG, text measuring, time, shared state, events, debug, the animation loop and detail level, and how things fall (`physics.js`: mass, area, drag, wind) |
 | `src/sky/` | Day and night for every season: daylight, the sun, stars, moon, planets and meteors; `index.js` starts and connects them with the weather effects |
 | `src/plan/` | The floor plan, clock, list panel, QR code |
 | `src/data/` | Fetching bookings and working out room states |
 | `src/system/` | Standby mode, auto-update and reload |
-| `src/weather/` | The weather for every season: the live data for the office (Open-Meteo, `weather.js`), as a simple description themes can use, and its effects: wind, clouds, rain |
+| `src/weather/` | The weather for every season: the live data for the office (Open-Meteo, `weather.js`), as a simple description themes can use, and its effects: wind, clouds, rain and snow |
 | `src/themes/` | Seasonal themes: `index.js` picks one by date, `toolkit.js` has shared helpers |
 | `src/themes/fall/settings.js` | Autumn tuning knobs (palettes, falling, ledges) |
 | `assets/sky/sprites.svg` | Shapes for every season (the moon), editable in any SVG editor |

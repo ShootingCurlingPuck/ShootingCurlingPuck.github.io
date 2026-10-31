@@ -158,6 +158,42 @@ export const RAIN = {
   splashFrom: 0.3,
 };
 
+// Snow (see weather/snow.js). levels: [centimetres of snow per hour, amount 0..1] points (how hard
+// it's snowing, like RAIN.levels); at most `max` flakes on screen at full amount. Each flake is a little body (see core/physics.js):
+// mass (kg), size (m) and flatness, picked between the two values; drawn at one of `sizes`
+// (diameter, screen units), the heavier the bigger. linger: seconds a flake stays where it lands.
+export const SNOW = {
+  levels: [
+    [0, 0.2],
+    [0.3, 0.4],
+    [1.5, 0.75],
+    [4, 1],
+  ],
+  max: { live: 140, standby: 220 },
+  mass: [1e-6, 5e-6],
+  size: [0.003, 0.008],
+  flat: [0.05, 0.15], // barely: a flake's own flutter is tiny; it meanders with the air's eddies
+  sizes: [6, 9, 12],
+  colour: "#FFFFFF",
+  edge: "#8FA3C4", // a thin outline, so flakes show on the light background too
+  linger: [1, 2.5],
+};
+
+// Falling things (see core/physics.js). scale: screen units per metre of fall (the scene isn't drawn
+// to scale; this keeps gravity looking right: about 90 units per metre). wind: share of the real
+// wind speed that pushes on falling things (1 = all of it: snow nearly sideways in a breeze).
+// eddies: the air's own slow little swirls (m/s), which light things follow.
+// glide: how far a tilted flat body glides sideways; swingReach: the largest tilt of a perfectly
+// flat body (radians); swingRate: the fastest it swings back and forth (radians per second)
+export const PHYSICS = {
+  scale: 90,
+  wind: 0.6,
+  eddies: 0.35,
+  glide: 2.5,
+  swingReach: 1.0,
+  swingRate: 7,
+};
+
 // ----- Animation performance (see core/perf.js) -----
 // Below `low` fps the detail level drops by `down` per second, above `high` it climbs back by `up`
 // per second (slower, so it doesn't seesaw), never below `min`. `target`: the fps assumed at start.

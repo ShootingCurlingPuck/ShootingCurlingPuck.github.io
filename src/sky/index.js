@@ -5,7 +5,8 @@
 // weather is:
 //   fx.wind               strength(), gust(), onGust(fn), dir(), setDirection(-1 | 1)
 //   fx.clouds             cover(), coverAt(x), setStyle({ body, line, rainBody, rainLine })
-//   fx.precip             amount(), setGround(fn, below), setKind(start) (see precip.js)
+//   fx.precip             amount(), kind() ("rain" | "snow"), setGround(fn, below),
+//                         setKind(start, "rain" | "snow") (see weather/precip.js)
 //   fx.daylight           darkness() (0 day .. 1 night), sunAltitude(), veil() (see daylight.js)
 //   fx.night              addForeground(node): keep the stars and moon behind this drawing (in live
 //                         mode and standby)

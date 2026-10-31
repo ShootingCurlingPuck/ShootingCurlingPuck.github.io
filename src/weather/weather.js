@@ -2,7 +2,7 @@
 // and standby alike, and turned into one simple description that themes can use:
 //
 //   { tempC, sky: "clear" | "partly" | "cloudy" | "overcast", cloud: 0-100,
-//     precip: "none" | "drizzle" | "rain" | "heavy" | "snow" | "thunder", mmPerHour,
+//     precip: "none" | "drizzle" | "rain" | "heavy" | "snow" | "thunder", mmPerHour, snowCm (per hour),
 //     wind: km/h, gusts: km/h, windFrom: degrees (0 = from the north), fog: boolean,
 //     isDay: boolean, code: WMO weather code, at: Date (when it was measured) }
 //
@@ -91,15 +91,12 @@ function describe(c) {
   const cloud = num(c.cloud_cover);
   const mm = num(c.rain) + num(c.showers);
   const snowCm = num(c.snowfall);
+  // Mixed (sleet, snow and rain showers): one kind only, whichever brings more water. Snow's water:
+  // Open-Meteo's 7 cm of snow = 10 mm of water. Freezing rain and drizzle count as rain.
+  const snowCode = (code >= 71 && code <= 77) || code === 85 || code === 86;
   let precip = "none";
   if (code >= 95) precip = "thunder";
-  else if (
-    (code >= 71 && code <= 77) ||
-    code === 85 ||
-    code === 86 ||
-    snowCm > 0
-  )
-    precip = "snow";
+  else if ((snowCode || snowCm > 0) && (snowCm * 10) / 7 >= mm) precip = "snow";
   else if (code === 65 || code === 67 || code === 82 || mm >= 4)
     precip = "heavy";
   else if (
@@ -124,6 +121,7 @@ function describe(c) {
     cloud: cloud,
     precip: precip,
     mmPerHour: num(c.precipitation) || mm,
+    snowCm: snowCm,
     wind: num(c.wind_speed_10m),
     gusts: num(c.wind_gusts_10m),
     windFrom: num(c.wind_direction_10m),
