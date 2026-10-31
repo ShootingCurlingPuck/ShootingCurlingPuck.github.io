@@ -88,7 +88,10 @@ export const FALLING = {
 export const ACORNS = {
   max: 4,
   size: 0.8,
-  gravity: 900,
+  // falling (see core/physics.js): about 4 g, 1.5 by 2.5 cm, rounded (low drag)
+  mass: 0.004,
+  area: 0.015 * 0.025,
+  cd: 0.5,
   bounce: 0.12,
   rest: [40, 90],
   tip: 0.35, // seconds to tip over a quarter turn onto its side after landing

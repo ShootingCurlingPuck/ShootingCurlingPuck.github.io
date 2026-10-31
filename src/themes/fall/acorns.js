@@ -7,6 +7,8 @@ import { el, use } from "../../core/svg.js";
 import { QS } from "../../core/params.js";
 import { everyFrame } from "../toolkit.js";
 import { ACORNS } from "./settings.js";
+import { body, fall, airSpeed } from "../../core/physics.js";
+import { PHYSICS } from "../../config.js";
 
 // The acorn's outline, roughly an egg: an ellipse of half length L and half width W around the
 // sprite's middle (sprite units: cap 28 wide, cap and nut 36 long)
@@ -32,12 +34,19 @@ export function startAcorns(layer, scene, tree, surface, wind, perMinute) {
   const g = el("g", { class: "acorns" }, layer);
   const acorns = [];
 
+  // a falling acorn is a real little body (see core/physics.js): heavy and compact, so it drops
+  // fast and the wind barely moves it
   function drop(at) {
-    const a = {
+    const a = body({
       x: at.x,
       y: at.y,
-      vx: (Math.random() - 0.5) * 30,
+      mass: ACORNS.mass,
+      area: ACORNS.area,
+      cd: ACORNS.cd,
+      vx: (Math.random() - 0.5) * 0.3, // m/s: let go of with a little nudge
       vy: 0,
+    });
+    Object.assign(a, {
       spin: (Math.random() - 0.5) * 400, // degrees per second
       deg: Math.random() * 360,
       bounces: 0,
@@ -45,7 +54,7 @@ export function startAcorns(layer, scene, tree, surface, wind, perMinute) {
       fadeFrom: 0,
       // each in a little wrapper that shades it at night (a small area: cheap)
       w: el("g", daylight ? { filter: daylight.shadeFilter } : {}, g),
-    };
+    });
     a.u = use(a.w, "prop-acorn", "");
     acorns.push(a);
   }
@@ -65,21 +74,18 @@ export function startAcorns(layer, scene, tree, surface, wind, perMinute) {
     for (let i = acorns.length - 1; i >= 0; i--) {
       const a = acorns[i];
       if (!a.until) {
-        // falling: gravity, a little drift with the wind, spinning
-        a.vy += ACORNS.gravity * dt;
-        a.vx += (wind ? wind.dir() * wind.strength() * 40 : 0) * dt;
-        a.x += a.vx * dt;
-        a.y += a.vy * dt;
+        // falling (and hopping): gravity, the air, the wind; spinning
+        fall(a, dt, airSpeed(wind));
         a.deg += a.spin * dt;
         // the ground line: lying flat, its middle sits 6 below the leaf surface, as before
         const ground = surface(a.x) + 6 + W;
         const lo = lowest(a.deg);
         if (a.y + lo.y >= ground) {
           a.y = ground - lo.y; // touching with its lowest point
-          if (a.bounces < 1 && a.vy > 120) {
+          if (a.bounces < 1 && a.vy * PHYSICS.scale > 120) {
             a.bounces++;
             a.vy = -a.vy * ACORNS.bounce; // one small hop: leaves are soft
-            a.vx *= 0.6;
+            a.vx *= 0.6; // (m/s)
             a.spin *= 0.5;
           } else {
             a.until = t + ACORNS.rest[0] + Math.random() * (ACORNS.rest[1] - ACORNS.rest[0]);
