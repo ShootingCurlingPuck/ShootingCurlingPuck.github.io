@@ -122,7 +122,8 @@ export const LEDGE_FUNGI = {
 export const SPIDER = {
   every: [5, 10], // minutes between visits
   live: { drop: [60, 150], hang: [40, 90] }, // from the underside of a tile; units, seconds
-  standby: { drop: [150, 520], hang: [120, 300] }, // from the top of the screen, stays longer
+  standby: { drop: [150, 520], hang: [120, 300] }, // from a branch, stays longer
+  clockClear: 330, // standby: stays this far (left or right) from the clock in the middle
   speed: { down: 22, up: 32 }, // units per second
   scale: 0.75,
   branchMinW: 5, // standby: only hangs from branches at least this thick (not from twigs)
@@ -132,7 +133,7 @@ export const SPIDER = {
   // stronger than gustUp (0..1). At night (darkness above 0.5) it visits nightMore times as often.
   wet: 0.2,
   windy: 0.6,
-  peek: { drop: [15, 35], hang: [1.5, 3] },
+  peek: { drop: [15, 35], frame: [6, 12], hang: [1.5, 3] }, // frame: under the clock, above the date
   windSway: 14,
   gustUp: 0.5,
   nightMore: 1.5,

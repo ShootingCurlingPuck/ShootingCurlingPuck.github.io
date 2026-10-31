@@ -11,7 +11,7 @@
 // Any part can be missing (?skip=wind,clouds,precip,daylight,night, or if it failed): check before using it.
 import { QS } from "../core/params.js";
 import { debugLog, crumb } from "../core/debug.js";
-import { HEAD_F } from "../config.js";
+import { HEAD_F, CLOUDS } from "../config.js";
 import { startWind } from "./wind.js";
 import { startClouds } from "./clouds.js";
 import { startPrecip } from "./precip.js";
@@ -80,5 +80,7 @@ export function startSky(scene) {
     precip: precip || null,
     daylight: daylight || null,
     night: night || null,
+    // the lowest a cloud can hang: things that come down from above start below this
+    cloudsBottom: g.VIEW.y + (textTop - g.VIEW.y) * CLOUDS.depth,
   };
 }

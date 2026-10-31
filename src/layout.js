@@ -40,6 +40,23 @@ export const DATE_Y = CORE.y + 256,
   ERR_Y = CORE.y + 344;
 const GROUP_MID_Y = (CLOCK_FRAME.y + DATE_Y + 13) / 2; // vertical middle of frame + date
 export const STANDBY_SHIFT = `translate(${VIEW.x + VIEW.w / 2}px, ${VIEW.y + VIEW.h / 2}px) scale(${STANDBY_SCALE}) translate(${-CX}px, ${-GROUP_MID_Y}px)`;
+// Where a point of the clock group ends up in standby (the same move as STANDBY_SHIFT)
+const inStandby = (x, y) => ({
+  x: VIEW.x + VIEW.w / 2 + STANDBY_SCALE * (x - CX),
+  y: VIEW.y + VIEW.h / 2 + STANDBY_SCALE * (y - GROUP_MID_Y),
+});
+// The underside of the clock frame's drawing (its blue shadow: x 40.7 to 216.6, y 99 in the frame
+// file's 257.37 x 122.92 units, fitted into CLOCK_FRAME like the image), and the bottom of the date
+// below it, both as they are in standby: for things that hang from the frame (the autumn spider)
+const fk = Math.min(CLOCK_FRAME.w / 257.37, CLOCK_FRAME.h / 122.92),
+  fx = CLOCK_FRAME.x + (CLOCK_FRAME.w - 257.37 * fk) / 2,
+  fy = CLOCK_FRAME.y + (CLOCK_FRAME.h - 122.92 * fk) / 2;
+const under1 = inStandby(fx + 40.7 * fk, fy + 99 * fk),
+  under2 = inStandby(fx + 216.6 * fk, fy + 99 * fk);
+export const STANDBY_CLOCK = {
+  under: { x1: under1.x, x2: under2.x, y: under1.y },
+  dateBottom: inStandby(CX, DATE_Y + 8).y,
+};
 export const LIVE_POS = "translate(0px, 0px) scale(1) translate(0px, 0px)";
 
 // Live indicator under the date. Fixed left edge, text grows right.

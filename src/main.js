@@ -89,6 +89,7 @@ const scene = {
     CHIP: L.CHIP,
     NAME_F: NAME_F,
     BOOTH_CHIP_Y: L.BOOTH_CHIP_Y,
+    STANDBY_CLOCK: L.STANDBY_CLOCK, // the clock frame's underside and the date's bottom, in standby
   },
   // spots a theme must never cover: the QR code (with its label and the weather credit), the logos,
   // the Kitchen label,

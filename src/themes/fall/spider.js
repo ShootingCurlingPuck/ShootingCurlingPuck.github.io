@@ -1,7 +1,7 @@
 // A small spider that visits every few minutes. Live: it lowers itself from the underside of a
-// tile (a different one each time), hangs and sways, then climbs back. Standby: it comes down
-// from the top of the screen, at a different spot each time, and stays longer; where the tree's
-// branches are above that spot, it comes down from the underside of one of them instead.
+// tile (a different one each time), hangs and sways, then climbs back. Standby (the tiles are
+// faint then): from the underside of the clock's frame, down past the date, or from the underside
+// of one of the tree's branches (below the clouds), and it stays longer.
 // Weather: in rain it only peeks (a short way down, a moment, straight back up); in strong wind it
 // stays in; out already, it swings with the wind and climbs back up in a strong gust or when the rain
 // starts. A few more visits at night.
@@ -47,7 +47,7 @@ export function startSpider(layer, scene, tree) {
   let phase = "wait",
     wait = test ? 2 : nextWait(),
     t = 0;
-  let ax, ay, drop, hang, y, inStandby, lastTile, lastX, fromEdge, peek;
+  let ax, ay, drop, hang, y, inStandby, lastTile, lastX, fromEdge, peek, fromFrame;
   let sway = 0; // degrees, eased: it swings with the wind
   // a strong gust while it hangs there: back up
   if (fx.wind)
@@ -55,54 +55,76 @@ export function startSpider(layer, scene, tree) {
       if (phase === "hang" && amp >= SPIDER.gustUp) phase = "up";
     });
 
-  // Pick where to come down; false if no good spot right now
+  // Pick where to come down; false if no good spot right now. Live: from the underside of a tile.
+  // Standby: from the clock's frame or a branch of the tree (never from the top of the screen: it
+  // would come out of the clouds).
   function choose() {
     inStandby = scene.isStandby();
-    if (inStandby) {
-      // From above the top edge, away from the big standby clock in the middle; or, where the
-      // tree is above that spot, from the underside of one of its branches there (any of them)
-      const mid = VIEW.x + VIEW.w / 2;
-      for (let i = 0; i < 40; i++) {
-        const x = VIEW.x + 80 + Math.random() * (VIEW.w - 160);
-        if (
-          Math.abs(x - mid) < 520 ||
-          (lastX !== undefined && Math.abs(x - lastX) < 300)
-        )
-          continue;
-        const ys = tree ? tree.branchesAt(x, SPIDER.branchMinW) : [];
-        if (fromTree && !ys.length) continue;
-        if (ys.length) {
-          const branch = ys[Math.floor(Math.random() * ys.length)];
-          // from the branch, but never down into the leaves on the ground
-          const room = VB - 200 - branch;
-          if (room < 60) continue;
-          const d = Math.min(between(SPIDER.standby.drop), room);
-          // and not where the thread would run down in front of the trunk
-          let onTrunk = false;
-          for (let k = 0; k <= 4; k++) {
-            const tr = tree.trunkAt(branch + (d * k) / 4);
-            if (Math.abs(x - tr.x) < tr.w / 2 + 25) onTrunk = true;
-          }
-          // nor hanging over something that must stay clear (labels, QR code)
-          if (onTrunk || hits(x, branch + d, 30)) continue;
-          ax = x;
-          ay = branch;
-          drop = d;
-          fromEdge = true; // comes out from behind the branch
-        } else {
-          ax = x;
-          ay = VIEW.y - 30;
-          drop = between(SPIDER.standby.drop) + 30;
-          if (hits(x, ay + drop, 30)) continue;
-          fromEdge = false;
-        }
-        hang = between(SPIDER.standby.hang);
-        lastX = x;
-        return true;
-      }
-      return false;
+    fromFrame = false;
+    if (!inStandby) return fromTile();
+    if (tree && (fromTree || Math.random() < 0.5) && fromBranch()) return true;
+    if (fromTree) return false;
+    return fromClock();
+  }
+
+  // From the underside of the clock's frame, hanging below the date
+  function fromClock() {
+    const C = scene.geo.STANDBY_CLOCK;
+    if (!C) return false;
+    for (let i = 0; i < 10; i++) {
+      const x = C.under.x1 + 30 + Math.random() * (C.under.x2 - C.under.x1 - 60);
+      if (lastX !== undefined && Math.abs(x - lastX) < 80) continue;
+      const room = VB - 200 - C.under.y;
+      const d = Math.min(room, Math.max(C.dateBottom - C.under.y + 60, between(SPIDER.standby.drop)));
+      if (d < 60 || hits(x, C.under.y + d, 30)) continue;
+      ax = x;
+      ay = C.under.y;
+      drop = d;
+      hang = between(SPIDER.standby.hang);
+      lastX = x;
+      fromEdge = true; // comes out from behind the frame
+      fromFrame = true;
+      return true;
     }
-    // Under a tile, with open space below it for the whole drop
+    return false;
+  }
+  const mid = VIEW.x + VIEW.w / 2;
+  const nearClock = (x) => inStandby && Math.abs(x - mid) < SPIDER.clockClear;
+  const below = (fx.cloudsBottom || VIEW.y) + 10; // branches below the clouds only
+
+  // From the underside of one of the tree's branches (thick enough), wherever they reach
+  function fromBranch() {
+    for (let i = 0; i < 40; i++) {
+      const x = VIEW.x + 80 + Math.random() * (VIEW.w - 160);
+      if (nearClock(x) || (lastX !== undefined && Math.abs(x - lastX) < 300)) continue;
+      const ys = tree.branchesAt(x, SPIDER.branchMinW).filter((b) => b > below);
+      if (!ys.length) continue;
+      const branch = ys[Math.floor(Math.random() * ys.length)];
+      // from the branch, but never down into the leaves on the ground
+      const room = VB - 200 - branch;
+      if (room < 60) continue;
+      const d = Math.min(between(SPIDER.standby.drop), room);
+      // and not where the thread would run down in front of the trunk
+      let onTrunk = false;
+      for (let k = 0; k <= 4; k++) {
+        const tr = tree.trunkAt(branch + (d * k) / 4);
+        if (Math.abs(x - tr.x) < tr.w / 2 + 25) onTrunk = true;
+      }
+      // nor hanging over something that must stay clear (labels, QR code)
+      if (onTrunk || hits(x, branch + d, 30)) continue;
+      ax = x;
+      ay = branch;
+      drop = d;
+      hang = between(SPIDER.standby.hang);
+      lastX = x;
+      fromEdge = true; // comes out from behind the branch
+      return true;
+    }
+    return false;
+  }
+
+  // Under a tile, with open space below it for the whole drop
+  function fromTile() {
     for (let i = 0; i < 20; i++) {
       const e = undersides[Math.floor(Math.random() * undersides.length)];
       if (!e || e.tile === lastTile) continue;
@@ -119,8 +141,9 @@ export function startSpider(layer, scene, tree) {
       ax = x;
       ay = e.at;
       drop = d;
-      hang = between(SPIDER.live.hang);
+      hang = between(inStandby ? SPIDER.standby.hang : SPIDER.live.hang);
       lastTile = e.tile;
+      lastX = x;
       fromEdge = true;
       return true;
     }
@@ -157,7 +180,8 @@ export function startSpider(layer, scene, tree) {
       // raining: only a peek at the weather, then back in
       peek = rain() > SPIDER.wet;
       if (peek) {
-        drop = Math.min(drop, between(SPIDER.peek.drop));
+        // under the clock it only just shows itself, above the date
+        drop = fromFrame ? between(SPIDER.peek.frame) : Math.min(drop, between(SPIDER.peek.drop));
         hang = between(SPIDER.peek.hang);
       }
       phase = "down";
