@@ -6,7 +6,7 @@ import { QS } from "../../core/params.js";
 import { sceneNow } from "../../core/time.js";
 import { use } from "../../core/svg.js";
 import { seeded, pick, mix, INK, randInt } from "../toolkit.js";
-import { HAZE, FLOOR_PROPS, ACORNS } from "./settings.js";
+import { HAZE, FLOOR_PROPS, ACORNS, FOXFIRE } from "./settings.js";
 
 // Floor props that follow the season (see season.js), and by which amount
 const SEASONAL = {
@@ -27,7 +27,8 @@ import {
 } from "./shapes.js";
 
 // amounts (optional, see season.js): { litter: depth 0..1, acornsOnGround, fungi: times the usual }
-export function drawForestFloor(g, scene, pal, amounts) {
+// glows (optional): a list to add the foxfire spots to (see foxfire.js)
+export function drawForestFloor(g, scene, pal, amounts, glows) {
   const A = amounts || { litter: 1, acornsOnGround: 1, fungi: 1 };
   const { VIEW, VR, VB, ROOMS, LIST, CHIP, NAME_F, BOOTH_CHIP_Y } = scene.geo;
   const P = scene.palette;
@@ -166,6 +167,9 @@ export function drawForestFloor(g, scene, pal, amounts) {
       line: yb - b.bury * s,
     };
     P.tf = `translate(${Math.round(x)} ${yb}) scale(${s})`;
+    P.x = x;
+    P.y = yb;
+    P.s = s;
     props.push(P);
     taken.push([x, ((b.r - b.l) * s) / 2]);
     for (let i = 0; i < 3; i++)
@@ -325,6 +329,13 @@ export function drawForestFloor(g, scene, pal, amounts) {
     .sort(byKey)
     .forEach((it) =>
       it.prop ? use(g, propShape(it.prop.name), it.prop.tf) : draw(it),
+    );
+  // where today's glowing fungi glow at night
+  if (glows)
+    props.forEach((P) =>
+      ((P.s && FOXFIRE.spots[P.name]) || []).forEach((q) =>
+        glows.push({ x: P.x + q[0] * P.s, y: P.y + q[1] * P.s, rx: q[2] * P.s, ry: q[3] * P.s, o: q[4] }),
+      ),
     );
   return surface; // falling leaves land on this
 }

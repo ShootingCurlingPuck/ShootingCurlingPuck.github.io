@@ -1,5 +1,6 @@
-// Autumn: a tree on the right, a forest floor along the bottom edge, fungi on the tiles,
-// a visiting spider, and falling leaves carried by the wind (the weather itself is in sky/)
+// Autumn: a tree on the right, a forest floor along the bottom edge, fungi on the tiles (some
+// glowing at night), a visiting spider, now and then a will-o'-the-wisp, and falling leaves
+// carried by the wind (the weather itself is in sky/)
 import { el } from "../../core/svg.js";
 import { QS } from "../../core/params.js";
 import { debugLog, crumb } from "../../core/debug.js";
@@ -12,6 +13,8 @@ import { startSpider } from "./spider.js";
 import { drawTree } from "./tree.js";
 import { startOwl } from "./owl.js";
 import { startAcorns } from "./acorns.js";
+import { startFoxfire } from "./foxfire.js";
+import { startWisp } from "./wisp.js";
 import { season } from "./season.js";
 
 export default function startFall(scene) {
@@ -39,8 +42,9 @@ export default function startFall(scene) {
       // Tree first: the floor's leaves cover the foot of its trunk
       const tree = part("tree", () => drawTree(scene.layer, scene, pals.tree));
       const ground = el("g", { class: "ground" }, scene.layer);
+      const glows = []; // where fungi glow at night (foxfire)
       const surface = part("floor", () =>
-        drawForestFloor(ground, scene, pals.litter, now),
+        drawForestFloor(ground, scene, pals.litter, now, glows),
       );
       part("fungi", () => drawLedgeFungi(scene.layer, scene, now.fungi));
       // Everything that moves goes in a layer of its own, which the TV can redraw on its own; the
@@ -51,13 +55,27 @@ export default function startFall(scene) {
       const fx = scene.fx || {};
       const moving = scene.front || scene.layer;
       const near = scene.near || moving;
+      // foxfire first: everything else in front of the sky passes in front of it
+      part("foxfire", () => startFoxfire(near, scene, glows));
       const spiderLayer = el(
         "g",
         fx.daylight && scene.near ? { filter: fx.daylight.shadeFilter } : {},
         near,
       );
       const spider = part("spider", () => startSpider(spiderLayer, scene, tree));
-      part("owl", () => tree && startOwl(moving, scene, tree, spider));
+      // the will-o'-the-wisp drifts over the litter; the owl watches it like it watches the spider
+      const wisp = part(
+        "wisp",
+        () => surface && startWisp(near, scene, surface, fx.wind || null, fx.precip || null),
+      );
+      const watched =
+        spider || wisp
+          ? {
+              out: () => !!((wisp && wisp.out()) || (spider && spider.out())),
+              pos: () => (wisp && wisp.out() ? wisp.pos() : spider.pos()),
+            }
+          : null;
+      part("owl", () => tree && startOwl(moving, scene, tree, watched));
       // The weather (scene.fx, see sky/index.js) is general; autumn reacts to it and tells it
       // where its ground is: rain lands on the leaf cover, up to 25 units into it
       if (fx.precip && surface) fx.precip.setGround(surface, 25);

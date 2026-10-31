@@ -191,3 +191,59 @@ export const OWL = {
   blink: [2.5, 6], // seconds between blinks when awake (a bit slower in standby)
   zEvery: [8, 14], // seconds between z's while it dozes
 };
+
+// Foxfire (see foxfire.js): the glow of some fungi in the dark. It follows how dark the screen looks
+// (the night veil, as a share of its standby maximum): none below `from`, full at `full`, so in
+// live mode (a lighter veil) it stays fainter. strength: its opacity at full; falloff: the glow's
+// gradient, [offset, opacity]. spots: where each kind glows, in its sprite's units:
+// [x, y, half width, half height, opacity]
+export const FOXFIRE = {
+  colour: "#B4F07A",
+  from: 0.35,
+  full: 0.9,
+  strength: 0.75,
+  falloff: [
+    [0, 0.7],
+    [0.4, 0.35],
+    [1, 0],
+  ],
+  spots: {
+    // the bonnets (Mycena): each cap
+    mycena: [
+      [-14, -21, 11, 9, 1],
+      [-4, -30, 11, 9, 1],
+      [6, -25, 11, 9, 1],
+      [15, -16, 11, 9, 1],
+    ],
+    // honey fungus threads in the rotting wood of the stump: faint patches
+    stump: [
+      [-26, -32, 10, 22, 0.45],
+      [21, -50, 8, 16, 0.35],
+    ],
+  },
+};
+
+// The will-o'-the-wisp (see wisp.js): a rare light over the leaf litter on dark, calm nights.
+// perDarkHour: visits per hour of darkness (about one per long autumn night), times `halloween`
+// on 31 October; darkness: the sky's darkness it needs (0..1, not the veil: so also on dark
+// mornings and evenings in live mode); maxWind, maxRain: calm enough (0..1)
+export const WISP = {
+  perDarkHour: 0.08,
+  halloween: 5,
+  darkness: 0.8,
+  maxWind: 0.45,
+  maxRain: 0.3,
+  life: [25, 45], // seconds per visit
+  height: [35, 140], // where it floats, above the litter
+  // what it does, one after the other: [chance, seconds]. hover: dancing on the spot; drift: a
+  // slow float somewhere else; dart: a quick little dash
+  moves: { hover: [0.45, [1.5, 4]], drift: [0.4, [2, 5]], dart: [0.15, [0.5, 1]] },
+  startled: [1, 3], // times per visit it's startled: snuffed out, then back further off
+  startleGust: 0.5, // chance a gust startles it
+  gone: [1, 3], // seconds it stays out when startled
+  size: 1.2, // the flame's size (its sprite is about 36 units tall)
+  colour: "#7FE6D2", // the flame
+  heart: "#D6FFF4", // its brighter middle
+  light: { r: 70, colour: "#6FDCC8" }, // the soft light around it
+  pool: { rx: 70, ry: 12, near: 130 }, // its light on the leaves below: size; gone above `near`
+};
