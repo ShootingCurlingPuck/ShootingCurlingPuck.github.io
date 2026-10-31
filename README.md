@@ -18,8 +18,9 @@ Useful URL switches: `?mode=live|standby`, `?theme=fall|winter|none`, `?debug=1`
 detail level on screen), `?weather=clear|cloudy|rain|heavy|snow|fog|windy|...` (pretend weather; `?weather=heavy>clear` changes it
 every 30 seconds, to see the fades),
 `?detail=0..1` (fixed animation detail instead of self-adjusting), `?wind=<km/h>` (pretend wind),
-`?gusts=often` (a gust every few seconds), `?rain=0..1` (pretend rain amount), `?clouds=0..1` (pretend cloud cover),
-`?skip=wind,clouds,precip,tree,floor,fungi,spider,owl,falling` (leave out parts of the weather or the autumn theme), `?icons=text|emoji`. Autumn also has `?seed=<any text>` (another day's layout), `?fallpal=a|b`, `?haze=0`,
+`?gusts=often` (a gust every few seconds), `?rain=0..1` (pretend rain amount), `?clouds=0..1` (pretend cloud cover), `?time=17:40` (pretend it's that time today, for day and night),
+`?darkness=0..1` (fixed darkness),
+`?skip=wind,clouds,precip,daylight,tree,floor,fungi,spider,owl,falling` (leave out parts of the weather or the autumn theme), `?icons=text|emoji`. Autumn also has `?seed=<any text>` (another day's layout), `?fallpal=a|b`, `?haze=0`,
 `?spider=now|tree` (a visit every 15-25 s; `tree`: in standby always from a branch).
 
 ## When the TV crashes
@@ -51,7 +52,7 @@ version within about 5 minutes and reloads by itself.
 | `src/layout.js` | Geometry derived from the two above |
 | `src/main.js` | Wires everything together, in drawing order |
 | `src/core/` | Helpers: SVG, text measuring, time, shared state, events, debug, the animation loop and detail level |
-| `src/sky/` | Weather effects for every season: wind, clouds, rain (`index.js` starts and connects them) |
+| `src/sky/` | Weather effects and day/night for every season: wind, clouds, rain, the sun (`index.js` starts and connects them) |
 | `src/plan/` | The floor plan, clock, list panel, QR code |
 | `src/data/` | Fetching bookings and working out room states |
 | `src/system/` | Standby mode, auto-update and reload |
@@ -87,5 +88,8 @@ The TV redraws a whole drawing whenever anything in it moves, so everything that
 owl, spider, and the weather's rain in front of them) lives in its own transparent drawing on top of the plan (`overlay()` in
 `src/core/svg.js`, the theme's `scene.front`), and the QR code in another one above that. The plan and
 the static scene (tree, floor, fungi) are then drawn once. New moving parts go in `scene.front`.
-Clouds have a layer of their own (`scene.sky`), between the moving layer and the QR code: they're
-drawn once and drift by moving that whole layer, which costs the TV nothing.
+Above the moving layer comes the night veil (`src/sky/daylight.js`): it darkens everything below it as
+the real sun sets, through the twilights, darker in standby than in live mode (`DAYLIGHT` in
+`src/config.js`). Clouds have a layer of their own above the veil (`scene.sky`), so the moon can later
+sit behind them: they darken themselves to match. They're drawn once and drift by moving that whole
+layer, which costs the TV nothing. The QR code stays on top, never darkened, so it keeps scanning.

@@ -66,6 +66,27 @@ export const CLOUDS = {
   rainLine: "#8D9BB3",
 };
 
+// Day and night (see sky/daylight.js). curve: [sun height in degrees, darkness 0..1] points: day
+// down to 6 degrees, sunset at -0.833, then civil (-6), nautical (-12) and astronomical (-18)
+// twilight. max: the night veil's opacity at full darkness, in live mode (rooms must stay
+// readable) and in standby. Its colour goes from dusk to night as it gets darker. ease: seconds the
+// veil takes to follow a switch between live and standby. qr: the QR code gets this share of the
+// veil, so it still scans (and isn't the brightest thing on the screen at night).
+export const DAYLIGHT = {
+  curve: [
+    [6, 0],
+    [-0.833, 0.2],
+    [-6, 0.55],
+    [-12, 0.85],
+    [-18, 1],
+  ],
+  max: { live: 0.45, standby: 0.8 },
+  dusk: "#3B2D5C",
+  night: "#0B1533",
+  ease: 4,
+  qr: 0.4,
+};
+
 // Rain (see sky/precip.js and sky/streaks.js). levels: amount (0..1) per kind of rain, from its lightest to its
 // heaviest mm/h. max: drops on screen at amount 1. slant: sideways per downward at full wind.
 // speed in units per second, length of a streak in units (shorter in light rain).

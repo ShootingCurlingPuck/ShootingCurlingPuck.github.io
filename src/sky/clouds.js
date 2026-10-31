@@ -16,8 +16,9 @@ import { CLOUDS } from "../config.js";
 import { everyFrame, seeded, mix } from "../core/anim.js";
 
 // sky: an overlay <svg> of its own; textTop: y of the first text below the strip (clouds stay
-// above it, see CLOUDS.depth); wet(): how hard it's raining, 0..1
-export function startClouds(sky, scene, wind, textTop, wet) {
+// above it, see CLOUDS.depth); wet(): how hard it's raining, 0..1; daylight (optional): they sit
+// above the night veil (so the moon can be behind them), so they darken themselves just like it
+export function startClouds(sky, scene, wind, textTop, wet, daylight) {
   const { VIEW } = scene.geo;
   const C = CLOUDS;
   const forced = parseFloat(QS.get("clouds"));
@@ -240,10 +241,13 @@ export function startClouds(sky, scene, wind, textTop, wet) {
       show(c, s);
     });
     const grey = Math.round((wet ? wet() : 0) * 20) / 20;
-    if (grey !== lastGrey) {
-      lastGrey = grey;
-      sky.style.setProperty("--cloud-body", mix(style.body, style.rainBody, grey));
-      sky.style.setProperty("--cloud-line", mix(style.line, style.rainLine, grey));
+    const v = daylight ? daylight.veil() : null;
+    const night = v ? Math.round(v.opacity * 100) / 100 : 0;
+    if (grey + night * 1000 !== lastGrey) {
+      lastGrey = grey + night * 1000; // repaint only when the rain or the night changed visibly
+      const dark = (c) => (v ? mix(c, v.colour, night) : c);
+      sky.style.setProperty("--cloud-body", dark(mix(style.body, style.rainBody, grey)));
+      sky.style.setProperty("--cloud-line", dark(mix(style.line, style.rainLine, grey)));
     }
     // Drift: moving the whole layer, no redrawing (offset grows as the field moves left)
     const k = wind ? wind.strength() + 0.3 * wind.gust() : 0.1;

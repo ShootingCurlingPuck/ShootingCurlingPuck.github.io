@@ -1,19 +1,22 @@
-// The sky: weather effects (and later the day/night cycle) for everything, whatever the season.
+// The sky: weather effects and the day/night cycle, for everything, whatever the season.
 // Started by main.js before the theme, so it also runs with ?theme=none. Themes get the result as
 // scene.fx: they can react to it (leaves in the wind, ...) and change how it looks, never what the
 // weather is:
 //   fx.wind               strength(), gust(), onGust(fn), dir(), setDirection(-1 | 1)
 //   fx.clouds             cover(), coverAt(x), setStyle({ body, line, rainBody, rainLine })
 //   fx.precip             amount(), setGround(fn, below), setKind(start) (see precip.js)
-// Any part can be missing (?skip=wind,clouds,precip, or if it failed): check before using it.
+//   fx.daylight           darkness() (0 day .. 1 night), sunAltitude(), veil() (see daylight.js)
+// Any part can be missing (?skip=wind,clouds,precip,daylight, or if it failed): check before using it.
 import { QS } from "../core/params.js";
 import { debugLog, crumb } from "../core/debug.js";
 import { HEAD_F } from "../config.js";
 import { startWind } from "./wind.js";
 import { startClouds } from "./clouds.js";
 import { startPrecip } from "./precip.js";
+import { startDaylight } from "./daylight.js";
 
-// scene: as given to themes; it needs scene.front (moving layer) and scene.sky (clouds' layer)
+// scene: as given to themes; it needs scene.front (moving layer), scene.night (the night veil's
+// layer, above the moving one) and scene.sky (the clouds' layer, above the veil)
 export function startSky(scene) {
   const skip = (QS.get("skip") || "").split(",");
   // Each part runs on its own, so a bug in one doesn't take the others down
@@ -41,11 +44,19 @@ export function startSky(scene) {
     ),
   );
 
+  const daylight = scene.night
+    ? part("daylight", () => startDaylight(scene.night, scene))
+    : null;
   const wind = part("wind", () => startWind(scene));
   const clouds = scene.sky
     ? part("clouds", () =>
-        startClouds(scene.sky, scene, wind || null, textTop, () =>
-          precip ? precip.amount() : 0,
+        startClouds(
+          scene.sky,
+          scene,
+          wind || null,
+          textTop,
+          () => (precip ? precip.amount() : 0),
+          daylight || null,
         ),
       )
     : null;
@@ -54,5 +65,10 @@ export function startSky(scene) {
     startPrecip(scene.front, scene, wind || null, clouds || null),
   );
 
-  return { wind: wind || null, clouds: clouds || null, precip: precip || null };
+  return {
+    wind: wind || null,
+    clouds: clouds || null,
+    precip: precip || null,
+    daylight: daylight || null,
+  };
 }
