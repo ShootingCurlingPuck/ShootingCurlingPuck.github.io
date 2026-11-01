@@ -7,16 +7,19 @@
 //   fx.clouds             cover(), coverAt(x), setStyle({ body, line, rainBody, rainLine })
 //   fx.precip             amount(), kind() ("rain" | "snow"), setGround(fn, below),
 //                         setKind(start, "rain" | "snow") (see weather/precip.js)
+//   fx.snow               depth(), addAirLedges(list): snow settling (see weather/settle.js)
 //   fx.daylight           darkness() (0 day .. 1 night), sunAltitude(), veil() (see daylight.js)
 //   fx.night              addForeground(node): keep the stars and moon behind this drawing (in live
 //                         mode and standby)
-// Any part can be missing (?skip=wind,clouds,precip,daylight,night, or if it failed): check before using it.
+// Any part can be missing (?skip=wind,clouds,precip,settle,daylight,night, or if it failed): check
+// before using it.
 import { QS } from "../core/params.js";
 import { debugLog, crumb } from "../core/debug.js";
 import { HEAD_F, CLOUDS } from "../config.js";
 import { startWind } from "../weather/wind.js";
 import { startClouds } from "../weather/clouds.js";
 import { startPrecip } from "../weather/precip.js";
+import { startSettle } from "../weather/settle.js";
 import { startDaylight } from "./daylight.js";
 import { startNightSky } from "./night-sky.js";
 
@@ -75,11 +78,15 @@ export function startSky(scene) {
   const precip = part("precip", () =>
     startPrecip(scene.front, scene, wind || null, clouds || null),
   );
+  // snow settling on things, where it's cold enough
+  const snow = precip ? part("settle", () => startSettle(scene.front, scene, precip)) : null;
+  if (snow) precip.setSettle(snow);
 
   return {
     wind: wind || null,
     clouds: clouds || null,
     precip: precip || null,
+    snow: snow || null,
     daylight: daylight || null,
     night: night || null,
     // the lowest a cloud can hang: things that come down from above start below this

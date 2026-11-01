@@ -19,8 +19,10 @@ export function startSnow(layer, api) {
       { fill: "none", stroke: colour, "stroke-width": w, "stroke-linecap": "round", "stroke-opacity": op },
       g,
     );
-  // each size: a thin darker rim under the white dot
-  const paths = S.sizes.map((w) => ({ rim: dots(w + 2, S.edge, 0.55), dot: dots(w, S.colour, 1) }));
+  // each size: a thin darker rim under the white dot. All the rims first, then all the dots, so
+  // flakes that touch merge into one white shape with one outline (instead of a rim between them)
+  const rims = S.sizes.map((w) => dots(w + 2, S.edge, 0.55));
+  const paths = S.sizes.map((w, k) => ({ rim: rims[k], dot: dots(w, S.colour, 1) }));
 
   const flakes = [],
     resting = [];
@@ -81,17 +83,27 @@ export function startSnow(layer, api) {
       for (let n = 0; n < 10 && flakes.length < want; n++) newFlake(false);
 
       const d = S.sizes.map(() => "");
+      const settle = api.settle; // where it's cold enough, landing flakes stay (weather/settle.js)
       for (let i = flakes.length - 1; i >= 0; i--) {
         const f = flakes[i];
+        const before = f.y;
         fall(f, dt, air);
         // blown out of the picture: gone (a new one comes in)
         if (f.x < VIEW.x - 60 || f.x > VR + 60) {
           flakes.splice(i, 1);
           continue;
         }
-        const ground = api.groundAt(f.x) + f.depth;
+        const size = S.sizes[f.cls];
+        // on a ledge on the way down (a tile, the clock, a branch), where it stays
+        if (settle && settle.catchFlake(f.x, before, f.y, size)) {
+          flakes.splice(i, 1);
+          continue;
+        }
+        const ground = settle ? settle.groundAt(f.x) : api.groundAt(f.x) + f.depth;
         if (f.y >= ground) {
-          resting.push({ x: f.x, y: ground, cls: f.cls, until: t + rand(S.linger) });
+          // it stays (part of the lying snow now), or rests a moment and melts
+          if (!settle || !settle.landFlake(f.x, size))
+            resting.push({ x: f.x, y: ground, cls: f.cls, until: t + rand(S.linger) });
           flakes.splice(i, 1);
           continue;
         }

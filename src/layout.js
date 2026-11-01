@@ -57,6 +57,17 @@ export const STANDBY_CLOCK = {
   under: { x1: under1.x, x2: under2.x, y: under1.y },
   dateBottom: inStandby(CX, DATE_Y + 8).y,
 };
+// A point of the clock group on screen, in live mode or standby
+export const clockPoint = (x, y, standby) => (standby ? inStandby(x, y) : { x: x, y: y });
+// The tops of the clock frame's drawing (its white shape, in the frame file's units), in the clock
+// group's own units: where snow can settle on it (see clockPoint for where they are on screen)
+export const CLOCK_TOPS = [
+  [27.6, 37.9, 8], // the little square top left
+  [40.75, 213.8, 24], // the top
+  [32.8, 40.75, 40], // the step on the left
+  [216.6, 229.8, 40], // the step on the right
+  [224.6, 237.8, 90.9], // the little square bottom right
+].map((e) => ({ x1: fx + e[0] * fk, x2: fx + e[1] * fk, y: fy + e[2] * fk }));
 export const LIVE_POS = "translate(0px, 0px) scale(1) translate(0px, 0px)";
 
 // Live indicator under the date. Fixed left edge, text grows right.

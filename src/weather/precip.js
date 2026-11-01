@@ -11,6 +11,7 @@
 //   groundAt(x), depth()  the ground's surface at x, and how far below it things may land
 //   underCloud(x)  whether something may start at x now (under a visible cloud)
 //   wind       the wind service (or null)
+//   settle     snow settling (or null): catchFlake(x, y0, y1, size), landFlake(x, size), groundAt(x)
 //   detail()   the shared animation detail level (core/perf.js), 0..1
 //   geo, isStandby()
 // Test switches: ?rain=0..1, ?snow=0..1 (pretend amount; ?weather=drizzle|rain|heavy|snow works too)
@@ -99,6 +100,7 @@ export function startPrecip(layer, scene, wind, clouds) {
     underCloud: (x) => !clouds || Math.random() < clouds.coverAt(x),
     depth: () => depth,
     wind: wind || null,
+    settle: null, // snow settling, if any (see weather/settle.js and setSettle)
   };
 
   const g = el("g", { class: "precip" }, layer);
@@ -140,5 +142,10 @@ export function startPrecip(layer, scene, wind, clouds) {
       if (w === type) use(type);
     },
     kind: () => type, // "rain" or "snow"
+    ground: () => ground, // the ground's surface: a function of x (see setGround)
+    // snow settling (weather/settle.js): falling snow lies down on what it meets there
+    setSettle(s) {
+      api.settle = s;
+    },
   };
 }

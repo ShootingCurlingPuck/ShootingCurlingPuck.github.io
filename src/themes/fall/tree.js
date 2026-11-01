@@ -423,6 +423,17 @@ export function drawTree(layer, scene, pal) {
       });
       return ys;
     },
+    // The tops of the branches snow can lie on (at least minW thick, not too steep), as
+    // [{ x1, y1, x2, y2 }], left to right
+    ledges(minW) {
+      return segs
+        .filter((s) => s.w >= minW && Math.abs(s.b[1] - s.a[1]) <= Math.abs(s.b[0] - s.a[0]) * 0.8)
+        .map((s) => {
+          const l = s.a[0] < s.b[0] ? s.a : s.b,
+            r = s.a[0] < s.b[0] ? s.b : s.a;
+          return { x1: l[0], y1: l[1] - s.w / 2, x2: r[0], y2: r[1] - s.w / 2 };
+        });
+    },
     fullness: total ? canopy.length / total : 0,
     // A random leaf in the crown: where a falling leaf starts
     spawnPoint() {

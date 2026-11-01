@@ -179,6 +179,28 @@ export const SNOW = {
   linger: [1, 2.5],
 };
 
+// Snow settling (see weather/settle.js): made of the flakes that land. unitsPerCm: how thick a
+// centimetre of snow is drawn (the scene isn't to scale: real centimetres would hardly show); max:
+// the most it builds up on the ground, on ledges (tile tops, the clock frame) and up in the air
+// (branches), in units; freeze: flakes stay at or below this temperature (C), and lying snow melts
+// above it by `melt` units per minute (more the warmer it is); pretendRate: cm per hour for pretend
+// snow (?snow=1); dots: the sizes it's drawn with (diameters, from a single flake to a lump; deeper
+// snow is lumps piled up)
+export const SETTLE = {
+  unitsPerCm: 4,
+  max: { ground: 28, ledge: 12, air: 8 },
+  freeze: 0,
+  melt: 3,
+  pretendRate: 2,
+  // on the ground: from half this depth a blanket rises from the bottom of the pile; at this depth
+  // it reaches `sink` units below the pile's general line, and above it from there
+  blanket: 6,
+  sink: 14,
+  dots: [6, 8, 10, 12, 14],
+  colour: "#FFFFFF",
+  edge: "#B9C6DC",
+};
+
 // Falling things (see core/physics.js). scale: screen units per metre of fall (the scene isn't drawn
 // to scale; this keeps gravity looking right: about 90 units per metre). wind: share of the real
 // wind speed that pushes on falling things (1 = all of it: snow nearly sideways in a breeze).

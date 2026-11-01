@@ -82,6 +82,8 @@ export default function startFall(scene) {
       // The weather (scene.fx, see sky/index.js) is general; autumn reacts to it and tells it
       // where its ground is: rain lands on the leaf cover, up to 25 units into it
       if (fx.precip && surface) fx.precip.setGround(surface, 25);
+      // snow settles on the tree's thicker branches too (by the air's temperature)
+      if (fx.snow && tree) fx.snow.addAirLedges(tree.ledges(6));
       // and keeps the night sky behind the tree and the leaf litter
       if (fx.night) {
         if (tree) fx.night.addForeground(tree.group);

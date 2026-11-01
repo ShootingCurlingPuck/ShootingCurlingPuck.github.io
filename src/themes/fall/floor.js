@@ -337,7 +337,7 @@ export function drawForestFloor(g, scene, pal, amounts, glows) {
         glows.push({ x: P.x + q[0] * P.s, y: P.y + q[1] * P.s, rx: q[2] * P.s, ry: q[3] * P.s, o: q[4] }),
       ),
     );
-  return landing(kept, surface); // falling leaves, acorns and rain land on this
+  return landing(kept, surface, props); // falling leaves, acorns, rain and snow land on this
 }
 
 // The top of the leaves as they were drawn. The surface line above is where the cover may reach,
@@ -345,21 +345,48 @@ export function drawForestFloor(g, scene, pal, amounts, glows) {
 // away), so things that landed on that line could sit on thin air. This follows the leaves
 // themselves: the highest leaf edge in each strip, smoothed a little; never higher than the line
 // (where the cover is full, nothing changes).
-function landing(kept, surface) {
+// landing.exact(x): the same without smoothing, to the leaf: the very top of the highest leaf there
+// (each leaf rounded on top), or of the stump, a mushroom cap or a puffball. Snow settles on this.
+const DOMES = {
+  stump: { w: 34, top: 90, flat: true },
+  mushroom: { w: 21, top: 39, base: 17 },
+  puffball: { w: 15, top: 20, base: 0 },
+};
+function landing(kept, surface, props) {
   const BIN = 10;
   const tops = {};
   const raise = (b, y) => {
     if (tops[b] === undefined || y < tops[b]) tops[b] = y;
   };
+  const FINE = 5,
+    fine = {};
+  const top = (b, y) => {
+    if (fine[b] === undefined || y < fine[b]) fine[b] = y;
+  };
   kept.forEach((L) => {
     const half = L.r * 0.5; // the visible leaf, about half its nominal size
     for (let b = Math.floor((L.x - half) / BIN); b <= Math.floor((L.x + half) / BIN); b++)
       raise(b, L.y - half * Math.max(0.6, L.squash));
+    const h = half * Math.max(0.6, L.squash);
+    for (let b = Math.floor((L.x - half) / FINE); b <= Math.floor((L.x + half) / FINE); b++) {
+      const d = (b * FINE + FINE / 2 - L.x) / half;
+      if (Math.abs(d) < 1) top(b, L.y - h * Math.sqrt(1 - d * d));
+    }
+  });
+  props.forEach((P) => {
+    const D = DOMES[P.name];
+    if (!D || !P.s) return;
+    const w = D.w * P.s;
+    for (let b = Math.floor((P.x - w) / FINE); b <= Math.floor((P.x + w) / FINE); b++) {
+      const d = (b * FINE + FINE / 2 - P.x) / w;
+      if (Math.abs(d) >= 1) continue;
+      top(b, P.y - P.s * (D.flat ? D.top : D.base + (D.top - D.base) * Math.sqrt(1 - d * d)));
+    }
   });
   // never above the cover's own line, and smoothed over five strips
   const at = (b) => (tops[b] === undefined ? null : Math.max(tops[b], surface(b * BIN + BIN / 2)));
   const cache = {};
-  return (x) => {
+  const fn = (x) => {
     const b = Math.floor(x / BIN);
     if (cache[b] !== undefined) return cache[b];
     let sum = 0,
@@ -374,4 +401,9 @@ function landing(kept, surface) {
     // no leaves around: the bottom of the cover line (the always-covered strip)
     return (cache[b] = n ? sum / n : surface(x) + 30);
   };
+  fn.exact = (x) => {
+    const y = fine[Math.floor(x / FINE)];
+    return y === undefined ? fn(x) : y;
+  };
+  return fn;
 }

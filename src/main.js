@@ -130,6 +130,8 @@ const scene = {
   // plan parts on the background: the night sky stays behind them (in standby only behind the
   // clock, the last one)
   foreground: [listG, clockG],
+  clockTops: L.CLOCK_TOPS, // the tops of its frame, in its own units (snow settles there)
+  clockPoint: L.clockPoint, // (x, y, standby): a point of the clock group on screen
   top: topLayer, // the QR code's layer (only the night dims it a little, see sky/daylight.js)
   qr: { x: L.QR_X, y: L.QR_Y, size: L.QR_TILE }, // the QR code's tile
   sky: skyLayer, // a layer of its own above the moving one (clouds drift by moving it whole)
