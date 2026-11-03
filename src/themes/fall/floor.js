@@ -3,10 +3,22 @@
 // The layout is seeded by date: stable all day, different tomorrow.
 import { TZ } from "../../config.js";
 import { QS } from "../../core/params.js";
-import { nowMs } from "../../core/time.js";
+import { sceneNow } from "../../core/time.js";
 import { use } from "../../core/svg.js";
 import { seeded, pick, mix, INK, randInt } from "../toolkit.js";
-import { HAZE, FLOOR_PROPS } from "./settings.js";
+import { HAZE, FLOOR_PROPS, ACORNS, FOXFIRE } from "./settings.js";
+
+// Floor props that follow the season (see season.js), and by which amount
+const SEASONAL = {
+  acorn: "acornsOnGround",
+  conker: "acornsOnGround",
+  husk: "acornsOnGround",
+  mushroom: "fungi",
+  mushrooms: "fungi",
+  chanterelles: "fungi",
+  mycena: "fungi",
+  puffball: "fungi",
+};
 import {
   LEAF_FORM_WEIGHTS,
   LEAF_VARIANTS,
@@ -14,7 +26,10 @@ import {
   propShape,
 } from "./shapes.js";
 
-export function drawForestFloor(g, scene, pal) {
+// amounts (optional, see season.js): { litter: depth 0..1, acornsOnGround, fungi: times the usual }
+// glows (optional): a list to add the foxfire spots to (see foxfire.js)
+export function drawForestFloor(g, scene, pal, amounts, glows) {
+  const A = amounts || { litter: 1, acornsOnGround: 1, fungi: 1 };
   const { VIEW, VR, VB, ROOMS, LIST, CHIP, NAME_F, BOOTH_CHIP_Y } = scene.geo;
   const P = scene.palette;
   const haze = QS.get("haze") === "0" ? 0 : HAZE;
@@ -22,7 +37,7 @@ export function drawForestFloor(g, scene, pal) {
   const rnd = seeded(
     "fall-floor " +
       (QS.get("seed") ||
-        new Date(nowMs()).toLocaleDateString("en-GB", { timeZone: TZ })),
+        new Date(sceneNow()).toLocaleDateString("en-GB", { timeZone: TZ })),
   );
 
   const oasis = ROOMS.filter((r) => r.name === "Oasis")[0];
@@ -54,11 +69,13 @@ export function drawForestFloor(g, scene, pal) {
       0.15 * Math.sin(x / 23 + p3);
     return Math.max(0, Math.min(1, n));
   };
+  // the season's depth (A.litter) scales everything above the always-covered strip along the bottom
   const surface = (x) => {
-    const floor = carpet - (carpet - groundTop) * floorH(x);
-    return Math.max(pileTop, Math.min(floor, groundTop - mound(x)));
+    const floor = carpet - (carpet - groundTop) * floorH(x) * A.litter;
+    const pile = carpet - (carpet - (groundTop - mound(x))) * A.litter;
+    return Math.max(pileTop, Math.min(floor, pile));
   };
-  const inPile = (x) => mound(x) > 12;
+  const inPile = (x) => mound(x) * A.litter > 12;
 
   const keepOut = scene.keepOut; // QR code, logos
   const hits = (x, y, r) =>
@@ -150,6 +167,9 @@ export function drawForestFloor(g, scene, pal) {
       line: yb - b.bury * s,
     };
     P.tf = `translate(${Math.round(x)} ${yb}) scale(${s})`;
+    P.x = x;
+    P.y = yb;
+    P.s = s;
     props.push(P);
     taken.push([x, ((b.r - b.l) * s) / 2]);
     for (let i = 0; i < 3; i++)
@@ -166,12 +186,14 @@ export function drawForestFloor(g, scene, pal) {
     let name = kind,
       s = 1.1 + rnd() * 0.25,
       deg;
-    if (kind === "acorn")
+    if (kind === "acorn") {
       name = pick(rnd, [
         ["acorn", 6],
         ["nut", 2],
         ["cap", 1],
       ]);
+      s = ACORNS.size * (0.95 + rnd() * 0.15); // the same size as the ones falling from the tree
+    }
     if (kind === "twig") name = rnd() < 0.5 ? "twig" : "twig-fork";
     if (name === "cap")
       deg = (rnd() < 0.5 ? 0 : 180) + (rnd() - 0.5) * 24; // bowl-up or dome-up
@@ -224,7 +246,10 @@ export function drawForestFloor(g, scene, pal) {
   const todo = [];
   Object.keys(FLOOR_PROPS).forEach((k) => {
     if (k === "stump") return;
-    for (let n = randInt(rnd, FLOOR_PROPS[k][0], FLOOR_PROPS[k][1]); n > 0; n--)
+    // the season: more or fewer acorns (and nuts) and mushrooms
+    const times = SEASONAL[k] ? A[SEASONAL[k]] : 1;
+    const n0 = randInt(rnd, FLOOR_PROPS[k][0], FLOOR_PROPS[k][1]);
+    for (let n = Math.round(n0 * times + (rnd() - 0.5) * 0.6); n > 0; n--)
       todo.push(k);
   });
   for (let i = todo.length - 1; i > 0; i--) {
@@ -305,5 +330,80 @@ export function drawForestFloor(g, scene, pal) {
     .forEach((it) =>
       it.prop ? use(g, propShape(it.prop.name), it.prop.tf) : draw(it),
     );
-  return surface; // falling leaves land on this
+  // where today's glowing fungi glow at night
+  if (glows)
+    props.forEach((P) =>
+      ((P.s && FOXFIRE.spots[P.name]) || []).forEach((q) =>
+        glows.push({ x: P.x + q[0] * P.s, y: P.y + q[1] * P.s, rx: q[2] * P.s, ry: q[3] * P.s, o: q[4] }),
+      ),
+    );
+  return landing(kept, surface, props); // falling leaves, acorns, rain and snow land on this
+}
+
+// The top of the leaves as they were drawn. The surface line above is where the cover may reach,
+// but on the thinner floor many columns stop short of it (and leaves without support are taken
+// away), so things that landed on that line could sit on thin air. This follows the leaves
+// themselves: the highest leaf edge in each strip, smoothed a little; never higher than the line
+// (where the cover is full, nothing changes).
+// landing.exact(x): the same without smoothing, to the leaf: the very top of the highest leaf there
+// (each leaf rounded on top), or of the stump, a mushroom cap or a puffball. Snow settles on this.
+const DOMES = {
+  stump: { w: 34, top: 90, flat: true },
+  mushroom: { w: 21, top: 39, base: 17 },
+  puffball: { w: 15, top: 20, base: 0 },
+};
+function landing(kept, surface, props) {
+  const BIN = 10;
+  const tops = {};
+  const raise = (b, y) => {
+    if (tops[b] === undefined || y < tops[b]) tops[b] = y;
+  };
+  const FINE = 5,
+    fine = {};
+  const top = (b, y) => {
+    if (fine[b] === undefined || y < fine[b]) fine[b] = y;
+  };
+  kept.forEach((L) => {
+    const half = L.r * 0.5; // the visible leaf, about half its nominal size
+    for (let b = Math.floor((L.x - half) / BIN); b <= Math.floor((L.x + half) / BIN); b++)
+      raise(b, L.y - half * Math.max(0.6, L.squash));
+    const h = half * Math.max(0.6, L.squash);
+    for (let b = Math.floor((L.x - half) / FINE); b <= Math.floor((L.x + half) / FINE); b++) {
+      const d = (b * FINE + FINE / 2 - L.x) / half;
+      if (Math.abs(d) < 1) top(b, L.y - h * Math.sqrt(1 - d * d));
+    }
+  });
+  props.forEach((P) => {
+    const D = DOMES[P.name];
+    if (!D || !P.s) return;
+    const w = D.w * P.s;
+    for (let b = Math.floor((P.x - w) / FINE); b <= Math.floor((P.x + w) / FINE); b++) {
+      const d = (b * FINE + FINE / 2 - P.x) / w;
+      if (Math.abs(d) >= 1) continue;
+      top(b, P.y - P.s * (D.flat ? D.top : D.base + (D.top - D.base) * Math.sqrt(1 - d * d)));
+    }
+  });
+  // never above the cover's own line, and smoothed over five strips
+  const at = (b) => (tops[b] === undefined ? null : Math.max(tops[b], surface(b * BIN + BIN / 2)));
+  const cache = {};
+  const fn = (x) => {
+    const b = Math.floor(x / BIN);
+    if (cache[b] !== undefined) return cache[b];
+    let sum = 0,
+      n = 0;
+    for (let k = b - 2; k <= b + 2; k++) {
+      const y = at(k);
+      if (y !== null) {
+        sum += y;
+        n++;
+      }
+    }
+    // no leaves around: the bottom of the cover line (the always-covered strip)
+    return (cache[b] = n ? sum / n : surface(x) + 30);
+  };
+  fn.exact = (x) => {
+    const y = fine[Math.floor(x / FINE)];
+    return y === undefined ? fn(x) : y;
+  };
+  return fn;
 }

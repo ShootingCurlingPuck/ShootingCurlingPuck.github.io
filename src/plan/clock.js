@@ -3,7 +3,7 @@
 import { CLOCK_F, FONT_STACK, TZ, REFRESH_MS } from "../config.js";
 import { svg, el, label, img, roomShape } from "../core/svg.js";
 import { mctx, inkMid } from "../core/text.js";
-import { nowMs, fmt } from "../core/time.js";
+import { sceneNow, fmt } from "../core/time.js";
 import { state } from "../core/state.js";
 import { CX, CLOCK_FRAME, FRAME_C, DATE_Y, ERR_Y, LIVE } from "../layout.js";
 
@@ -73,7 +73,7 @@ export function placeClock() {
 let lastClock = "",
   lastDate = "";
 export function tick() {
-  const now = new Date(nowMs());
+  const now = new Date(sceneNow()); // the pretend time too (?date, ?time)
   const c = fmt(now);
   if (c !== lastClock) {
     lastClock = c;

@@ -24,6 +24,41 @@ export const FALL_PALS = {
 };
 export const HAZE = 0.4; // how far back-layer floor leaves fade towards the background
 
+// The season (see season.js), in days since 1 October (0) to 30 November (60).
+// colourPeaks: when each palette colour (same order as FALL_PALS) is most common: greens and yellows
+// early, oranges and reds mid-season, browns late; colourSpread: how many days a colour stays
+// common; colourRare: how rare it gets out of season. litterLag: the litter's colours follow the
+// tree's this many days later. The rest are [day, value] points: litter depth (share of the full
+// pile), acorns on the ground (times FLOOR_PROPS), acorns falling from the tree (per minute) and
+// mushrooms (times FLOOR_PROPS and LEDGE_FUNGI): fungi peak around mid-October.
+export const FALL_SEASON = {
+  colourPeaks: [26, 46, 14, 8, 0, 30, 36, 58],
+  colourSpread: 16,
+  colourRare: 0.05,
+  litterLag: 10,
+  litter: [
+    [0, 0.3],
+    [30, 0.7],
+    [60, 1],
+  ],
+  acornsOnGround: [
+    [0, 0.5],
+    [25, 1.3],
+    [60, 0.25],
+  ],
+  acornsFalling: [
+    [0, 0.6],
+    [20, 0.4],
+    [40, 0],
+  ],
+  fungi: [
+    [0, 0.5],
+    [18, 1.5],
+    [45, 0.8],
+    [60, 0.3],
+  ],
+};
+
 export const FALLING = {
   live: { max: 6, every: 7 }, // at most this many in the air, a new one about every N seconds
   standby: { max: 20, every: 2 },
@@ -33,17 +68,34 @@ export const FALLING = {
   // Share of new leaves that come from the tree's crown (scaled by how full it still is);
   // the rest fall from above the top edge. Fewer leaves fall as the crown empties.
   fromTree: 0.75,
-  breeze: [20, 65], // leftward drift of leaves from the tree, units per second
-  // What the wind (0..1, see themes/wind.js) does to them: extra leftward drift at full strength and
-  // at a full gust (units per second), faster sway (+60% at full) and fall (+30%), and extra
-  // leaves the crown sheds at a gust (still air .. stormy)
-  wind: { drift: 160, gustDrift: 140, sway: 0.6, fall: 0.3, shed: [1, 6] },
-  // Gusts stir the ground: leaves hop up and swirl, then settle again. Hop height in still air and
-  // when stormy (units), how many leaves get kicked up out of the pile (still .. stormy), and how
-  // far around the gust's spot landed leaves get lifted too
-  // Wet leaves in heavy rain (scaled down in lighter rain): +40% falling speed, half the sway
-  wet: { fall: 0.4, sway: 0.5 },
-  swirl: { calm: [60, 120], stormy: [180, 320], kick: [4, 10], reach: 160 },
+  breeze: [20, 65], // leftward drift of leaves from the tree as they let go, units per second
+  // Each leaf as a falling body (see core/physics.js): mass (kg), area (m2) and flatness, picked in
+  // these ranges (a dry oak or maple leaf: a third of a gram to most of a gram, 45 to 65 cm2, very flat);
+  // wet: extra mass from rain water at full rain (+80%)
+  body: { mass: [0.0003, 0.0007], area: [0.0045, 0.0065], flat: [0.75, 1], wet: 0.8 },
+  // extra leaves the crown sheds at a gust (still air .. stormy)
+  wind: { shed: [1, 6] },
+  // Gusts swirl up off the ground: the rising air carries leaves up and round, then lets them fall
+  // again. How high it carries them in still air and when stormy (units), how long the swirl lasts
+  // (s), how many leaves come up out of the pile (still .. stormy), and how far around the gust's
+  // spot landed leaves get lifted too
+  swirl: { calm: [60, 120], stormy: [180, 320], lasts: 1.2, kick: [4, 10], reach: 160 },
+};
+
+// Acorns dropping from the tree (how often: FALL_SEASON.acornsFalling): at most this many at once,
+// their size (the acorns lying on the floor are about the same), what they're like as falling
+// bodies, how much of their speed is left after their one small hop on the leaves, and how many
+// seconds they rest there before fading
+export const ACORNS = {
+  max: 4,
+  size: 0.8,
+  // falling (see core/physics.js): about 4 g, 1.5 by 2.5 cm, rounded (low drag)
+  mass: 0.004,
+  area: 0.015 * 0.025,
+  cd: 0.5,
+  bounce: 0.12,
+  rest: [40, 90],
+  tip: 0.35, // seconds to tip over a quarter turn onto its side after landing
 };
 
 // Things on the forest floor: how many of each, per day (a random number in the range)
@@ -74,9 +126,21 @@ export const LEDGE_FUNGI = {
 export const SPIDER = {
   every: [5, 10], // minutes between visits
   live: { drop: [60, 150], hang: [40, 90] }, // from the underside of a tile; units, seconds
-  standby: { drop: [150, 520], hang: [120, 300] }, // from the top of the screen, stays longer
+  standby: { drop: [150, 520], hang: [120, 300] }, // from a branch, stays longer
+  clockClear: 330, // standby: stays this far (left or right) from the clock in the middle
   speed: { down: 22, up: 32 }, // units per second
   scale: 0.75,
+  branchMinW: 5, // standby: only hangs from branches at least this thick (not from twigs)
+  // Weather. In rain (precip amount above `wet`) it only peeks: a short way down, a moment, then
+  // straight back up. In strong wind (wind strength above `windy`) it doesn't come out at all; out
+  // already, it swings more in the wind (up to windSway degrees) and climbs back up in a gust
+  // stronger than gustUp (0..1). At night (darkness above 0.5) it visits nightMore times as often.
+  wet: 0.2,
+  windy: 0.6,
+  peek: { drop: [15, 35], frame: [6, 12], hang: [1.5, 3] }, // frame: under the clock, above the date
+  windSway: 14,
+  gustUp: 0.5,
+  nightMore: 1.5,
 };
 
 // The tree on the right. Its shape is fixed; only the canopy changes with the date.
@@ -138,6 +202,90 @@ export const OWL = {
   awakeEvery: [10, 20], // minutes between awake moments during the day
   awakeFor: [30, 60], // seconds
   lookFor: 5, // seconds it looks at a room that just changed state
+  spiderFor: 8, // seconds it watches the spider when it shows up; then it loses interest
   blink: [2.5, 6], // seconds between blinks when awake (a bit slower in standby)
   zEvery: [8, 14], // seconds between z's while it dozes
+  // Day and night go by the sky's darkness (0..1), not live/standby: night from `night[1]` up, day
+  // again below `night[0]` (a gap, so it doesn't flip back and forth at dusk)
+  night: [0.3, 0.4],
+  rainWakes: 0.6, // heavy rain (precip amount, 0..1) wakes it more often in the day...
+  rainAwakeEvery: [2, 5], // ...every few minutes instead
+  // at night it sits hunched and fluffed up in rain or strong wind (no hunting in that)
+  hunker: { rain: 0.35, wind: 0.55 },
+  // The night hunt (see owl-flight.js): not in rain or strong wind (when it hunkers down)
+  hunt: {
+    every: [8, 20], // minutes between hunts, at night
+    away: [2, 5], // minutes it's gone
+    spot: 1.5, // seconds it stares out before it takes off
+    speed: 230, // up close, units per second
+    beats: 2.6, // wingbeats per second
+    size: 1.3, // up close
+    // seen far off while it's away: how many times, how often it drops behind the leaves (else it
+    // just glides across), how long it stays down there (seconds), its speed, size and colour
+    far: {
+      sightings: [1, 3],
+      dive: 0.5,
+      hidden: [4, 8],
+      speed: 100,
+      size: 1.5,
+      colour: "#140F18",
+      opacity: 0.85,
+    },
+  },
+};
+
+// Foxfire (see foxfire.js): the glow of some fungi in the dark. It follows how dark the screen looks
+// (the night veil, as a share of its standby maximum): none below `from`, full at `full`, so in
+// live mode (a lighter veil) it stays fainter. strength: its opacity at full; falloff: the glow's
+// gradient, [offset, opacity]. spots: where each kind glows, in its sprite's units:
+// [x, y, half width, half height, opacity]
+export const FOXFIRE = {
+  colour: "#B4F07A",
+  from: 0.35,
+  full: 0.9,
+  strength: 0.75,
+  falloff: [
+    [0, 0.7],
+    [0.4, 0.35],
+    [1, 0],
+  ],
+  spots: {
+    // the bonnets (Mycena): each cap
+    mycena: [
+      [-14, -21, 11, 9, 1],
+      [-4, -30, 11, 9, 1],
+      [6, -25, 11, 9, 1],
+      [15, -16, 11, 9, 1],
+    ],
+    // honey fungus threads in the rotting wood of the stump: faint patches
+    stump: [
+      [-26, -32, 10, 22, 0.45],
+      [21, -50, 8, 16, 0.35],
+    ],
+  },
+};
+
+// The will-o'-the-wisp (see wisp.js): a rare light over the leaf litter on dark, calm nights.
+// perDarkHour: visits per hour of darkness (about one per long autumn night), times `halloween`
+// on 31 October; darkness: the sky's darkness it needs (0..1, not the veil: so also on dark
+// mornings and evenings in live mode); maxWind, maxRain: calm enough (0..1)
+export const WISP = {
+  perDarkHour: 0.08,
+  halloween: 5,
+  darkness: 0.8,
+  maxWind: 0.45,
+  maxRain: 0.3,
+  life: [25, 45], // seconds per visit
+  height: [35, 140], // where it floats, above the litter
+  // what it does, one after the other: [chance, seconds]. hover: dancing on the spot; drift: a
+  // slow float somewhere else; dart: a quick little dash
+  moves: { hover: [0.45, [1.5, 4]], drift: [0.4, [2, 5]], dart: [0.15, [0.5, 1]] },
+  startled: [1, 3], // times per visit it's startled: snuffed out, then back further off
+  startleGust: 0.5, // chance a gust startles it
+  gone: [1, 3], // seconds it stays out when startled
+  size: 1.2, // the flame's size (its sprite is about 36 units tall)
+  colour: "#7FE6D2", // the flame
+  heart: "#D6FFF4", // its brighter middle
+  light: { r: 70, colour: "#6FDCC8" }, // the soft light around it
+  pool: { rx: 70, ry: 12, near: 130 }, // its light on the leaves below: size; gone above `near`
 };

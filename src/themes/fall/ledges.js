@@ -3,20 +3,24 @@
 // floorplan.css fades together with the plan in standby.
 import { TZ } from "../../config.js";
 import { QS } from "../../core/params.js";
-import { nowMs } from "../../core/time.js";
+import { sceneNow } from "../../core/time.js";
 import { el, use } from "../../core/svg.js";
 import { seeded, randInt } from "../toolkit.js";
 import { exposedEdges } from "../edges.js";
 import { LEDGE_FUNGI } from "./settings.js";
 import { propShape } from "./shapes.js";
 
-export function drawLedgeFungi(layer, scene) {
+// fungi (optional): times the usual number, for the season (see season.js)
+export function drawLedgeFungi(layer, scene, fungi) {
+  const times = fungi === undefined ? 1 : fungi;
   const g = el("g", { class: "on-plan" }, layer);
   const rnd = seeded(
     "fall-ledges " +
       (QS.get("seed") ||
-        new Date(nowMs()).toLocaleDateString("en-GB", { timeZone: TZ })),
+        new Date(sceneNow()).toLocaleDateString("en-GB", { timeZone: TZ })),
   );
+  // how many of a kind today (the usual random number, times the season's)
+  const count = (r) => Math.round(randInt(rnd, r[0], r[1]) * times + (rnd() - 0.5) * 0.6);
   const all = exposedEdges(scene.geo);
   const edges = all.filter((e) => !(e.tile.room && e.tile.room.booth));
   const hits = (x, y, r) =>
@@ -37,7 +41,7 @@ export function drawLedgeFungi(layer, scene) {
   const usedTiles = [];
 
   // Toadstools standing on a top edge, slightly sunk into the outline
-  let n = randInt(rnd, LEDGE_FUNGI.toadstools[0], LEDGE_FUNGI.toadstools[1]);
+  let n = count(LEDGE_FUNGI.toadstools);
   shuffled(edges.filter((e) => e.side === "top")).forEach((e) => {
     if (n <= 0 || usedTiles.indexOf(e.tile) >= 0 || e.x2 - e.x1 < 50) return;
     const x = e.x1 + 22 + rnd() * (e.x2 - e.x1 - 44),
@@ -53,7 +57,7 @@ export function drawLedgeFungi(layer, scene) {
   });
 
   // Chanterelles standing on a top edge, slightly sunk into the outline
-  n = randInt(rnd, LEDGE_FUNGI.chanterelles[0], LEDGE_FUNGI.chanterelles[1]);
+  n = count(LEDGE_FUNGI.chanterelles);
   shuffled(edges.filter((e) => e.side === "top")).forEach((e) => {
     if (n <= 0 || usedTiles.indexOf(e.tile) >= 0 || e.x2 - e.x1 < 50) return;
     const x = e.x1 + 22 + rnd() * (e.x2 - e.x1 - 44),
@@ -69,7 +73,7 @@ export function drawLedgeFungi(layer, scene) {
   });
 
   // Bracket fungi growing out of a side edge, pointing away from the tile
-  n = randInt(rnd, LEDGE_FUNGI.brackets[0], LEDGE_FUNGI.brackets[1]);
+  n = count(LEDGE_FUNGI.brackets);
   shuffled(
     edges.filter((e) => e.side === "left" || e.side === "right"),
   ).forEach((e) => {

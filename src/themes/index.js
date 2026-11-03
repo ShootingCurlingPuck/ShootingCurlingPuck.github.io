@@ -3,7 +3,7 @@
 // Date ranges are DD-MM and may wrap the new year. Force one with ?theme=fall|winter|none
 import { TZ } from "../config.js";
 import { QS } from "../core/params.js";
-import { nowMs } from "../core/time.js";
+import { sceneNow } from "../core/time.js";
 import { svg } from "../core/svg.js";
 import startFall from "./fall/index.js";
 import startWinter from "./winter/index.js";
@@ -37,7 +37,7 @@ function themeFor(d) {
 }
 
 export function startTheme(scene) {
-  THEME = themeFor(new Date(nowMs()));
+  THEME = themeFor(new Date(sceneNow()));
   if (!THEME) return;
   svg.classList.add("theme-" + THEME);
   THEMES[THEME].start(scene);
@@ -45,5 +45,5 @@ export function startTheme(scene) {
 
 // True when the date has moved into another theme since load (checked when standby ends)
 export function themeChanged() {
-  return !QS.get("theme") && themeFor(new Date(nowMs())) !== THEME;
+  return !QS.get("theme") && themeFor(new Date(sceneNow())) !== THEME;
 }

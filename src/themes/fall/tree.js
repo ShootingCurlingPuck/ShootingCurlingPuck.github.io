@@ -2,32 +2,12 @@
 // top-right corner of the plan, and a canopy that thins as autumn goes on.
 // The tree's shape never changes (fixed seed). Each canopy leaf has its own "drop day", so the
 // crown empties gradually from 1 October to 30 November and never grows back mid-season.
-// Test switch: ?treeday=0..60 (days since 1 October)
-import { TZ } from "../../config.js";
-import { QS } from "../../core/params.js";
-import { nowMs } from "../../core/time.js";
+// To see another point in the season: ?date=2026-11-25 (see core/time.js)
+import { seasonDay } from "./season.js";
 import { el, use } from "../../core/svg.js";
 import { seeded, pick, mix, INK } from "../toolkit.js";
 import { TREE } from "./settings.js";
 import { LEAF_FORM_WEIGHTS, LEAF_VARIANTS, leafShape } from "./shapes.js";
-
-// Days since 1 October (Brussels date), 0..60
-function seasonDay() {
-  const forced = QS.get("treeday");
-  if (forced !== null) return Math.max(0, Math.min(60, +forced));
-  const p = new Date(nowMs())
-    .toLocaleDateString("en-GB", {
-      timeZone: TZ,
-      day: "2-digit",
-      month: "2-digit",
-    })
-    .split("/");
-  const day = +p[0],
-    month = +p[1];
-  if (month === 10) return day - 1;
-  if (month === 11) return 30 + day;
-  return month < 10 ? 0 : 60;
-}
 
 // Returns { fullness: 0..1, spawnPoint(): {x, y} | null } for the falling leaves
 export function drawTree(layer, scene, pal) {
@@ -85,6 +65,8 @@ export function drawTree(layer, scene, pal) {
         d: `M${p1[0].toFixed(1)},${p1[1].toFixed(1)}L${p2[0].toFixed(1)},${p2[1].toFixed(1)}`,
         w: w1 + (w2 - w1) * ((i + 0.5) / n),
         y: (p1[1] + p2[1]) / 2,
+        a: p1,
+        b: p2,
       });
     }
     return pt; // to find points along the limb
@@ -424,7 +406,34 @@ export function drawTree(layer, scene, pal) {
   });
 
   return {
+    group: g, // the whole tree (e.g. so the night sky can keep its stars behind it)
     trunkAt: trunkAt,
+    // The undersides of all branches crossing x that something can hang from (at least minW
+    // thick and not too steep), as a list of y's; empty if there's no such wood there
+    branchesAt(x, minW) {
+      const ys = [];
+      segs.forEach((s) => {
+        const x1 = s.a[0],
+          x2 = s.b[0];
+        if (s.w < minW || x < Math.min(x1, x2) || x > Math.max(x1, x2)) return;
+        const dx = x2 - x1,
+          dy = s.b[1] - s.a[1];
+        if (Math.abs(dy) > Math.abs(dx) * 1.2) return; // too steep to hang from
+        ys.push(s.a[1] + (dx ? ((x - x1) / dx) * dy : 0) + s.w / 2);
+      });
+      return ys;
+    },
+    // The tops of the branches snow can lie on (at least minW thick, not too steep), as
+    // [{ x1, y1, x2, y2 }], left to right
+    ledges(minW) {
+      return segs
+        .filter((s) => s.w >= minW && Math.abs(s.b[1] - s.a[1]) <= Math.abs(s.b[0] - s.a[0]) * 0.8)
+        .map((s) => {
+          const l = s.a[0] < s.b[0] ? s.a : s.b,
+            r = s.a[0] < s.b[0] ? s.b : s.a;
+          return { x1: l[0], y1: l[1] - s.w / 2, x2: r[0], y2: r[1] - s.w / 2 };
+        });
+    },
     fullness: total ? canopy.length / total : 0,
     // A random leaf in the crown: where a falling leaf starts
     spawnPoint() {

@@ -16,7 +16,7 @@ import {
 } from "./config.js";
 import { svg, el, overlay } from "./core/svg.js";
 import { state } from "./core/state.js";
-import { nowMs } from "./core/time.js";
+import { roomNow } from "./core/time.js";
 import { on, emit } from "./core/events.js";
 import * as L from "./layout.js";
 import { drawStatic } from "./plan/static.js";
@@ -36,6 +36,7 @@ import { load, roomState } from "./data/schedule.js";
 import { applyMode } from "./system/mode.js";
 import { startAutoRefresh, safeReload } from "./system/autorefresh.js";
 import { startTheme, themeChanged } from "./themes/index.js";
+import { startSky } from "./sky/index.js";
 import { startWeather, getWeather } from "./weather/weather.js";
 
 // ---- Drawing ----
@@ -52,19 +53,30 @@ const veil = el(
   { x: L.VIEW.x, y: L.VIEW.y, width: L.VIEW.w, height: L.VIEW.h, class: "dim" },
   svg,
 );
-// Final z-order: ...map, logos, list, [theme], veil, clock, error line; then two layers on top:
-// [theme front] (everything that moves), then the QR code
+// Final z-order: ...map, logos, list, [theme], veil, clock, error line; then layers on top: moving
+// things ([theme front], then the weather's rain), the night veil, stars and moon, near things
+// (falling leaves, the spider), clouds, then the QR code
 svg.insertBefore(listG, clockG);
 svg.insertBefore(veil, clockG);
 // Front layer for themes, in its own drawing on top: everything that moves goes here, so the TV
 // doesn't have to redraw the whole plan for every moving leaf (see overlay() in core/svg.js)
-const frontG = el("g", { class: "theme-front" }, overlay("moving"));
-drawQR(overlay("top")); // last, so nothing covers it
+const movingLayer = overlay("moving");
+const frontG = el("g", { class: "theme-front" }, movingLayer);
+const weatherG = el("g", { class: "weather-front" }, movingLayer); // rain in front of leaves
+const nightLayer = overlay("night"); // darkens everything below it at night (sky/daylight.js)
+const starsLayer = overlay("stars"); // stars and moon: above the veil, behind the clouds
+// Near things (falling leaves, the spider): in front of the stars, so above the veil: they darken
+// themselves at night (see sky/daylight.js shade). Behind the clouds, like the tree they come from
+// (it reads as a bit of mist up in the crown)
+const nearG = el("g", { class: "near" }, overlay("near"));
+const skyLayer = overlay("sky"); // clouds: in front of the rain, so it falls from under them
+const topLayer = overlay("top");
+drawQR(topLayer); // last, so nothing covers it
 
 // Seasonal theme. Live: above the plan and list, under the veil. Standby: above the veil.
 const themeG = el("g", { class: "theme" }, svg);
 svg.insertBefore(themeG, veil);
-startTheme({
+const scene = {
   layer: themeG,
   geo: {
     VIEW: L.VIEW,
@@ -77,6 +89,7 @@ startTheme({
     CHIP: L.CHIP,
     NAME_F: NAME_F,
     BOOTH_CHIP_Y: L.BOOTH_CHIP_Y,
+    STANDBY_CLOCK: L.STANDBY_CLOCK, // the clock frame's underside and the date's bottom, in standby
   },
   // spots a theme must never cover: the QR code (with its label and the weather credit), the logos,
   // the Kitchen label,
@@ -112,17 +125,31 @@ startTheme({
         };
       }),
     ),
+  night: nightLayer, // the night veil's layer
+  stars: starsLayer, // the stars' and moon's layer
+  // plan parts on the background: the night sky stays behind them (in standby only behind the
+  // clock, the last one)
+  foreground: [listG, clockG],
+  clockTops: L.CLOCK_TOPS, // the tops of its frame, in its own units (snow settles there)
+  clockPoint: L.clockPoint, // (x, y, standby): a point of the clock group on screen
+  top: topLayer, // the QR code's layer (only the night dims it a little, see sky/daylight.js)
+  qr: { x: L.QR_X, y: L.QR_Y, size: L.QR_TILE }, // the QR code's tile
+  sky: skyLayer, // a layer of its own above the moving one (clouds drift by moving it whole)
+  near: nearG, // above the veil, in front of the stars, behind the clouds (they shade themselves)
   front: frontG, // above everything except the QR code, in live and standby: for things that move
   palette: P,
   isStandby: () => !!state.standby,
   on: on, // subscribe to events: "mode" (standby), "room" (a room changed state), "weather"
   weather: getWeather, // the latest weather, or null (see weather/weather.js)
-});
+};
+// The sky (wind, clouds, rain) runs whatever the theme, and before it: themes get it as scene.fx
+scene.fx = startSky(Object.assign({}, scene, { front: weatherG }));
+startTheme(scene);
 
 // ---- Updating ----
 const lastState = {}; // per room, to notice changes (sent as a "room" event, e.g. for themes)
 function render() {
-  const now = new Date(nowMs());
+  const now = new Date(roomNow()); // today's bookings, at the pretend time of day if ?time
   const fresh = state.lastData && Date.now() - state.lastOk < STALE_MS;
   const avail = [];
   L.ROOMS.forEach((r) => {

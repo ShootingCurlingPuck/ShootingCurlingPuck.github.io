@@ -2,14 +2,18 @@
 // and standby alike, and turned into one simple description that themes can use:
 //
 //   { tempC, sky: "clear" | "partly" | "cloudy" | "overcast", cloud: 0-100,
-//     precip: "none" | "drizzle" | "rain" | "heavy" | "snow" | "thunder", mmPerHour,
+//     precip: "none" | "drizzle" | "rain" | "heavy" | "snow" | "thunder", mmPerHour, snowCm (per hour),
 //     wind: km/h, gusts: km/h, windFrom: degrees (0 = from the north), fog: boolean,
+//     groundC: the ground's surface temperature, snowDepthCm: snow lying on the ground,
 //     isDay: boolean, code: WMO weather code, at: Date (when it was measured) }
 //
 // getWeather() returns the latest one, or null when there's none (yet) or it's too old.
 // A "weather" event fires on every successful update.
-// Test switch: ?weather=clear|partly|cloudy|overcast|drizzle|rain|heavy|snow|thunder|fog|windy
-// (or a change, e.g. ?weather=heavy>clear: switches every 30 seconds)
+// Test switches: ?weather=clear|partly|cloudy|overcast|drizzle|rain|heavy|snow|thunder|fog|windy
+// (or a change, e.g. ?weather=heavy>clear: switches every 30 seconds). With a pretend day or time
+// (?date, ?time: see core/time.js) it's the real weather of that hour: the hourly forecast (from 3
+// months back to 15 days ahead), or the history before that (back to 1940, ERA5 reanalysis, a bit
+// coarser). Further ahead there's none: the sky's default (clear).
 import {
   WEATHER_AT,
   WEATHER_EVERY_MS,
@@ -20,7 +24,7 @@ import { QS } from "../core/params.js";
 import { emit } from "../core/events.js";
 import { debugLog } from "../core/debug.js";
 import { fetchJson } from "../data/schedule.js";
-import { parseUtc } from "../core/time.js";
+import { parseUtc, nowMs, sceneNow, scenePretend } from "../core/time.js";
 
 const FIELDS = [
   "temperature_2m",
@@ -35,6 +39,8 @@ const FIELDS = [
   "wind_speed_10m",
   "wind_direction_10m",
   "wind_gusts_10m",
+  "soil_temperature_0cm", // the ground's surface: does snow settle?
+  "snow_depth", // metres of snow already lying
 ];
 const URL =
   "https://api.open-meteo.com/v1/forecast?latitude=" +
@@ -43,6 +49,36 @@ const URL =
   WEATHER_AT.lon +
   "&current=" +
   FIELDS.join(","); // times come back in GMT, without a zone; parseUtc reads them as such
+
+// For a pretend day or time: the hourly data of that day. The history has no showers or visibility.
+const HOURLY = "https://api.open-meteo.com/v1/forecast";
+const HISTORY = "https://archive-api.open-meteo.com/v1/archive";
+const HISTORY_FIELDS = FIELDS.filter(
+  (f) => f !== "showers" && f !== "visibility" && f !== "soil_temperature_0cm",
+).concat(["soil_temperature_0_to_7cm"]); // the history has the top 7 cm of soil instead
+function pretendUrl(at) {
+  const ago = (nowMs() - at) / 86400000; // days back (negative: ahead)
+  if (ago < -15) return null; // past the forecast
+  const history = ago > 85;
+  const date = new Date(at).toISOString().slice(0, 10); // the GMT day, like the times that come back
+  return (
+    (history ? HISTORY : HOURLY) +
+    "?latitude=" + WEATHER_AT.lat + "&longitude=" + WEATHER_AT.lon +
+    "&hourly=" + (history ? HISTORY_FIELDS : FIELDS).join(",") +
+    "&start_date=" + date + "&end_date=" + date
+  );
+}
+// The hour of that day's data closest to at, as one "current" record
+function hourOf(h, at) {
+  if (!h || !h.time || !h.time.length) return null;
+  let best = 0;
+  h.time.forEach((t, i) => {
+    if (Math.abs(parseUtc(t) - at) < Math.abs(parseUtc(h.time[best]) - at)) best = i;
+  });
+  const c = {};
+  Object.keys(h).forEach((k) => (c[k] = h[k][best]));
+  return c;
+}
 
 let latest = null;
 
@@ -60,15 +96,12 @@ function describe(c) {
   const cloud = num(c.cloud_cover);
   const mm = num(c.rain) + num(c.showers);
   const snowCm = num(c.snowfall);
+  // Mixed (sleet, snow and rain showers): one kind only, whichever brings more water. Snow's water:
+  // Open-Meteo's 7 cm of snow = 10 mm of water. Freezing rain and drizzle count as rain.
+  const snowCode = (code >= 71 && code <= 77) || code === 85 || code === 86;
   let precip = "none";
   if (code >= 95) precip = "thunder";
-  else if (
-    (code >= 71 && code <= 77) ||
-    code === 85 ||
-    code === 86 ||
-    snowCm > 0
-  )
-    precip = "snow";
+  else if ((snowCode || snowCm > 0) && (snowCm * 10) / 7 >= mm) precip = "snow";
   else if (code === 65 || code === 67 || code === 82 || mm >= 4)
     precip = "heavy";
   else if (
@@ -89,10 +122,18 @@ function describe(c) {
           : "overcast";
   return {
     tempC: typeof c.temperature_2m === "number" ? c.temperature_2m : null,
+    groundC:
+      typeof c.soil_temperature_0cm === "number"
+        ? c.soil_temperature_0cm
+        : typeof c.soil_temperature_0_to_7cm === "number"
+          ? c.soil_temperature_0_to_7cm
+          : null,
+    snowDepthCm: num(c.snow_depth) * 100,
     sky: sky,
     cloud: cloud,
     precip: precip,
     mmPerHour: num(c.precipitation) || mm,
+    snowCm: snowCm,
     wind: num(c.wind_speed_10m),
     gusts: num(c.wind_gusts_10m),
     windFrom: num(c.wind_direction_10m),
@@ -115,7 +156,7 @@ const FORCED = {
   drizzle: { cloud: 90, weather_code: 51, rain: 0.2 },
   rain: { cloud: 95, weather_code: 63, rain: 2 },
   heavy: { cloud: 100, weather_code: 65, rain: 8 },
-  snow: { cloud: 100, weather_code: 73, snowfall: 0.5 },
+  snow: { cloud: 100, weather_code: 73, snowfall: 0.8, temp: -2 },
   thunder: { cloud: 100, weather_code: 95, rain: 6 },
   fog: { cloud: 100, weather_code: 45, visibility: 300 },
   windy: { cloud: 60, wind: 45, gusts: 75 },
@@ -133,18 +174,27 @@ function summary(w) {
     Math.round(w.gusts) +
     ") from " +
     dirs[Math.round(w.windFrom / 45) % 8] +
-    (w.tempC !== null ? ", " + w.tempC + " C" : "")
+    (w.tempC !== null ? ", " + w.tempC + " C" : "") +
+    (w.groundC !== null ? " (ground " + w.groundC + " C)" : "") +
+    (w.snowDepthCm ? ", " + Math.round(w.snowDepthCm) + " cm of snow lying" : "")
   );
 }
 
 function update() {
-  fetchJson(URL, FETCH_TIMEOUT_MS)
+  const pretend = scenePretend();
+  const at = sceneNow();
+  const url = pretend ? pretendUrl(at) : URL;
+  if (!url) {
+    debugLog("Weather: none that far ahead");
+    return;
+  }
+  fetchJson(url, FETCH_TIMEOUT_MS)
     .then((data) => {
-      if (!data || !data.current)
-        throw new Error("Unexpected weather response");
-      latest = describe(data.current);
+      const c = !data ? null : pretend ? hourOf(data.hourly, at) : data.current;
+      if (!c) throw new Error("Unexpected weather response");
+      latest = describe(c);
       latest.fetched = Date.now();
-      debugLog("Weather: " + summary(latest));
+      debugLog("Weather" + (pretend ? " (" + c.time + " GMT)" : "") + ": " + summary(latest));
       emit("weather", latest);
     })
     .catch((e) => debugLog("Weather unavailable: " + e));
@@ -165,7 +215,8 @@ function forceWeather(name) {
     wind_speed_10m: c.wind || 12,
     wind_gusts_10m: c.gusts || 25,
     wind_direction_10m: 225,
-    temperature_2m: 10,
+    temperature_2m: c.temp !== undefined ? c.temp : 10,
+    soil_temperature_0cm: c.temp !== undefined ? c.temp : 8,
     is_day: 1,
   });
   latest.forced = true;

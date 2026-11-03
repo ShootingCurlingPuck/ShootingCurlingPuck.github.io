@@ -20,7 +20,7 @@ export const WEATHER_STALE_MS = 90 * 60 * 1000; // older than this: treat as "no
 // Credit shown under the QR code (required by the data licence), one entry per line
 export const WEATHER_CREDIT = ["Weather by", "Open-Meteo.com"];
 export const CREDIT_F = 15; // its font size
-// Wind (see themes/wind.js). levels: [km/h, strength] points: still under 10 km/h, a breeze to 25,
+// Wind (see weather/wind.js). levels: [km/h, strength] points: still under 10 km/h, a breeze to 25,
 // windy to 45, stormy beyond. noData: strength when there's no weather (a light breeze).
 // ease: seconds to follow a weather change. Gusts: every gustEvery seconds in still air (much more
 // often when windy), rising in gustRise and fading over gustFade seconds.
@@ -38,8 +38,105 @@ export const WIND = {
   gustRise: 0.6,
   gustFade: 2.5,
   standbyBoost: 1.3,
+  direction: -1, // on screen: -1 right to left, 1 left to right (a theme may change it)
 };
-// Rain (see themes/rain.js). levels: amount (0..1) per kind of rain, from its lightest to its
+// Clouds (see weather/clouds.js): `count` clouds spread over a field `period` screen widths long
+// that repeats as it drifts; each `width` units wide, made of puffs every `puffEvery` units with
+// radii `puff` (bigger in the middle) and a soft `halo`. They hang down at most `depth` of the way
+// from the top edge to the first text (0.95: to just above it, never over it). `opacity` of a cloud; from `bankFrom` cover on, the clouds
+// merge into one continuous bank. ease: seconds to follow a weather change. speed: drift in units
+// per second, still air .. full wind. Colours: body and outline, dry and when it rains.
+export const CLOUDS = {
+  count: 9,
+  period: 1.5,
+  width: [320, 560],
+  puffEvery: 70,
+  puff: [55, 105],
+  halo: 10,
+  depth: 0.95,
+  opacity: 0.9,
+  bankFrom: 0.75,
+  ease: 60,
+  changeEvery: [3, 8], // seconds between one cloud arriving or leaving and the next
+  growFor: 8, // seconds a cloud takes to grow in next to another, or to merge away
+  speed: [4, 60],
+  body: "#FFFFFF",
+  line: "#AFC0DA",
+  rainBody: "#D3D9E3",
+  rainLine: "#8D9BB3",
+};
+
+// Day and night (see sky/daylight.js). curve: [sun height in degrees, darkness 0..1] points: day
+// down to 6 degrees, sunset at -0.833, then civil (-6), nautical (-12) and astronomical (-18)
+// twilight. max: the night veil's opacity at full darkness, in live mode (rooms must stay
+// readable) and in standby. Its colour goes from dusk to night as it gets darker. ease: seconds the
+// veil takes to follow a switch between live and standby. qr: the QR code gets this share of the
+// veil, so it still scans (and isn't the brightest thing on the screen at night).
+export const DAYLIGHT = {
+  curve: [
+    [6, 0],
+    [-0.833, 0.2],
+    [-6, 0.55],
+    [-12, 0.85],
+    [-18, 1],
+  ],
+  max: { live: 0.45, standby: 0.8 },
+  dusk: "#3B2D5C",
+  night: "#0B1533",
+  ease: 4,
+  qr: 0.4,
+};
+
+// The night sky (see sky/night-sky.js). The screen is a window facing `facing` degrees (0 north,
+// 90 east, 135 south-east), its middle `centre` degrees up, the top edge `top` degrees up (the
+// bottom edge is the horizon). Positions are updated every `every` seconds. stars: brightness
+// groups (up to magnitude `mag`), each with a dot `size` (and a soft `glow` around the brightest),
+// its opacity, and the darkness `from` which it comes out. moon: its radius, its height in the top
+// strip (0 top .. 1 just above the text), the darkness from which it shows fully, its opacity by
+// day (a pale day moon, only when more than `dayLit` of it is lit), how strongly its glow shows
+// through a cloud, and its colour if the sprite (assets/sky/sprites.svg) can't be loaded.
+// planets: dot size, colour, and the darkness from which each shows (Venus first). meteors: the
+// share of the whole sky the window shows (the real rates are for the whole sky), a multiplier
+// for tuning (times: 1 = the real rate), the darkness from which they show, their speed (units
+// per second), how far they fly, the longest their tail gets, and its width.
+export const NIGHT = {
+  facing: 135,
+  centre: 30,
+  top: 60,
+  every: 20,
+  stars: [
+    { mag: 1, size: 9, glow: 22, opacity: 1, from: 0.45 },
+    { mag: 2, size: 7, glow: 15, opacity: 0.95, from: 0.55 },
+    { mag: 3, size: 5.2, opacity: 0.85, from: 0.68 },
+    { mag: 4, size: 4, opacity: 0.7, from: 0.8 },
+  ],
+  moon: {
+    size: 40,
+    height: 0.5,
+    from: 0.15,
+    day: 0.35,
+    dayLit: 0.2,
+    glow: 0.9,
+    colour: "#FFF6DA",
+  },
+  planets: {
+    venus: { size: 12, colour: "#FFFFFF", from: 0.3 },
+    jupiter: { size: 10, colour: "#FFF1D6", from: 0.4 },
+    mars: { size: 8, colour: "#FFB38F", from: 0.5 },
+    saturn: { size: 8, colour: "#F3DFA8", from: 0.5 },
+  },
+  meteors: {
+    share: 0.3,
+    times: 1,
+    from: 0.75,
+    speed: 900,
+    length: [120, 320],
+    tail: 140,
+    width: 3,
+  },
+};
+
+// Rain (see weather/precip.js and weather/streaks.js). levels: amount (0..1) per kind of rain, from its lightest to its
 // heaviest mm/h. max: drops on screen at amount 1. slant: sideways per downward at full wind.
 // speed in units per second, length of a streak in units (shorter in light rain).
 // ease: seconds to follow a weather change. splashFrom: amount above which drops splash.
@@ -59,6 +156,64 @@ export const RAIN = {
   opacity: 0.5,
   ease: 60,
   splashFrom: 0.3,
+};
+
+// Snow (see weather/snow.js). levels: [centimetres of snow per hour, amount 0..1] points (how hard
+// it's snowing, like RAIN.levels); at most `max` flakes on screen at full amount. Each flake is a little body (see core/physics.js):
+// mass (kg), size (m) and flatness, picked between the two values; drawn at one of `sizes`
+// (diameter, screen units), the heavier the bigger. linger: seconds a flake stays where it lands.
+export const SNOW = {
+  levels: [
+    [0, 0.2],
+    [0.3, 0.4],
+    [1.5, 0.75],
+    [4, 1],
+  ],
+  max: { live: 140, standby: 220 },
+  mass: [1e-6, 5e-6],
+  size: [0.003, 0.008],
+  flat: [0.05, 0.15], // barely: a flake's own flutter is tiny; it meanders with the air's eddies
+  sizes: [6, 9, 12],
+  colour: "#FFFFFF",
+  edge: "#8FA3C4", // a thin outline, so flakes show on the light background too
+  linger: [1, 2.5],
+};
+
+// Snow settling (see weather/settle.js): made of the flakes that land. unitsPerCm: how thick a
+// centimetre of snow is drawn (the scene isn't to scale: real centimetres would hardly show); max:
+// the most it builds up on the ground, on ledges (tile tops, the clock frame) and up in the air
+// (branches), in units; freeze: flakes stay at or below this temperature (C), and lying snow melts
+// above it by `melt` units per minute (more the warmer it is); pretendRate: cm per hour for pretend
+// snow (?snow=1); dots: the sizes it's drawn with (diameters, from a single flake to a lump; deeper
+// snow is lumps piled up)
+export const SETTLE = {
+  unitsPerCm: 4,
+  max: { ground: 28, ledge: 12, air: 8 },
+  freeze: 0,
+  melt: 3,
+  pretendRate: 2,
+  // on the ground: from half this depth a blanket rises from the bottom of the pile; at this depth
+  // it reaches `sink` units below the pile's general line, and above it from there
+  blanket: 6,
+  sink: 14,
+  dots: [6, 8, 10, 12, 14],
+  colour: "#FFFFFF",
+  edge: "#B9C6DC",
+};
+
+// Falling things (see core/physics.js). scale: screen units per metre of fall (the scene isn't drawn
+// to scale; this keeps gravity looking right: about 90 units per metre). wind: share of the real
+// wind speed that pushes on falling things (1 = all of it: snow nearly sideways in a breeze).
+// eddies: the air's own slow little swirls (m/s), which light things follow.
+// glide: how far a tilted flat body glides sideways; swingReach: the largest tilt of a perfectly
+// flat body (radians); swingRate: the fastest it swings back and forth (radians per second)
+export const PHYSICS = {
+  scale: 90,
+  wind: 0.6,
+  eddies: 0.35,
+  glide: 2.5,
+  swingReach: 1.0,
+  swingRate: 5,
 };
 
 // ----- Animation performance (see core/perf.js) -----
@@ -84,11 +239,13 @@ export const SYNC_MS = 10 * 60 * 1000; // how often to sync the clock
 export const WATCH = [
   "dist/app.js",
   "floorplan.css",
+  "assets/sky/sprites.svg",
   "assets/themes/fall/sprites.svg",
 ];
 
 // ----- Font sizes -----
 export const NAME_F = 26; // one size for every room name
+export const HEAD_F = 52; // the "Rooms" and "Booths" headings
 export const CLOCK_F = 70; // max clock size, shrinks automatically if too wide
 export const CHAR_W = 0.68; // average glyph width in em, used to fit text into tiles
 export const FONT_STACK = "Obviously, NeueHaas, Arial, sans-serif";
