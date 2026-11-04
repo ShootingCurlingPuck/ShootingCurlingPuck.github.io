@@ -1,6 +1,7 @@
 // Leaves falling from the tree and the top. Each is a real little body (see core/physics.js): light
-// and flat, so it drifts down slowly, swings and glides from side to side, and goes where the wind
-// and the air's eddies take it; nothing here says how it should sway. In the rain they're wet:
+// and flat, so it drifts down slowly, swinging from side to side like a pendulum, and goes where the
+// wind and the air's eddies take it; nothing here says how it should sway. On top of that it turns
+// over now and then, edge-on and back (a 3D-ish flip). In the rain they're wet:
 // heavier, so they fall faster and swing less. On the ground they rest a while, then fade. Gusts
 // swirl up off the ground there and carry leaves up with them.
 import { el, use } from "../../core/svg.js";
@@ -202,9 +203,6 @@ export function startFalling(layer, scene, pal, floorSurface, tree, wind, wet) {
           L.u.removeAttribute("opacity");
         }
       }
-      L.tb += L.tumble * (1 + k) * dt;
-      let flipX = Math.cos(L.tb); // 3D-ish tumble: the leaf turns edge-on and back
-      if (Math.abs(flipX) < 0.15) flipX = flipX < 0 ? -0.15 : 0.15;
 
       if (L.hop) {
         // in the swirl: the air rises (less and less) and turns round
@@ -216,6 +214,9 @@ export function startFalling(layer, scene, pal, floorSurface, tree, wind, wet) {
         L.deg0 += h.spin * left * dt;
         if (h.t >= h.dur) L.hop = null;
       } else fall(L, dt, air);
+      L.tb += L.tumble * (1 + k) * dt;
+      let flipX = Math.cos(L.tb); // 3D-ish tumble: the leaf turns edge-on and back
+      if (Math.abs(flipX) < 0.15) flipX = flipX < 0 ? -0.15 : 0.15;
       const x = L.x;
       // how it hangs: its tilt as it swings (the physics' tilt), on top of its own angle
       const deg = L.deg0 + (L.tilt * 180) / Math.PI;

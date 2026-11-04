@@ -14,7 +14,7 @@ export const FETCH_TIMEOUT_MS = 20 * 1000;
 
 // ----- Weather (Open-Meteo, free for non-commercial use, data under CC BY 4.0) -----
 // Where the office is: weather for this spot. Brussels centre by default; set to the office.
-export const WEATHER_AT = { lat: 50.85, lon: 4.35 };
+export const WEATHER_AT = { lat: 50.889954, lon: 4.445271 };
 export const WEATHER_EVERY_MS = 15 * 60 * 1000; // Open-Meteo's current data changes every 15 min
 export const WEATHER_STALE_MS = 90 * 60 * 1000; // older than this: treat as "no weather"
 // Credit shown under the QR code (required by the data licence), one entry per line
@@ -205,15 +205,18 @@ export const SETTLE = {
 // to scale; this keeps gravity looking right: about 90 units per metre). wind: share of the real
 // wind speed that pushes on falling things (1 = all of it: snow nearly sideways in a breeze).
 // eddies: the air's own slow little swirls (m/s), which light things follow.
-// glide: how far a tilted flat body glides sideways; swingReach: the largest tilt of a perfectly
-// flat body (radians); swingRate: the fastest it swings back and forth (radians per second)
+// Flat bodies swing like a pendulum: swing: how far to each side, in the body's own lengths for a
+// perfectly flat one (the scene isn't to scale either); swingLength: how slowly, as a pendulum this
+// many of its lengths long (bigger bodies swing slower); swingRise: how much it rises at the ends,
+// as a share of the width; swingReach: its tilt at the ends for a perfectly flat one (radians)
 export const PHYSICS = {
   scale: 90,
   wind: 0.6,
   eddies: 0.35,
-  glide: 2.5,
-  swingReach: 1.0,
-  swingRate: 5,
+  swing: 7,
+  swingLength: 11,
+  swingRise: 0.25,
+  swingReach: 0.8,
 };
 
 // ----- Animation performance (see core/perf.js) -----
