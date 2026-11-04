@@ -14,7 +14,7 @@ export const FETCH_TIMEOUT_MS = 20 * 1000;
 
 // ----- Weather (Open-Meteo, free for non-commercial use, data under CC BY 4.0) -----
 // Where the office is: weather for this spot. Brussels centre by default; set to the office.
-export const WEATHER_AT = { lat: 50.85, lon: 4.35 };
+export const WEATHER_AT = { lat: 50.889954, lon: 4.445271 };
 export const WEATHER_EVERY_MS = 15 * 60 * 1000; // Open-Meteo's current data changes every 15 min
 export const WEATHER_STALE_MS = 90 * 60 * 1000; // older than this: treat as "no weather"
 // Credit shown under the QR code (required by the data licence), one entry per line
