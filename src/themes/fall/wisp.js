@@ -5,6 +5,7 @@
 // as if it moved away. One of its old names is jack-o'-lantern, so it comes out more on Halloween.
 // Test switch: ?wisp=often (one every 20 seconds or so, when it's dark: add ?time=23:00)
 import { el, defs } from "../../core/svg.js";
+import { crumb } from "../../core/debug.js";
 import { QS } from "../../core/params.js";
 import { TZ } from "../../config.js";
 import { sceneNow } from "../../core/time.js";
@@ -120,6 +121,7 @@ export function startWisp(layer, scene, surface, wind, precip) {
     pickMove();
     g.setAttribute("display", "");
     pool.setAttribute("display", "");
+    crumb("wisp");
   }
   function end() {
     V = null;

@@ -16,7 +16,7 @@ import { el, use, defs, XLINK } from "../core/svg.js";
 import { loadSprites } from "../core/sprites.js";
 import { WEATHER_AT, NIGHT } from "../config.js";
 import { everyFrame } from "../core/anim.js";
-import { debugLog } from "../core/debug.js";
+import { debugLog, count } from "../core/debug.js";
 import { sunAltitude } from "./daylight.js";
 import { STARS } from "./stars-data.js";
 import { planetAt, PLANET_NAMES } from "./planets.js";
@@ -255,6 +255,7 @@ export function startNightSky(layer, scene, daylight, textTop, clouds) {
       dy = Math.abs(Math.sin(a)) + 0.2; // random ones mostly head down
     }
     const len = Math.sqrt(dx * dx + dy * dy) || 1;
+    count("meteors");
     const speed = N.meteors.speed * (0.6 + src.speed / 70); // faster showers streak faster
     flying.push({
       x: x,

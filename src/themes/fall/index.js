@@ -3,6 +3,7 @@
 // carried by the wind (the weather itself is in sky/)
 import { el } from "../../core/svg.js";
 import { QS } from "../../core/params.js";
+import { trouble } from "../../system/monitor.js";
 import { debugLog, crumb } from "../../core/debug.js";
 import { FALL_PALS } from "./settings.js";
 import { loadShapes } from "./shapes.js";
@@ -34,6 +35,7 @@ export default function startFall(scene) {
       return r;
     } catch (e) {
       debugLog("Autumn " + name + ": " + e);
+      trouble("autumn " + name + ": " + e);
     }
   };
   crumb("autumn: loading shapes");

@@ -2,6 +2,8 @@
 // Written as ES modules; esbuild bundles them into dist/app.js for the TV (old Chromium 56),
 // so modern syntax is fine here. Drawing order = z-order, so the order below matters.
 import { crumb } from "./core/debug.js"; // first, so it catches errors from everything else
+import { startMonitor } from "./system/monitor.js";
+startMonitor(); // health reports from the TV (and how the previous run ended)
 import {
   REFRESH_MS,
   STALE_MS,
@@ -181,8 +183,9 @@ function render() {
 }
 
 on("mode", (standby) => {
+  crumb(standby ? "standby" : "live");
   svg.insertBefore(themeG, standby ? clockG : veil);
-  if (!standby && themeChanged()) safeReload(); // season changed overnight
+  if (!standby && themeChanged()) safeReload("new season"); // season changed overnight
   clockG.style.transform = standby ? L.STANDBY_SHIFT : L.LIVE_POS;
   if (standby) {
     state.lastData = null; // nothing stale survives standby

@@ -14,6 +14,7 @@
 // Any part can be missing (?skip=wind,clouds,precip,settle,daylight,night, or if it failed): check
 // before using it.
 import { QS } from "../core/params.js";
+import { trouble } from "../system/monitor.js";
 import { debugLog, crumb } from "../core/debug.js";
 import { HEAD_F, CLOUDS } from "../config.js";
 import { startWind } from "../weather/wind.js";
@@ -37,6 +38,7 @@ export function startSky(scene) {
       return r;
     } catch (e) {
       debugLog("Sky " + name + ": " + e);
+      trouble("sky " + name + ": " + e);
     }
   };
 

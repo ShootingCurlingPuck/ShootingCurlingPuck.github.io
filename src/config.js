@@ -238,6 +238,26 @@ export const WAKE_GAP_MS = 30 * 1000; // a 1 s tick arriving this late means the
 export const MIN_LIFE_MS = 30 * 1000; // ignore wake signals this soon after load (prevents reload loops)
 export const UPDATE_MS = 5 * 60 * 1000; // how often to check for new code
 export const SYNC_MS = 10 * 60 * 1000; // how often to sync the clock
+// Health reports from the TV (see system/monitor.js), as ntfy notifications: subscribe to this topic
+// in the ntfy app. The topic is public (it's in this code): reports never hold room bookings.
+// quiet: each kind of report at most this often; perDay: at most this many a day; lines: how much
+// of the trail a report carries; slow: under lowFps for lowMinutes minutes in a row; growing:
+// more than nodesGrowth extra drawn elements, or heapGrowth times the memory, compared with
+// `settle` after the start; reloads: more than loopLoads starts within loopWindow
+export const MONITOR = {
+  ntfy: "https://ntfy.sh/ormit-room-screen-caddmij3sj",
+  quiet: 6 * 60 * 60 * 1000,
+  perDay: 12,
+  lines: 25,
+  lowFps: 10,
+  lowMinutes: 5,
+  nodesGrowth: 1500,
+  heapGrowth: 2,
+  settle: 5 * 60 * 1000,
+  loopLoads: 4,
+  loopWindow: 15 * 60 * 1000,
+};
+
 // Files whose change triggers a reload on the TV
 export const WATCH = [
   "dist/app.js",

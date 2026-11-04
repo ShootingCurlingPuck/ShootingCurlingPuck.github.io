@@ -9,6 +9,7 @@ import {
 } from "../config.js";
 import { state } from "../core/state.js";
 import { nowMs, fmt } from "../core/time.js";
+import { endRun } from "../core/debug.js";
 
 const BOOT = Date.now();
 
@@ -19,14 +20,16 @@ function hardReload() {
   location.replace(u.toString());
 }
 // Only reload once the network answers, otherwise the TV could land on an error page.
+// why: for the crash trail (a planned end, not a crash: see system/monitor.js)
 let reloading = false;
-export function safeReload() {
+export function safeReload(why) {
   if (reloading) return;
   reloading = true;
   (function attempt() {
     fetch("index.html?v=" + Date.now(), { cache: "no-store" })
       .then(function (res) {
         if (!res.ok) throw new Error("HTTP " + res.status);
+        endRun("reload (" + (why || "asked") + ")");
         hardReload();
       })
       .catch(function () {
@@ -39,7 +42,7 @@ export function safeReload() {
 export function startAutoRefresh(onClockSync) {
   // 2. Wake handler: resume events plus a late-tick check.
   function onWake() {
-    if (Date.now() - BOOT > MIN_LIFE_MS) safeReload();
+    if (Date.now() - BOOT > MIN_LIFE_MS) safeReload("woke up");
   }
   document.addEventListener("visibilitychange", function () {
     if (!document.hidden) onWake();
@@ -76,7 +79,7 @@ export function startAutoRefresh(onClockSync) {
     snapshot()
       .then(function (s) {
         if (baseline === null) baseline = s;
-        else if (s !== baseline) safeReload();
+        else if (s !== baseline) safeReload("new version");
       })
       .catch(function () {});
   }
@@ -104,7 +107,7 @@ export function startAutoRefresh(onClockSync) {
     function () {
       const h = parseInt(fmt(new Date(nowMs())), 10) % 24;
       if (state.standby && h === 23 && Date.now() - BOOT > 45 * 60 * 1000)
-        safeReload();
+        safeReload("nightly");
     },
     30 * 60 * 1000,
   );

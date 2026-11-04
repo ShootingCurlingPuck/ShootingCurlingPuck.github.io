@@ -23,6 +23,7 @@ export function measure(gapMs) {
 }
 
 export const detail = () => level;
+export const fpsNow = () => fps; // the smoothed frame rate (for the crash trail and monitor)
 
 // "n things at full detail" scaled to the current level, never below `least`
 export const scaled = (n, least) =>

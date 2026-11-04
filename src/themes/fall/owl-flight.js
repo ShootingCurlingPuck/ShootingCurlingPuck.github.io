@@ -6,6 +6,7 @@
 // is over it flies back in from the right and settles in the hollow. Up close it's a simple shape
 // (round head turned to us, broad rounded wings, short tail) that shades itself at night.
 import { el } from "../../core/svg.js";
+import { crumb } from "../../core/debug.js";
 import { everyFrame } from "../toolkit.js";
 import { OWL } from "./settings.js";
 
@@ -165,6 +166,7 @@ export function startOwlFlight(layer, scene, home, owl) {
       flare: 0.82,
     });
     plan.push({ land: true });
+    crumb("owl: hunting (" + n + " sightings)");
     owl.look([VR, hy - 160], F.spot);
     steps = plan;
     s = 0;
@@ -199,6 +201,7 @@ export function startOwlFlight(layer, scene, home, owl) {
       return next();
     }
     if (st.land) {
+      crumb("owl: back");
       owl.show(); // back in the hollow
       return next();
     }

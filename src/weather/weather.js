@@ -22,7 +22,7 @@ import {
 } from "../config.js";
 import { QS } from "../core/params.js";
 import { emit } from "../core/events.js";
-import { debugLog } from "../core/debug.js";
+import { debugLog, crumb } from "../core/debug.js";
 import { fetchJson } from "../data/schedule.js";
 import { parseUtc, nowMs, sceneNow, scenePretend } from "../core/time.js";
 
@@ -195,9 +195,13 @@ function update() {
       latest = describe(c);
       latest.fetched = Date.now();
       debugLog("Weather" + (pretend ? " (" + c.time + " GMT)" : "") + ": " + summary(latest));
+      crumb("weather: " + summary(latest));
       emit("weather", latest);
     })
-    .catch((e) => debugLog("Weather unavailable: " + e));
+    .catch((e) => {
+      debugLog("Weather unavailable: " + e);
+      crumb("weather unavailable: " + e);
+    });
 }
 
 // Pretend weather: ?weather=rain, or a change to test fades: ?weather=heavy>clear switches after
