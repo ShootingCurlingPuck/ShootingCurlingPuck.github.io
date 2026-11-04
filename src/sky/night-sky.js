@@ -141,8 +141,18 @@ export function startNightSky(layer, scene, daylight, textTop, clouds) {
   }
   // the plan's own foreground on the background (the list's text, the clock): only the clock stays
   // in front in standby (it's the last item of scene.foreground)
+  // The clock group holds the pulsing "Live" indicator in live mode: a copy of the whole group would
+  // change with every step of that animation, and the browser would redraw this whole layer every
+  // frame (the TV dropped to 11 fps from dusk on). So in live mode: copies of its other parts.
   const plan = scene.foreground || [];
-  plan.forEach((node) => silhouette(live, node));
+  const clockNode = plan[plan.length - 1];
+  plan.forEach((node) => {
+    if (node !== clockNode) return silhouette(live, node);
+    Array.prototype.forEach.call(node.children, (part) => {
+      if (part.querySelector && part.querySelector(".room")) return; // the Live indicator
+      silhouette(live, part);
+    });
+  });
   if (plan.length) silhouette(standby, plan[plan.length - 1]);
   // theme drawings stay in front in both
   function addForeground(node) {
